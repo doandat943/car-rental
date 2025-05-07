@@ -1,105 +1,131 @@
 # Car Rental Application
 
-A complete car rental service platform with backend API, admin portal, and client-facing website.
+A full-stack car rental application with admin dashboard and client interface built with Next.js, Express, and MongoDB.
 
 ## Project Structure
 
 ```
 car-rental/
-├── backend/          # Express + MongoDB API
-├── frontend-admin/   # Admin portal (Next.js with Materio template)
-└── frontend-client/  # Client website (Next.js)
+├── backend/             # Express.js API backend
+│   ├── src/
+│   │   ├── config/      # Configuration files
+│   │   ├── controllers/ # API controllers
+│   │   ├── middleware/  # Express middleware
+│   │   ├── models/      # Mongoose models
+│   │   ├── public/      # Static assets
+│   │   ├── routes/      # API routes
+│   │   ├── utils/       # Utility functions
+│   │   ├── app.js       # Express app setup
+│   │   └── server.js    # Server entry point
+│   ├── .env             # Environment variables
+│   └── package.json     # Backend dependencies
+│
+├── frontend-admin/      # Next.js admin dashboard
+│   ├── app/             # Next.js app router pages
+│   ├── components/      # React components
+│   ├── lib/             # Utility functions
+│   ├── public/          # Static assets
+│   └── package.json     # Frontend dependencies
+│
+└── frontend-client/     # Next.js client website
+    ├── src/
+    │   ├── app/         # Next.js app router pages
+    │   ├── components/  # React components
+    │   └── lib/         # Utility functions
+    ├── public/          # Static assets
+    └── package.json     # Frontend dependencies
 ```
 
-## Technologies Used
+## Environment Setup
 
-### Backend
-- Node.js with Express
-- MongoDB with Mongoose
-- JWT Authentication
-- Multer for file uploads
+### Backend (.env)
 
-### Frontend Admin
-- Next.js App Router
-- Material UI + Tailwind CSS
-- Materio Admin Template
-- DataGrid for tables
+Create a `.env` file in the `backend` directory with the following variables:
 
-### Frontend Client
-- Next.js App Router
-- Tailwind CSS
-- Responsive design
-
-## Features
-
-- User registration and authentication
-- Car listing and filtering
-- Car booking system with availability calendar
-- Admin dashboard with analytics
-- Booking management system
-- User and role management
+```env
+NODE_ENV=development
+PORT=5000
+# Development database
+# MONGO_URI=mongodb://localhost:27017/car-rental
+# Production database
+MONGODB_URI=mongodb+srv://your-mongodb-connection-string
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRE=7d
+UPLOAD_PATH=./src/public/uploads
+```
 
 ## Getting Started
 
-### Prerequisites
-- Node.js (LTS version)
-- MongoDB
-- npm or pnpm
-
 ### Backend Setup
+
 ```bash
+# Navigate to backend directory
 cd backend
+
+# Install dependencies
 npm install
-# Create .env file with your configuration or use the default
+
+# Run in development mode
 npm run dev
+
+# Run in production mode
+npm start
 ```
 
-### Admin Portal Setup
+### Admin Dashboard Setup
+
 ```bash
+# Navigate to admin dashboard directory
 cd frontend-admin
+
+# Install dependencies
 npm install
-# Create .env.local file with your configuration or use the default
+
+# Run in development mode
 npm run dev
-# Admin runs on http://localhost:3001
+
+# Build for production
+npm run build
 ```
 
 ### Client Website Setup
+
 ```bash
+# Navigate to client website directory
 cd frontend-client
+
+# Install dependencies
 npm install
-# Create .env.local file with your configuration or use the default
+
+# Run in development mode
 npm run dev
-# Client runs on http://localhost:3000
+
+# Build for production
+npm run build
 ```
 
-## API Endpoints
+## API Routes
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
+- `/api/auth` - Authentication routes
+- `/api/users` - User management
+- `/api/cars` - Car management
+- `/api/bookings` - Booking management
+- `/api/categories` - Car categories
+- `/api/website` - Website content
+- `/api/dashboard` - Admin dashboard statistics
+- `/api/upload` - File upload
 
-### Cars
-- `GET /api/cars` - Get all cars
-- `GET /api/cars/:id` - Get car by ID
-- `POST /api/cars` - Create new car (admin)
-- `PUT /api/cars/:id` - Update car (admin)
-- `DELETE /api/cars/:id` - Delete car (admin)
+## Important Notes
 
-### Bookings
-- `GET /api/bookings` - Get user's bookings
-- `GET /api/bookings/:id` - Get booking details
-- `POST /api/bookings` - Create new booking
-- `PATCH /api/bookings/:id/status` - Update booking status
-- `DELETE /api/bookings/:id` - Delete booking (admin)
+1. Make sure MongoDB is running before starting the backend server.
+2. Use a proper JWT secret in production.
+3. Set up appropriate CORS settings in production.
+4. Change default admin credentials after first run.
 
-## Admin Portal Access
+## Default Admin User
 
-The admin portal includes dedicated pages for:
-- Dashboard with analytics
-- Cars management
-- Bookings management
-- Users management
+- Email: admin@carental.com
+- Password: Admin123!
 
 ## License
 

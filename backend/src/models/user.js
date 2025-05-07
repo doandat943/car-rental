@@ -1,43 +1,60 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-const userSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true,
-    trim: true,
-    lowercase: true
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Please add a name'],
+      trim: true,
+      maxlength: [50, 'Name cannot be more than 50 characters']
+    },
+    email: {
+      type: String,
+      required: [true, 'Please add an email'],
+      unique: true,
+      match: [
+        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+        'Please add a valid email'
+      ]
+    },
+    phone: {
+      type: String,
+      maxlength: [20, 'Phone number cannot be longer than 20 characters']
+    },
+    password: {
+      type: String,
+      required: [true, 'Please add a password'],
+      minlength: [6, 'Password must be at least 6 characters'],
+      select: false // Don't return password in queries
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user'
+    },
+    avatar: {
+      type: String,
+      default: '/uploads/users/default-avatar.jpg'
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date
   },
-  password: { type: String, required: true },
-  phoneNumber: String,
-  address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: String
-  },
-  drivingLicense: {
-    number: String,
-    expiryDate: Date
-  },
-  role: {
-    type: String,
-    enum: ['customer', 'admin', 'superadmin'],
-    default: 'customer'
-  },
-  profileImage: String,
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
 
-// Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  
+// Encrypt password using bcrypt
+UserSchema.pre('save', async function(next) {
+  // Only run this if the password is modified
+  if (!this.isModified('password')) {
+    next();
+  }
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -47,9 +64,30 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-// Method to compare password
-userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+// Sign JWT and return
+UserSchema.methods.getSignedJwtToken = function() {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE
+  });
 };
 
-module.exports = mongoose.model('User', userSchema); 
+// Match user entered password to hashed password in database
+UserSchema.methods.matchPassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Cascade delete bookings when a user is deleted
+UserSchema.pre('remove', async function(next) {
+  await this.model('Booking').deleteMany({ user: this._id });
+  next();
+});
+
+// Reverse populate with virtuals
+UserSchema.virtual('bookings', {
+  ref: 'Booking',
+  localField: '_id',
+  foreignField: 'user',
+  justOne: false
+});
+
+module.exports = mongoose.model('User', UserSchema); 

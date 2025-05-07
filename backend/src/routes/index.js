@@ -2,6 +2,7 @@ const express = require('express');
 const authRoutes = require('./auth');
 const carRoutes = require('./cars');
 const bookingRoutes = require('./bookings');
+const dashboardRoutes = require('./dashboard');
 
 /**
  * Initialize all routes
@@ -12,6 +13,7 @@ function setRoutes(app) {
   app.use('/api/auth', authRoutes);
   app.use('/api/cars', carRoutes);
   app.use('/api/bookings', bookingRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
 
   // 404 handler
   app.use((req, res) => {
