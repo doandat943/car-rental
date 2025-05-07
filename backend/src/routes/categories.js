@@ -7,13 +7,13 @@ const tempController = (req, res) => {
   res.status(200).json({ message: 'This endpoint is under development' });
 };
 
-// Protected routes - Authenticated users
-router.get('/', protect, tempController);
-router.get('/:id', protect, tempController);
-router.post('/', protect, tempController);
-router.patch('/:id/status', protect, tempController);
+// Public routes
+router.get('/', tempController);
+router.get('/:id', tempController);
 
-// Protected routes - Admin only
+// Protected routes (admin only)
+router.post('/', protect, authorize('admin'), tempController);
+router.put('/:id', protect, authorize('admin'), tempController);
 router.delete('/:id', protect, authorize('admin'), tempController);
 
 module.exports = router; 

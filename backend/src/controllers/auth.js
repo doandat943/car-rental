@@ -8,7 +8,7 @@ const { User } = require('../models');
  */
 exports.register = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, phoneNumber } = req.body;
+    const { name, email, password, phone } = req.body;
     
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -21,21 +21,16 @@ exports.register = async (req, res) => {
     
     // Create new user
     const user = new User({
-      firstName,
-      lastName,
+      name,
       email,
       password,
-      phoneNumber
+      phone
     });
     
     await user.save();
     
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRATION }
-    );
+    // Generate JWT token using the model method
+    const token = user.getSignedJwtToken();
     
     res.status(201).json({
       success: true,
@@ -43,8 +38,7 @@ exports.register = async (req, res) => {
       token,
       user: {
         id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
         email: user.email,
         role: user.role
       }
@@ -67,30 +61,34 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) {
+    // Check if email and password provided
+    if (!email || !password) {
       return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password'
+      });
+    }
+    
+    // Find user by email and include the password field
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
     
-    // Check if password is correct
-    const isMatch = await user.comparePassword(password);
+    // Check if password is correct using the model method
+    const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
     
     // Generate JWT token
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRATION }
-    );
+    const token = user.getSignedJwtToken();
     
     res.status(200).json({
       success: true,
@@ -98,8 +96,7 @@ exports.login = async (req, res) => {
       token,
       user: {
         id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
         email: user.email,
         role: user.role
       }
@@ -120,7 +117,7 @@ exports.login = async (req, res) => {
  */
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id);
     
     if (!user) {
       return res.status(404).json({
