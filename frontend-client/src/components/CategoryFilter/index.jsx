@@ -1,6 +1,9 @@
 import React from 'react';
 
 const CategoryFilter = ({ categories = [], selectedCategory, onSelectCategory }) => {
+  // Đảm bảo categories là một mảng
+  const categoriesList = Array.isArray(categories) ? categories : [];
+  
   return (
     <div className="container py-10">
       <div className="flex flex-wrap items-center gap-4">
@@ -15,12 +18,12 @@ const CategoryFilter = ({ categories = [], selectedCategory, onSelectCategory })
           All Cars
         </button>
         
-        {categories.map((category) => (
+        {categoriesList.map((category) => (
           <button
-            key={category.id}
-            onClick={() => onSelectCategory(category.id)}
+            key={category.id || category._id}
+            onClick={() => onSelectCategory(category.id || category._id)}
             className={`category-btn ${
-              selectedCategory === category.id
+              selectedCategory === (category.id || category._id)
                 ? 'category-btn-active'
                 : 'category-btn-inactive'
             }`}

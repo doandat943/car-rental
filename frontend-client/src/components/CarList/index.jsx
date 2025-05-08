@@ -3,11 +3,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const CarCard = ({ car }) => {
+  // Xử lý các trường dữ liệu có thể khác nhau giữa API và mock data
+  const carId = car._id || car.id;
+  const carImage = car.images?.[0] || car.image || "/placeholder-car.jpg";
+  const carPrice = car.price?.daily || car.price || 0;
+  const carSeats = car.specifications?.seats || 5;
+  const carTransmission = car.specifications?.transmission || 'Automatic';
+  
   return (
     <div className="card car-card hover:shadow-lg transition-shadow duration-300">
       <div className="car-card-image">
         <Image 
-          src={car.image || "/placeholder-car.jpg"} 
+          src={carImage} 
           alt={car.name}
           fill
           className="object-cover"
@@ -17,7 +24,7 @@ const CarCard = ({ car }) => {
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-bold text-lg">{car.name}</h3>
           <span className="car-card-price">
-            ${car.price?.daily}/day
+            ${carPrice}/day
           </span>
         </div>
         <p className="text-sm text-secondary mb-3">
@@ -29,18 +36,18 @@ const CarCard = ({ car }) => {
             <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
               <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
             </svg>
-            {car.specifications?.seats || 5} seats
+            {carSeats} seats
           </div>
           <div className="car-card-feature">
             <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
               <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd"></path>
             </svg>
-            {car.specifications?.transmission || 'Automatic'}
+            {carTransmission}
           </div>
         </div>
         
         <Link 
-          href={`/car/${car.id}`} 
+          href={`/car/${carId}`} 
           className="btn btn-primary w-full text-center mt-auto"
         >
           View Details
@@ -51,7 +58,10 @@ const CarCard = ({ car }) => {
 };
 
 const CarList = ({ cars = [], title = "Featured Cars" }) => {
-  if (!cars.length) {
+  // Đảm bảo cars là một mảng
+  const carsList = Array.isArray(cars) ? cars : [];
+  
+  if (!carsList.length) {
     return (
       <div className="container py-16">
         <h2 className="text-3xl font-bold mb-8">{title}</h2>
@@ -66,8 +76,8 @@ const CarList = ({ cars = [], title = "Featured Cars" }) => {
     <div className="container py-16">
       <h2 className="text-3xl font-bold mb-8">{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {cars.map((car) => (
-          <CarCard key={car.id} car={car} />
+        {carsList.map((car) => (
+          <CarCard key={car._id || car.id || Math.random()} car={car} />
         ))}
       </div>
     </div>

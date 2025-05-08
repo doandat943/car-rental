@@ -1,19 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middlewares/auth');
-
-// Tạm thời sử dụng controller giả để tránh lỗi
-const tempController = (req, res) => {
-  res.status(200).json({ message: 'This endpoint is under development' });
-};
+const categoryController = require('../controllers/category');
 
 // Public routes
-router.get('/', tempController);
-router.get('/:id', tempController);
+router.get('/', categoryController.getCategories);
+router.get('/:id', categoryController.getCategoryById);
 
 // Protected routes (admin only)
-router.post('/', protect, authorize('admin'), tempController);
-router.put('/:id', protect, authorize('admin'), tempController);
-router.delete('/:id', protect, authorize('admin'), tempController);
+router.post('/', protect, authorize('admin'), categoryController.createCategory);
+router.put('/:id', protect, authorize('admin'), categoryController.updateCategory);
+router.delete('/:id', protect, authorize('admin'), categoryController.deleteCategory);
 
 module.exports = router; 

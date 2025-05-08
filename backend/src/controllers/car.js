@@ -19,6 +19,8 @@ exports.getCars = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
     
+    console.log('Query params:', req.query);
+    
     // Build filter object
     const filter = {};
     
@@ -33,9 +35,13 @@ exports.getCars = async (req, res) => {
       if (maxPrice) filter['price.daily'].$lte = Number(maxPrice);
     }
     
+    console.log('Filter object:', filter);
+    
     // Build sort object
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    
+    console.log('Sort object:', sort);
     
     // Execute query with pagination
     const cars = await Car.find(filter)
@@ -47,16 +53,37 @@ exports.getCars = async (req, res) => {
     // Get total count
     const totalCars = await Car.countDocuments(filter);
     
-    res.status(200).json({
+    console.log('Found cars count:', cars.length);
+    console.log('Total cars in DB matching filter:', totalCars);
+    
+    // Log sample car for debugging
+    if (cars.length > 0) {
+      console.log('Sample car data structure:', 
+        JSON.stringify(cars[0].toObject ? cars[0].toObject() : cars[0], null, 2)
+      );
+    }
+    
+    // Trả về dữ liệu theo format mà frontend mong đợi
+    const responseObj = {
       success: true,
-      data: {
-        cars,
+      data: cars,  // Trả về trực tiếp mảng cars thay vì đặt trong object
+      meta: {
         currentPage: Number(page),
         totalPages: Math.ceil(totalCars / Number(limit)),
-        totalCars
+        totalItems: totalCars
       }
+    };
+    
+    console.log('Response structure:', {
+      success: responseObj.success,
+      dataType: Array.isArray(responseObj.data) ? 'array' : typeof responseObj.data,
+      dataLength: Array.isArray(responseObj.data) ? responseObj.data.length : 'not an array',
+      meta: responseObj.meta
     });
+    
+    res.status(200).json(responseObj);
   } catch (error) {
+    console.error('Error fetching cars:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching cars',

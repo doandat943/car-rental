@@ -58,15 +58,65 @@ export const authAPI = {
 
 // Cars API
 export const carsAPI = {
-  getAllCars: (params) => api.get('/cars', { params }),
-  getCarById: (id) => api.get(`/cars/${id}`),
-  checkAvailability: (carId, dates) => api.post(`/cars/${carId}/check-availability`, dates),
+  getAllCars: async (params) => {
+    try {
+      console.log('Fetching cars with params:', params);
+      const response = await api.get('/cars', { params });
+      console.log('Raw cars API response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error fetching cars:', error);
+      throw error;
+    }
+  },
+  getCarById: async (id) => {
+    try {
+      console.log('Fetching car with ID:', id);
+      const response = await api.get(`/cars/${id}`);
+      console.log('Raw car details API response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error fetching car details:', error);
+      throw error;
+    }
+  },
+  checkAvailability: async (carId, dates) => {
+    try {
+      console.log('Checking availability for car ID:', carId, 'with dates:', dates);
+      const response = await api.post(`/cars/${carId}/check-availability`, dates);
+      console.log('Raw availability API response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error checking car availability:', error);
+      throw error;
+    }
+  },
 };
 
 // Categories API
 export const categoriesAPI = {
-  getAllCategories: () => api.get('/categories'),
-  getCategoryById: (id) => api.get(`/categories/${id}`),
+  getAllCategories: async () => {
+    try {
+      console.log('Fetching all categories');
+      const response = await api.get('/categories');
+      console.log('Raw categories API response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  },
+  getCategoryById: async (id) => {
+    try {
+      console.log('Fetching category with ID:', id);
+      const response = await api.get(`/categories/${id}`);
+      console.log('Raw category details API response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error fetching category details:', error);
+      throw error;
+    }
+  },
 };
 
 // Bookings API
