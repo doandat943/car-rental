@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const path = require('path');
+const fs = require('fs');
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -12,8 +13,37 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/car-re
 // Import models
 const Car = require('./models/car');
 const Category = require('./models/category');
-const User = require('./models/User');
+const User = require('./models/user');
 const Booking = require('./models/booking');
+
+// Import utility functions
+let uploadHelper;
+try {
+  uploadHelper = require('./utils/upload-helper');
+} catch (error) {
+  console.warn('Upload helper not found, asset copying will be limited:', error.message);
+  // Create minimal implementations if the module is not found
+  uploadHelper = {
+    ensureUploadDir: (type) => {
+      const dir = path.join(__dirname, 'public/uploads', type);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      return dir;
+    },
+    createPlaceholderFile: (type, filename, content) => {
+      const dir = path.join(__dirname, 'public/uploads', type);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      const filePath = path.join(dir, filename);
+      if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, content);
+      }
+      return `/uploads/${type}/${filename}`;
+    }
+  };
+}
 
 // Dữ liệu mẫu cho Categories
 const categories = [
@@ -232,141 +262,145 @@ async function hashPassword(password) {
   return await bcrypt.hash(password, salt);
 }
 
-// Hàm kết nối đến MongoDB và import dữ liệu
+// Thực hiện seeding tất cả các dữ liệu
 async function seedDatabase() {
   try {
-    // Kết nối đến MongoDB
-    await mongoose.connect(MONGODB_URI);
-    console.log('Connected to MongoDB successfully');
-    console.log('Using database:', MONGODB_URI);
+    // Kết nối đến cơ sở dữ liệu
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    
+    // Xóa toàn bộ dữ liệu cũ
+    await Promise.all([
+      Category.deleteMany({}),
+      Car.deleteMany({}),
+      User.deleteMany({}),
+      Booking.deleteMany({})
+    ]);
 
-    // Xóa dữ liệu cũ (nếu có)
-    await Category.deleteMany({});
-    await Car.deleteMany({});
-    await User.deleteMany({});
-    await Booking.deleteMany({});
-    console.log('Old data deleted');
-
-    // Import Categories
-    console.log('Importing categories...');
-    console.log('Categories data:', JSON.stringify(categories, null, 2));
+    // Thêm categories mới
     const createdCategories = await Category.insertMany(categories);
-    console.log(`${createdCategories.length} categories imported`);
-    console.log('First category ID:', createdCategories[0]._id);
+    console.log(`${createdCategories.length} categories added`);
 
-    // Cập nhật category cho cars
-    console.log('Updating car categories...');
-    for (let i = 0; i < cars.length; i++) {
-      // Gán category cho từng loại xe
-      if (i < 2) {
-        cars[i].category = createdCategories[0]._id; // Sedan
-      } else if (i === 2) {
-        cars[i].category = createdCategories[3]._id; // Electric
-      } else if (i === 3) {
-        cars[i].category = createdCategories[1]._id; // SUV
-      } else {
-        cars[i].category = createdCategories[2]._id; // Sports Car
-      }
-    }
+    // Map category ID vào car data
+    const carData = cars.map(car => {
+      const categoryName = car.categoryName || (car.name.includes('Sedan') ? 'Sedan' : 
+                           car.name.includes('SUV') ? 'SUV' : 
+                           car.name.includes('Tesla') ? 'Electric' : 
+                           car.name.includes('Mustang') ? 'Sports Car' : 'Luxury');
+      
+      const category = createdCategories.find(c => c.name === categoryName);
+      
+      return {
+        ...car,
+        category: category._id
+      };
+    });
 
-    // Import Cars
-    console.log('Importing cars...');
-    console.log('First car data:', JSON.stringify(cars[0], null, 2));
-    const createdCars = await Car.insertMany(cars);
-    console.log(`${createdCars.length} cars imported`);
-    console.log('First car ID:', createdCars[0]._id);
+    // Thêm cars mới
+    const createdCars = await Car.insertMany(carData);
+    console.log(`${createdCars.length} cars added`);
 
-    // Hash passwords và import Users
-    console.log('Importing users...');
-    const usersWithHashedPasswords = await Promise.all(
-      users.map(async (user) => {
-        const hashedPassword = await hashPassword(user.password);
-        return { ...user, password: hashedPassword };
-      })
-    );
+    // Tạo user
+    const userIds = await createUsers();
     
-    console.log('First user data:', JSON.stringify({...usersWithHashedPasswords[0], password: '[HIDDEN]'}, null, 2));
-    const createdUsers = await User.insertMany(usersWithHashedPasswords);
-    console.log(`${createdUsers.length} users imported`);
-    console.log('First user ID:', createdUsers[0]._id);
-
-    // Tạo một số booking mẫu
-    console.log('Creating bookings...');
-    const bookings = [
-      {
-        customer: createdUsers[1]._id, // John Doe
-        car: createdCars[0]._id, // Toyota Camry
-        startDate: new Date('2023-06-10'),
-        endDate: new Date('2023-06-15'),
-        totalAmount: 225, // 5 days * $45
-        status: 'completed',
-        paymentStatus: 'paid',
-        pickupLocation: 'Hà Nội',
-        dropoffLocation: 'Hà Nội'
-      },
-      {
-        customer: createdUsers[2]._id, // Jane Smith
-        car: createdCars[2]._id, // Tesla Model 3
-        startDate: new Date('2023-07-05'),
-        endDate: new Date('2023-07-10'),
-        totalAmount: 400, // 5 days * $80
-        status: 'completed',
-        paymentStatus: 'paid',
-        pickupLocation: 'TP. Hồ Chí Minh',
-        dropoffLocation: 'TP. Hồ Chí Minh'
-      },
-      {
-        customer: createdUsers[1]._id, // John Doe
-        car: createdCars[3]._id, // BMW X5
-        startDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
-        endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
-        totalAmount: 475, // 5 days * $95
-        status: 'confirmed',
-        paymentStatus: 'paid',
-        pickupLocation: 'Đà Nẵng',
-        dropoffLocation: 'Đà Nẵng'
-      }
-    ];
-
-    console.log('First booking data:', JSON.stringify(bookings[0], null, 2));
-    // Import Bookings
-    const createdBookings = await Booking.insertMany(bookings);
-    console.log(`${createdBookings.length} bookings imported`);
-
-    // Kiểm tra dữ liệu đã import
-    const categoriesCount = await Category.countDocuments();
-    const carsCount = await Car.countDocuments();
-    const usersCount = await User.countDocuments();
-    const bookingsCount = await Booking.countDocuments();
-
-    console.log('\nVerifying imported data:');
-    console.log(`- Categories: ${categoriesCount}`);
-    console.log(`- Cars: ${carsCount}`);
-    console.log(`- Users: ${usersCount}`);
-    console.log(`- Bookings: ${bookingsCount}`);
-
-    console.log('\nDatabase seeded successfully!');
-    console.log('\nSample login credentials:');
-    console.log('Admin: admin@example.com / admin123');
-    console.log('User: john.doe@example.com / password123');
-
-  } catch (error) {
-    console.error('Error seeding database:');
-    console.error(error.message);
-    console.error(error.stack);
+    // Tạo bookings
+    await createBookings(userIds, createdCars);
     
-    if (error.errors) {
-      console.error('Validation errors:');
-      for (let field in error.errors) {
-        console.error(`- ${field}: ${error.errors[field].message}`);
-      }
-    }
-  } finally {
+    // Copy assets from frontend to backend
+    await copyPublicAssets();
+
     // Đóng kết nối
     await mongoose.connection.close();
-    console.log('Database connection closed');
+    
+    console.log('Database seeded successfully');
+    
+    return {
+      categories: createdCategories,
+      cars: createdCars
+    };
+  } catch (error) {
+    console.error('Error seeding database:', error);
+    await mongoose.connection.close();
+    throw error;
   }
 }
 
-// Chạy hàm import dữ liệu
-seedDatabase(); 
+// Copy assets from frontend to backend
+const copyPublicAssets = async () => {
+  try {
+    console.log('Setting up asset directories and placeholder files...');
+    
+    // Create sample image content for categories
+    const categoryImages = {
+      'sedan.jpg': 'Sedan category image',
+      'suv.jpg': 'SUV category image',
+      'sports.jpg': 'Sports Car category image',
+      'electric.jpg': 'Electric category image',
+      'luxury.jpg': 'Luxury category image',
+    };
+    
+    // Create sample images for categories
+    Object.entries(categoryImages).forEach(([filename, content]) => {
+      const filePath = uploadHelper.createPlaceholderFile('categories', filename, content);
+      console.log(`Created placeholder file: ${filePath}`);
+    });
+    
+    // Create sample image content for cars
+    const carImages = {
+      'toyota-camry-1.jpg': 'Toyota Camry image 1',
+      'toyota-camry-2.jpg': 'Toyota Camry image 2',
+      'honda-civic-1.jpg': 'Honda Civic image 1',
+      'honda-civic-2.jpg': 'Honda Civic image 2',
+      'bmw-x5-1.jpg': 'BMW X5 image 1',
+      'bmw-x5-2.jpg': 'BMW X5 image 2',
+      'tesla-model3-1.jpg': 'Tesla Model 3 image 1',
+      'tesla-model3-2.jpg': 'Tesla Model 3 image 2',
+      'ford-mustang-1.jpg': 'Ford Mustang image 1',
+      'ford-mustang-2.jpg': 'Ford Mustang image 2',
+    };
+    
+    // Create sample images for cars
+    Object.entries(carImages).forEach(([filename, content]) => {
+      const filePath = uploadHelper.createPlaceholderFile('cars', filename, content);
+      console.log(`Created placeholder file: ${filePath}`);
+    });
+    
+    console.log('Asset setup completed');
+    return true;
+  } catch (error) {
+    console.error('Error setting up assets:', error);
+    return false;
+  }
+};
+
+if (require.main === module) {
+  // Chạy trực tiếp từ dòng lệnh node seed-data.js
+  if (process.argv.includes('--copyAssets')) {
+    // Chỉ chạy hàm copy assets
+    copyPublicAssets()
+      .then(() => {
+        console.log('Assets copied successfully');
+        process.exit(0);
+      })
+      .catch(err => {
+        console.error('Error copying assets:', err);
+        process.exit(1);
+      });
+  } else if (process.argv.includes('--runAll')) {
+    // Chạy tất cả các hàm
+    seedDatabase()
+      .then(() => process.exit(0))
+      .catch(err => {
+        console.error(err);
+        process.exit(1);
+      });
+  } else {
+    console.log('Please specify an operation: --copyAssets or --runAll');
+    process.exit(1);
+  }
+} else {
+  // Export để sử dụng trong module khác
+  module.exports = { seedDatabase, createUsers, createBookings, copyPublicAssets };
+} 
