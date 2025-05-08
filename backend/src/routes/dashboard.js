@@ -16,4 +16,10 @@ router.get('/bookings', dashboardController.getBookingsStats);
 // Get revenue statistics
 router.get('/revenue', dashboardController.getRevenueStats);
 
+// Get top cars (most booked)
+router.get('/top-cars', dashboardController.getTopCars);
+
+// Get cars by status
+router.get('/cars-by-status', dashboardController.getCarsByStatus);
+
 module.exports = router; 

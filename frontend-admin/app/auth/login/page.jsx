@@ -48,6 +48,18 @@ export default function LoginPage() {
       
       // Lưu token vào localStorage đã được xử lý trong API
       
+      // Lưu thông tin người dùng vào localStorage nếu có
+      if (response.data && response.data.user) {
+        localStorage.setItem('admin_user', JSON.stringify(response.data.user));
+      } else {
+        // Nếu không có thông tin người dùng từ API, lưu thông tin mặc định
+        localStorage.setItem('admin_user', JSON.stringify({
+          name: 'Admin User',
+          email: email,
+          role: 'admin'
+        }));
+      }
+      
       // Kiểm tra nếu có redirect trong URL thì chuyển hướng đến đó
       const redirect = searchParams.get('redirect');
       router.push(redirect || '/dashboard');

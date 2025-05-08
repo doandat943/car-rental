@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { 
   Bell, 
@@ -15,17 +16,60 @@ import {
   Settings,
   LogOut
 } from 'lucide-react';
+import { authAPI } from '../../lib/api';
 
 const Header = ({ toggleSidebar, sidebarOpen }) => {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState({
+    name: 'Admin User',
+    email: 'admin@example.com'
+  });
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
+    
+    // Thử lấy thông tin người dùng từ localStorage
+    const getUserInfo = () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const storedUser = localStorage.getItem('admin_user');
+          if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUserInfo({
+              name: parsedUser.name || 'Admin User',
+              email: parsedUser.email || 'admin@example.com'
+            });
+          }
+        } catch (error) {
+          console.error('Error getting user info:', error);
+        }
+      }
+    };
+    
+    getUserInfo();
   }, []);
+
+  // Xử lý đăng xuất
+  const handleLogout = () => {
+    try {
+      authAPI.logout();
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Nếu có lỗi, vẫn cần đảm bảo xóa token và chuyển hướng
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        document.cookie = 'admin_token=; Max-Age=0; path=/; SameSite=Lax';
+      }
+      router.push('/auth/login');
+    }
+  };
 
   // Sample notifications
   const notifications = [
@@ -195,8 +239,8 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
               {dropdownOpen && (
                 <div className="absolute right-0 z-50 mt-2 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-800 dark:divide-gray-600" style={{ minWidth: '200px' }}>
                   <div className="px-4 py-3">
-                    <span className="block text-sm text-gray-900 dark:text-white">Admin User</span>
-                    <span className="block text-sm text-gray-500 truncate dark:text-gray-400">admin@example.com</span>
+                    <span className="block text-sm text-gray-900 dark:text-white">{userInfo.name}</span>
+                    <span className="block text-sm text-gray-500 truncate dark:text-gray-400">{userInfo.email}</span>
                   </div>
                   <ul className="py-2">
                     <li>
@@ -220,7 +264,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                     <li>
                       <button
                         className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
-                        onClick={() => console.log('Logout clicked')}
+                        onClick={handleLogout}
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Sign out

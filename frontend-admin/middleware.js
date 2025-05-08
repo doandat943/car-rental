@@ -6,6 +6,7 @@ const LOGIN_PATH = '/auth/login';
 // Các đường dẫn công khai không cần đăng nhập
 const PUBLIC_PATHS = [
   '/auth/login',
+  '/auth/unauthorized',
   '/auth/forgot-password',
   '/auth/reset-password',
   '/_next',   // Cho phép tài nguyên Next.js
@@ -46,6 +47,6 @@ export function middleware(request) {
 export const config = {
   matcher: [
     // Tất cả các đường dẫn trừ các đường dẫn công khai
-    '/((?!auth/login|auth/forgot-password|auth/reset-password|_next/static|_next/image|favicon.ico|images).*)',
+    '/((?!auth/login|auth/unauthorized|auth/forgot-password|auth/reset-password|_next/static|_next/image|favicon.ico|images).*)',
   ],
 }; 

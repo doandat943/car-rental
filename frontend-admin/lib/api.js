@@ -1,125 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// Kích hoạt chế độ mô phỏng API khi không thể kết nối tới backend
-const MOCK_API_ENABLED = true;
-
-// Import dữ liệu mô phỏng từ seed-data
-import { MOCK_DATA } from './seed-data';
-
-/**
- * Mô phỏng API response dựa trên endpoint
- * @param {string} endpoint - Đường dẫn API
- * @param {Object} options - Tùy chọn fetch
- * @returns {Object} Dữ liệu mô phỏng
- */
-const mockApiResponse = (endpoint, options = {}) => {
-  console.log(`🔶 Using mock API for endpoint: ${endpoint}`);
-  
-  // Mô phỏng độ trễ của API
-  return new Promise(resolve => {
-    setTimeout(() => {
-      // Dashboard stats
-      if (endpoint === '/dashboard/stats') {
-        return resolve({ data: MOCK_DATA.dashboard.stats.data });
-      }
-      
-      // Top cars
-      if (endpoint.includes('/dashboard/top-cars')) {
-        return resolve({ data: MOCK_DATA.dashboard.topCars });
-      }
-      
-      // Revenue chart
-      if (endpoint.includes('/dashboard/revenue')) {
-        // Xử lý tham số period
-        const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
-        const period = urlParams.get('period') || 'month';
-        
-        let data = [...MOCK_DATA.dashboard.revenueChart.data];
-        if (period === 'week') {
-          data = data.slice(0, 4).map((item, index) => ({ day: index + 1, revenue: item.revenue / 4 }));
-        } else if (period === 'year') {
-          data = [
-            { year: 2020, quarter: 1, revenue: 85000 },
-            { year: 2020, quarter: 2, revenue: 92000 },
-            { year: 2020, quarter: 3, revenue: 105000 },
-            { year: 2020, quarter: 4, revenue: 120000 },
-          ];
-        }
-        
-        return resolve({ data: { data } });
-      }
-      
-      // Bookings
-      if (endpoint.startsWith('/bookings')) {
-        if (endpoint === '/bookings' || endpoint.includes('?')) {
-          return resolve({ data: MOCK_DATA.bookings.list });
-        }
-        
-        // Chi tiết booking
-        const bookingId = endpoint.split('/')[2];
-        const booking = MOCK_DATA.bookings.list.data.find(b => b._id == bookingId);
-        
-        if (booking) {
-          return resolve({ data: booking });
-        }
-      }
-      
-      // Cars
-      if (endpoint.startsWith('/cars')) {
-        if (endpoint === '/cars' || endpoint.includes('?')) {
-          return resolve({ data: MOCK_DATA.cars.list });
-        }
-        
-        // Chi tiết xe
-        const carId = endpoint.split('/')[2];
-        const car = MOCK_DATA.cars.list.data.find(c => c._id == carId);
-        
-        if (car) {
-          return resolve({ data: car });
-        }
-        
-        // Reviews của xe
-        if (endpoint.includes('/reviews')) {
-          return resolve({ data: MOCK_DATA.reviews.list });
-        }
-      }
-      
-      // Users
-      if (endpoint.startsWith('/users')) {
-        if (endpoint === '/users' || endpoint.includes('?')) {
-          return resolve({ data: MOCK_DATA.users.list });
-        }
-        
-        // Chi tiết người dùng
-        const userId = endpoint.split('/')[2];
-        const user = MOCK_DATA.users.list.data.find(u => u._id == userId);
-        
-        if (user) {
-          return resolve({ data: user });
-        }
-      }
-      
-      // Categories
-      if (endpoint === '/categories') {
-        return resolve({ data: MOCK_DATA.categories.list });
-      }
-      
-      // Settings
-      if (endpoint === '/settings') {
-        return resolve({ data: MOCK_DATA.settings.data });
-      }
-      
-      // Reviews
-      if (endpoint.startsWith('/reviews')) {
-        return resolve({ data: MOCK_DATA.reviews.list });
-      }
-      
-      // Default response
-      resolve({ data: { message: 'Mock API endpoint không được hỗ trợ', endpoint } });
-    }, 300); // Độ trễ 300ms
-  });
-};
-
 /**
  * Các hàm tiện ích cho việc gọi API
  */
@@ -142,11 +22,6 @@ async function fetchWithAuth(endpoint, options = {}) {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    // Kiểm tra xem có nên sử dụng API mô phỏng không
-    if (MOCK_API_ENABLED) {
-      return mockApiResponse(endpoint, { ...options, headers });
-    }
-
     // Tạo request với headers đã cấu hình
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
@@ -157,10 +32,23 @@ async function fetchWithAuth(endpoint, options = {}) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       
-      // Nếu lỗi không được ủy quyền (401 hoặc 403), chuyển sang API mô phỏng
+      // Xử lý lỗi xác thực (401, 403)
       if (response.status === 401 || response.status === 403 || errorData.error === "Not authorized to access this route") {
-        console.warn('API authorization failed, falling back to mock data');
-        return mockApiResponse(endpoint, options);
+        console.warn('Lỗi xác thực, cần đăng nhập lại');
+        
+        // Xóa token hiện tại nếu không hợp lệ
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+          document.cookie = 'admin_token=; Max-Age=0; path=/; SameSite=Lax';
+          
+          // Chuyển hướng đến trang thông báo lỗi phiên hết hạn
+          if (window.location.pathname !== '/auth/login' && window.location.pathname !== '/auth/unauthorized') {
+            console.log('Chuyển hướng đến trang lỗi xác thực...');
+            window.location.href = '/auth/unauthorized';
+            return new Promise(() => {}); // Pending promise để ngừng thực thi
+          }
+        }
       }
       
       throw new Error(errorData.message || `API Error: ${response.status}`);
@@ -171,13 +59,6 @@ async function fetchWithAuth(endpoint, options = {}) {
     return { data, status: response.status };
   } catch (error) {
     console.error(`API Error: ${error.message}`);
-    
-    // Nếu có lỗi kết nối, chuyển sang API mô phỏng
-    if (MOCK_API_ENABLED) {
-      console.warn('API connection failed, falling back to mock data');
-      return mockApiResponse(endpoint, options);
-    }
-    
     throw error;
   }
 }
@@ -439,55 +320,13 @@ export const authAPI = {
   // Đăng nhập
   login: async (email, password) => {
     try {
-      // Kiểm tra endpoint có tồn tại không
-      const testResponse = await fetch(`${API_BASE_URL}/auth/login`, { method: 'HEAD' })
-        .catch(() => ({ ok: false }));
-      
-      let response;
-      
-      if (testResponse.ok) {
-        // Nếu endpoint tồn tại, sử dụng API thực
-        response = await fetch(`${API_BASE_URL}/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        });
-      } else {
-        // Mô phỏng đăng nhập thành công nếu API không tồn tại
-        console.log('API đăng nhập không tồn tại, sử dụng chế độ mô phỏng');
-        
-        // Kiểm tra thông tin đăng nhập mặc định
-        if (email === 'admin@example.com' && password === 'admin123') {
-          // Mô phỏng response thành công
-          const mockData = {
-            success: true,
-            token: 'mock-jwt-token-for-testing-purposes-only',
-            user: {
-              id: '1',
-              name: 'Admin',
-              email: 'admin@example.com',
-              role: 'admin',
-            }
-          };
-          
-          // Lưu token vào localStorage và cookie
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('admin_token', mockData.token);
-            
-            // Lưu token vào cookie để middleware có thể đọc
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + 7);
-            document.cookie = `admin_token=${mockData.token}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
-          }
-          
-          return { data: mockData, status: 200 };
-        } else {
-          // Mô phỏng đăng nhập thất bại
-          throw new Error('Email hoặc mật khẩu không chính xác');
-        }
-      }
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
       // Xử lý response từ API thực
       if (!response.ok) {
@@ -519,6 +358,7 @@ export const authAPI = {
     if (typeof window !== 'undefined') {
       // Xóa token khỏi localStorage
       localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
       
       // Xóa token khỏi cookie
       document.cookie = 'admin_token=; Max-Age=0; path=/; SameSite=Lax';
@@ -527,14 +367,49 @@ export const authAPI = {
 
   // Lấy thông tin người dùng hiện tại
   getProfile: async () => {
-    return fetchWithAuth('/auth/admin/profile', {
+    return fetchWithAuth('/auth/profile', {
       method: 'GET',
     });
   },
 
+  // Lấy thông tin người dùng hiện tại (từ API hoặc localStorage)
+  getCurrentUser: async () => {
+    try {
+      // Thử lấy từ API trước
+      const { data } = await fetchWithAuth('/auth/profile', {
+        method: 'GET',
+      });
+      
+      // Lưu vào localStorage để sử dụng sau này
+      if (data && data.user) {
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
+        return { user: data.user };
+      }
+      
+      return { user: null };
+    } catch (error) {
+      console.warn('Không thể lấy thông tin người dùng từ API, đang sử dụng localStorage');
+      
+      // Nếu không lấy được từ API, thử lấy từ localStorage
+      if (typeof window !== 'undefined') {
+        const storedUser = localStorage.getItem('admin_user');
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            return { user };
+          } catch (e) {
+            console.error('Lỗi parse JSON user từ localStorage:', e);
+          }
+        }
+      }
+      
+      return { user: null };
+    }
+  },
+
   // Đổi mật khẩu
   changePassword: async (currentPassword, newPassword) => {
-    return fetchWithAuth('/auth/admin/change-password', {
+    return fetchWithAuth('/auth/change-password', {
       method: 'PUT',
       body: JSON.stringify({ currentPassword, newPassword }),
     });
@@ -547,27 +422,9 @@ export const authAPI = {
 export const dashboardAPI = {
   // Lấy thống kê tổng quan
   getStats: async () => {
-    try {
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch dashboard stats');
-      }
-      
-      return { data };
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
-    }
+    return fetchWithAuth('/dashboard/stats', {
+      method: 'GET',
+    });
   },
 
   // Lấy biểu đồ doanh thu
@@ -586,27 +443,9 @@ export const dashboardAPI = {
 
   // Lấy top xe được đặt nhiều nhất
   getTopCars: async (limit = 5) => {
-    try {
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch(`${API_BASE_URL}/dashboard/top-cars?limit=${limit}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch top cars');
-      }
-      
-      return { data };
-    } catch (error) {
-      console.error('Error fetching top cars:', error);
-      throw error;
-    }
+    return fetchWithAuth(`/dashboard/top-cars?limit=${limit}`, {
+      method: 'GET',
+    });
   },
 
   // Lấy thông tin về xe theo trạng thái
@@ -676,4 +515,22 @@ export const reviewsAPI = {
       method: 'DELETE',
     });
   },
-}; 
+};
+
+/**
+ * Axios API client (giữ lại từ src/lib/api.js để tham khảo trong tương lai)
+ * 
+ * Example usage:
+ * import axios from 'axios';
+ * 
+ * // API base URL from environment variables
+ * const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+ * 
+ * // Create axios instance with default configs
+ * const api = axios.create({
+ *   baseURL: API_URL,
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *   },
+ * });
+ */ 

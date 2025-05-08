@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
-const connectDB = require('./config/db');
+const { connectDB } = require('./config/db');
 const errorHandler = require('./middlewares/error');
 
 // Load env vars from root .env file

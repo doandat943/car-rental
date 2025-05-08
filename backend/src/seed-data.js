@@ -15,6 +15,8 @@ const Car = require('./models/car');
 const Category = require('./models/category');
 const User = require('./models/user');
 const Booking = require('./models/booking');
+const Review = require('./models/review');
+const Setting = require('./models/setting');
 
 // Import utility functions
 let uploadHelper;
@@ -45,7 +47,7 @@ try {
   };
 }
 
-// Dữ liệu mẫu cho Categories
+// Dữ liệu mẫu cho Categories (mở rộng từ dữ liệu mô phỏng)
 const categories = [
   {
     name: 'Sedan',
@@ -71,10 +73,15 @@ const categories = [
     name: 'Luxury',
     description: 'Xe sang trọng đẳng cấp',
     image: '/uploads/categories/luxury.jpg'
+  },
+  {
+    name: 'Compact',
+    description: 'Xe nhỏ gọn, tiết kiệm nhiên liệu',
+    image: '/uploads/categories/compact.jpg'
   }
 ];
 
-// Dữ liệu mẫu cho Cars
+// Dữ liệu mẫu cho Cars (kết hợp từ dữ liệu mô phỏng)
 const cars = [
   {
     name: 'Toyota Camry',
@@ -83,9 +90,9 @@ const cars = [
     year: 2023,
     description: 'Sedan hạng D sang trọng và tiết kiệm nhiên liệu',
     price: {
-      daily: 45,
-      weekly: 280,
-      monthly: 1100
+      daily: 85,
+      weekly: 500,
+      monthly: 1800
     },
     specifications: {
       seats: 5,
@@ -101,10 +108,11 @@ const cars = [
       'Cruise Control',
       'Keyless Entry'
     ],
-    images: ['/uploads/cars/toyota-camry-1.jpg', '/uploads/cars/toyota-camry-2.jpg'],
+    images: ['https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb', '/uploads/cars/toyota-camry-1.jpg'],
     availability: true,
-    rating: 4.7,
-    reviewCount: 12
+    rating: 4.3,
+    reviewCount: 19,
+    categoryName: 'Sedan'
   },
   {
     name: 'Honda Civic',
@@ -113,9 +121,9 @@ const cars = [
     year: 2023,
     description: 'Sedan hạng C thể thao và tiết kiệm',
     price: {
-      daily: 40,
-      weekly: 250,
-      monthly: 950
+      daily: 75,
+      weekly: 450,
+      monthly: 1600
     },
     specifications: {
       seats: 5,
@@ -131,10 +139,11 @@ const cars = [
       'Android Auto',
       'Lane Keeping Assist'
     ],
-    images: ['/uploads/cars/honda-civic-1.jpg', '/uploads/cars/honda-civic-2.jpg'],
+    images: ['https://images.unsplash.com/photo-1590347607479-9d7c3a26e5e9', '/uploads/cars/honda-civic-1.jpg'],
     availability: true,
     rating: 4.5,
-    reviewCount: 8
+    reviewCount: 15,
+    categoryName: 'Compact'
   },
   {
     name: 'Tesla Model 3',
@@ -143,9 +152,9 @@ const cars = [
     year: 2023,
     description: 'Xe điện hiệu suất cao với công nghệ tự lái',
     price: {
-      daily: 80,
-      weekly: 500,
-      monthly: 1800
+      daily: 120,
+      weekly: 720,
+      monthly: 2600
     },
     specifications: {
       seats: 5,
@@ -159,12 +168,14 @@ const cars = [
       'Premium Sound System',
       'Glass Roof',
       'Supercharging',
-      'Over-the-air Updates'
+      'Over-the-air Updates',
+      'Heated Seats'
     ],
-    images: ['/uploads/cars/tesla-model3-1.jpg', '/uploads/cars/tesla-model3-2.jpg'],
+    images: ['https://images.unsplash.com/photo-1561580125-028ee3bd62eb', '/uploads/cars/tesla-model3-1.jpg'],
     availability: true,
-    rating: 4.9,
-    reviewCount: 15
+    rating: 4.8,
+    reviewCount: 28,
+    categoryName: 'Electric'
   },
   {
     name: 'BMW X5',
@@ -173,9 +184,9 @@ const cars = [
     year: 2023,
     description: 'SUV hạng sang với hiệu suất vượt trội',
     price: {
-      daily: 95,
-      weekly: 600,
-      monthly: 2200
+      daily: 175,
+      weekly: 1050,
+      monthly: 3800
     },
     specifications: {
       seats: 7,
@@ -189,12 +200,15 @@ const cars = [
       'Leather Seats',
       'Wireless Charging',
       'Harman Kardon Sound',
-      'Gesture Control'
+      'Gesture Control',
+      'Navigation',
+      'Panoramic Roof'
     ],
-    images: ['/uploads/cars/bmw-x5-1.jpg', '/uploads/cars/bmw-x5-2.jpg'],
+    images: ['https://images.unsplash.com/photo-1556189250-72ba954cfc2b', '/uploads/cars/bmw-x5-1.jpg'],
     availability: true,
-    rating: 4.8,
-    reviewCount: 10
+    rating: 4.6,
+    reviewCount: 22,
+    categoryName: 'SUV'
   },
   {
     name: 'Ford Mustang',
@@ -203,9 +217,9 @@ const cars = [
     year: 2023,
     description: 'Xe thể thao biểu tượng của Mỹ',
     price: {
-      daily: 85,
-      weekly: 550,
-      monthly: 2000
+      daily: 150,
+      weekly: 900,
+      monthly: 3200
     },
     specifications: {
       seats: 4,
@@ -223,8 +237,72 @@ const cars = [
     ],
     images: ['/uploads/cars/ford-mustang-1.jpg', '/uploads/cars/ford-mustang-2.jpg'],
     availability: true,
+    rating: 4.5,
+    reviewCount: 12,
+    categoryName: 'Sports Car'
+  },
+  {
+    name: 'Mercedes C-Class',
+    brand: 'Mercedes-Benz',
+    model: 'C300',
+    year: 2022,
+    description: 'Sedan hạng sang với nội thất và công nghệ đẳng cấp',
+    price: {
+      daily: 150,
+      weekly: 900,
+      monthly: 3500
+    },
+    specifications: {
+      seats: 5,
+      doors: 4,
+      transmission: 'Automatic',
+      fuelType: 'Petrol',
+      engineCapacity: '2.0L'
+    },
+    features: [
+      'Leather Seats',
+      'Heated Seats',
+      'Premium Sound',
+      'MBUX Infotainment',
+      'LED Headlights',
+      'Ambient Lighting'
+    ],
+    images: ['https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8'],
+    availability: true,
+    rating: 4.7,
+    reviewCount: 17,
+    categoryName: 'Luxury'
+  },
+  {
+    name: 'Audi A4',
+    brand: 'Audi',
+    model: 'A4',
+    year: 2022,
+    description: 'Sedan hạng sang với thiết kế tinh tế và công nghệ hiện đại',
+    price: {
+      daily: 145,
+      weekly: 870,
+      monthly: 3400
+    },
+    specifications: {
+      seats: 5,
+      doors: 4,
+      transmission: 'Automatic',
+      fuelType: 'Petrol',
+      engineCapacity: '2.0L'
+    },
+    features: [
+      'Quattro AWD',
+      'Virtual Cockpit',
+      'Bang & Olufsen Sound',
+      'Leather Interior',
+      'MMI Touch Interface'
+    ],
+    images: ['https://images.unsplash.com/photo-1581650107963-3e8c1f48241b'],
+    availability: true,
     rating: 4.6,
-    reviewCount: 7
+    reviewCount: 14,
+    categoryName: 'Luxury'
   }
 ];
 
@@ -239,22 +317,153 @@ const users = [
     avatar: '/uploads/users/admin.jpg'
   },
   {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
+    name: 'John Smith',
+    email: 'john.smith@example.com',
     phone: '0912345678',
     password: 'password123',
     role: 'user',
     avatar: '/uploads/users/john.jpg'
   },
   {
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
+    name: 'Jane Cooper',
+    email: 'jane.cooper@example.com',
     phone: '0923456789',
     password: 'password456',
     role: 'user',
     avatar: '/uploads/users/jane.jpg'
+  },
+  {
+    name: 'Robert Johnson',
+    email: 'robert.johnson@example.com',
+    phone: '0934567890',
+    password: 'password789',
+    role: 'user',
+    status: 'inactive',
+    avatar: '/uploads/users/robert.jpg'
+  },
+  {
+    name: 'Emily Davis',
+    email: 'emily.davis@example.com',
+    phone: '0945678901',
+    password: 'emilypwd',
+    role: 'user',
+    avatar: '/uploads/users/emily.jpg'
+  },
+  {
+    name: 'Michael Wilson',
+    email: 'michael.wilson@example.com',
+    phone: '0956789012',
+    password: 'michaelpwd',
+    role: 'user',
+    avatar: '/uploads/users/michael.jpg'
   }
 ];
+
+// Dữ liệu mẫu cho đánh giá
+const reviewsData = [
+  {
+    user: 'John Smith',
+    car: 'Tesla Model 3',
+    rating: 5,
+    comment: 'Amazing car, very smooth drive!',
+    createdAt: '2023-05-03'
+  },
+  {
+    user: 'Jane Cooper',
+    car: 'BMW X5',
+    rating: 4,
+    comment: 'Great SUV, lots of space but high fuel consumption',
+    createdAt: '2023-04-30'
+  },
+  {
+    user: 'Robert Johnson',
+    car: 'Mercedes C-Class',
+    rating: 5,
+    comment: 'Luxury at its finest, worth every penny',
+    createdAt: '2023-04-26'
+  },
+  {
+    user: 'Emily Davis',
+    car: 'Toyota Camry',
+    rating: 4,
+    comment: 'Reliable and comfortable, great for family trips',
+    createdAt: '2023-05-05'
+  },
+  {
+    user: 'Michael Wilson',
+    car: 'Honda Civic',
+    rating: 4,
+    comment: 'Fuel efficient and easy to drive',
+    createdAt: '2023-05-04'
+  }
+];
+
+// Dữ liệu mẫu cho đặt xe
+const bookingsData = [
+  {
+    user: 'John Smith',
+    car: 'Tesla Model 3',
+    status: 'confirmed',
+    startDate: '2023-05-01',
+    endDate: '2023-05-03',
+    totalAmount: 360,
+    createdAt: '2023-04-28'
+  },
+  {
+    user: 'Jane Cooper',
+    car: 'BMW X5',
+    status: 'completed',
+    startDate: '2023-04-28',
+    endDate: '2023-04-30',
+    totalAmount: 525,
+    createdAt: '2023-04-26'
+  },
+  {
+    user: 'Robert Johnson',
+    car: 'Mercedes C-Class',
+    status: 'cancelled',
+    startDate: '2023-04-25',
+    endDate: '2023-04-26',
+    totalAmount: 150,
+    createdAt: '2023-04-23'
+  },
+  {
+    user: 'Emily Davis',
+    car: 'Toyota Camry',
+    status: 'pending',
+    startDate: '2023-05-03',
+    endDate: '2023-05-05',
+    totalAmount: 170,
+    createdAt: '2023-05-01'
+  },
+  {
+    user: 'Michael Wilson',
+    car: 'Audi A4',
+    status: 'confirmed',
+    startDate: '2023-05-02',
+    endDate: '2023-05-04',
+    totalAmount: 435,
+    createdAt: '2023-04-30'
+  }
+];
+
+// Dữ liệu mẫu cho cài đặt hệ thống
+const settingsData = {
+  siteName: 'Car Rental Service',
+  contactEmail: 'support@carrental.example.com',
+  contactPhone: '+1 (555) 123-4567',
+  address: '123 Rental Street, City, Country',
+  currencySymbol: '$',
+  taxRate: 10,
+  bookingFee: 5,
+  maintenanceFee: 25,
+  depositPercentage: 15,
+  minimumBookingHours: 4,
+  maximumBookingDays: 30,
+  cancellationPolicy: 'Free cancellation up to 24 hours before pickup',
+  termsAndConditions: 'Standard terms and conditions for vehicle rental',
+  privacyPolicy: 'Privacy policy for user data and booking information',
+};
 
 // Hàm để hash password trước khi lưu vào database
 async function hashPassword(password) {
@@ -276,7 +485,9 @@ async function seedDatabase() {
       Category.deleteMany({}),
       Car.deleteMany({}),
       User.deleteMany({}),
-      Booking.deleteMany({})
+      Booking.deleteMany({}),
+      Review.deleteMany({}),
+      Setting.deleteMany({})
     ]);
 
     // Thêm categories mới
@@ -303,11 +514,21 @@ async function seedDatabase() {
     console.log(`${createdCars.length} cars added`);
 
     // Tạo user
-    const userIds = await createUsers();
+    const createdUsers = await createUsers();
+    console.log(`${createdUsers.length} users added`);
     
     // Tạo bookings
-    await createBookings(userIds, createdCars);
+    const createdBookings = await createBookings(createdUsers, createdCars);
+    console.log(`${createdBookings.length} bookings added`);
     
+    // Tạo reviews
+    const createdReviews = await createReviews(createdUsers, createdCars);
+    console.log(`${createdReviews.length} reviews added`);
+    
+    // Tạo settings
+    const createdSettings = await createSettings();
+    console.log('System settings added');
+
     // Copy assets from frontend to backend
     await copyPublicAssets();
 
@@ -318,13 +539,89 @@ async function seedDatabase() {
     
     return {
       categories: createdCategories,
-      cars: createdCars
+      cars: createdCars,
+      users: createdUsers,
+      bookings: createdBookings,
+      reviews: createdReviews,
+      settings: createdSettings
     };
   } catch (error) {
     console.error('Error seeding database:', error);
     await mongoose.connection.close();
     throw error;
   }
+}
+
+// Tạo users
+async function createUsers() {
+  const hashedUsers = await Promise.all(
+    users.map(async (user) => {
+      const hashedPassword = await hashPassword(user.password);
+      return {
+        ...user,
+        password: hashedPassword,
+      };
+    })
+  );
+
+  const createdUsers = await User.insertMany(hashedUsers);
+  return createdUsers;
+}
+
+// Tạo bookings
+async function createBookings(users, cars) {
+  const bookings = await Promise.all(
+    bookingsData.map(async (booking) => {
+      const user = users.find(u => u.name === booking.user);
+      const car = cars.find(c => c.name === booking.car);
+      
+      if (!user || !car) return null;
+      
+      return {
+        user: user._id,
+        car: car._id,
+        status: booking.status,
+        startDate: new Date(booking.startDate),
+        endDate: new Date(booking.endDate),
+        totalAmount: booking.totalAmount,
+        createdAt: new Date(booking.createdAt)
+      };
+    })
+  );
+
+  const validBookings = bookings.filter(b => b !== null);
+  const createdBookings = await Booking.insertMany(validBookings);
+  return createdBookings;
+}
+
+// Tạo reviews
+async function createReviews(users, cars) {
+  const reviews = await Promise.all(
+    reviewsData.map(async (review) => {
+      const user = users.find(u => u.name === review.user);
+      const car = cars.find(c => c.name === review.car);
+      
+      if (!user || !car) return null;
+      
+      return {
+        user: user._id,
+        car: car._id,
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: new Date(review.createdAt)
+      };
+    })
+  );
+
+  const validReviews = reviews.filter(r => r !== null);
+  const createdReviews = await Review.insertMany(validReviews);
+  return createdReviews;
+}
+
+// Tạo settings
+async function createSettings() {
+  const createdSettings = await Setting.create(settingsData);
+  return createdSettings;
 }
 
 // Copy assets from frontend to backend
@@ -339,6 +636,7 @@ const copyPublicAssets = async () => {
       'sports.jpg': 'Sports Car category image',
       'electric.jpg': 'Electric category image',
       'luxury.jpg': 'Luxury category image',
+      'compact.jpg': 'Compact category image',
     };
     
     // Create sample images for categories
@@ -367,11 +665,61 @@ const copyPublicAssets = async () => {
       console.log(`Created placeholder file: ${filePath}`);
     });
     
+    // Create sample image content for users
+    const userImages = {
+      'admin.jpg': 'Admin user image',
+      'john.jpg': 'John user image',
+      'jane.jpg': 'Jane user image',
+      'robert.jpg': 'Robert user image',
+      'emily.jpg': 'Emily user image',
+      'michael.jpg': 'Michael user image',
+    };
+    
+    // Create sample images for users
+    Object.entries(userImages).forEach(([filename, content]) => {
+      const filePath = uploadHelper.createPlaceholderFile('users', filename, content);
+      console.log(`Created placeholder file: ${filePath}`);
+    });
+    
     console.log('Asset setup completed');
     return true;
   } catch (error) {
     console.error('Error setting up assets:', error);
     return false;
+  }
+};
+
+/**
+ * Dữ liệu mô phỏng (mock data) cho API responses
+ * Giữ lại để tham khảo và dễ dàng cập nhật nếu cần
+ */
+const MOCK_DATA = {
+  dashboard: {
+    stats: {
+      data: {
+        totalUsers: 2856,
+        totalCars: 48,
+        totalBookings: 142,
+        totalRevenue: 35800,
+        userGrowth: 12.5,
+        carGrowth: -3.2,
+        bookingGrowth: 8.7,
+        revenueGrowth: 14.2,
+        userTrend: [12, 15, 18, 14, 22, 25, 28, 26, 30],
+        carTrend: [24, 25, 20, 18, 15, 16, 15, 14, 13],
+        bookingTrend: [45, 50, 55, 60, 58, 65, 70, 68, 78],
+        revenueTrend: [15000, 16000, 18000, 17000, 19000, 22000, 25000, 28000, 30000],
+      }
+    },
+    topCars: {
+      data: [
+        { _id: 1, name: 'Tesla Model 3', bookingsCount: 28, totalRevenue: 3360, averageRating: 4.8 },
+        { _id: 2, name: 'BMW X5', bookingsCount: 22, totalRevenue: 7700, averageRating: 4.6 },
+        { _id: 3, name: 'Toyota Camry', bookingsCount: 19, totalRevenue: 1615, averageRating: 4.3 },
+        { _id: 4, name: 'Mercedes C-Class', bookingsCount: 17, totalRevenue: 3400, averageRating: 4.7 },
+        { _id: 5, name: 'Honda Civic', bookingsCount: 15, totalRevenue: 1275, averageRating: 4.5 },
+      ]
+    }
   }
 };
 
@@ -402,5 +750,12 @@ if (require.main === module) {
   }
 } else {
   // Export để sử dụng trong module khác
-  module.exports = { seedDatabase, createUsers, createBookings, copyPublicAssets };
+  module.exports = {
+    seedDatabase,
+    copyPublicAssets,
+    categories,
+    cars,
+    users,
+    MOCK_DATA
+  };
 } 
