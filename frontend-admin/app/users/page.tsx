@@ -7,11 +7,6 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import UserFormModal from "./UserFormModal";
 import DeleteUserModal from "./DeleteUserModal";
 
-export const metadata = {
-  title: "User Management | Car Rental Admin",
-  description: "Manage users in the car rental system",
-};
-
 interface User {
   id: number;
   firstName: string;
@@ -21,7 +16,7 @@ interface User {
   role: string;
   status: string;
   address: string;
-  profileImage: string;
+  profileImage?: string;
   createdAt: string;
 }
 
@@ -234,7 +229,7 @@ const UsersPage = () => {
               <div className="flex items-center gap-3 p-2.5 xl:p-5 col-span-2">
                 <div className="flex-shrink-0">
                   <Image
-                    src={user.profileImage}
+                    src={user.profileImage || "/images/user/user-01.png"}
                     alt="User"
                     width={48}
                     height={48}

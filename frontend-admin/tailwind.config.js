@@ -1,0 +1,83 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  darkMode: "class",
+  theme: {
+    container: {
+      center: true,
+      padding: "1rem",
+    },
+    screens: {
+      xs: "450px",
+      sm: "575px",
+      md: "768px",
+      lg: "992px",
+      xl: "1200px",
+      "2xl": "1400px",
+    },
+    extend: {
+      colors: {
+        current: "currentColor",
+        transparent: "transparent",
+        white: "#FFFFFF",
+        black: "#121212",
+        dark: "#1D2144",
+        primary: "#3C50E0",
+        secondary: "#80CAEE",
+        meta: "#33C758",
+        "body-color": "#64748B",
+        "body-color-dark": "#ACB5C3",
+        stroke: "#E5E7EB",
+        strokedark: "#2E3A47",
+        form: "#EEEFF5",
+        "form-dark": "#24303F",
+        "bg-color": "#F8FAFC",
+        "bg-color-dark": "#1A222C",
+        "box-color": "#FFFFFF",
+        "box-color-dark": "#24303F",
+        warning: "#FFA70B",
+        danger: "#FF4A55",
+        success: "#13795B",
+        whiten: "#F8FAFC",
+        info: "#3C50E0",
+      },
+      fontFamily: {
+        satoshi: ['Inter', 'sans-serif'],
+      },
+      fontSize: {
+        'tiny': '.875rem',
+        'base': '1rem',
+        'lg': '1.125rem',
+        'xl': '1.25rem',
+        '2xl': '1.5rem',
+        '3xl': '1.875rem',
+        '4xl': '2.25rem',
+        '5xl': '3rem',
+        '6xl': '4rem',
+        '7xl': '5rem',
+      },
+      boxShadow: {
+        1: "0px 1px 3px 0px rgba(166, 175, 195, 0.40)",
+        2: "0px 5px 12px 0px rgba(0, 0, 0, 0.10)",
+        3: "0px 4px 12px 0px rgba(0, 0, 0, 0.08)",
+        card: "0px 0px 20px rgba(0, 0, 0, 0.05)",
+      },
+      dropShadow: {
+        1: "0px 1px 0px #E2E8F0",
+        2: "0px 1px 4px rgba(0, 0, 0, 0.12)",
+      },
+      keyframes: {
+        spinner: {
+          "0%, 100%": { opacity: 1 },
+          "50%": { opacity: 0.5 },
+        },
+      },
+    },
+  },
+  plugins: [],
+}; 

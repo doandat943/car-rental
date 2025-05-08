@@ -3,21 +3,126 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 248, 250, 252;
+  --primary: #0ea5e9;
+  --primary-dark: #0369a1;
+  --primary-light: #bae6fd;
+  --secondary: #64748b;
+  --dark: #1e293b;
+  --light: #f8fafc;
+  --gray: #cbd5e1;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+@layer base {
+  body {
+    @apply bg-light text-dark;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+  
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+  
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+  
+  h5 {
+    @apply text-lg md:text-xl;
+  }
+  
+  p {
+    @apply text-base leading-relaxed;
+  }
+  
+  a {
+    @apply text-primary hover:text-primary-dark transition duration-300;
+  }
 }
 
-/* Custom Utility Classes */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-md font-medium transition-all duration-300;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-dark;
+  }
+  
+  .btn-outline {
+    @apply border border-white text-white hover:bg-white/20;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-white hover:bg-opacity-90;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-card overflow-hidden;
+  }
+  
+  .form-control {
+    @apply w-full px-4 py-3 rounded-md border border-gray focus:border-primary focus:outline-none transition duration-300;
+  }
+  
+  /* Banner component specific styles */
+  .banner {
+    @apply relative w-full bg-gradient-to-r from-primary to-primary-dark text-white overflow-hidden;
+    height: 500px;
+  }
+  
+  /* Category filter styling */
+  .category-btn {
+    @apply px-6 py-3 rounded-full transition-all text-center;
+  }
+  
+  .category-btn-active {
+    @apply bg-primary text-white;
+  }
+  
+  .category-btn-inactive {
+    @apply bg-gray/20 hover:bg-primary/20 text-dark;
+  }
+  
+  /* Car card specific styles */
+  .car-card {
+    @apply flex flex-col h-full;
+  }
+  
+  .car-card-image {
+    @apply relative h-48 w-full mb-4 rounded-t-lg overflow-hidden;
+  }
+  
+  .car-card-content {
+    @apply p-4 flex flex-col flex-grow;
+  }
+  
+  .car-card-price {
+    @apply bg-primary-light text-primary-dark text-xs font-semibold px-2 py-1 rounded;
+  }
+  
+  .car-card-feature {
+    @apply flex items-center mr-4 text-sm text-secondary;
+  }
+}
+
+/* Custom classes */
 .container {
-  width: 100%;
-  max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
+  @apply px-4 mx-auto max-w-7xl;
 }
 
 /* Custom Animations */
@@ -31,18 +136,6 @@ body {
 }
 
 /* Custom Component Styles */
-.btn-primary {
-  @apply bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition;
-}
-
-.btn-secondary {
-  @apply bg-white text-blue-600 border border-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition;
-}
-
-.card {
-  @apply bg-white rounded-lg shadow-md overflow-hidden;
-}
-
 .form-input {
   @apply w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500;
 }

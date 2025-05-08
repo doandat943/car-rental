@@ -14,7 +14,7 @@ const api = axios.create({
 // Request interceptor for adding auth token
 api.interceptors.request.use(
   (config) => {
-    // Get token from localStorage or cookies
+    // Get token from localStorage - only in browser environment
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     
     // If token exists, add to headers
@@ -51,27 +51,16 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  login: (email, password) => api.post('/auth/login', { email, password }),
+  login: (credentials) => api.post('/auth/login', credentials),
   register: (userData) => api.post('/auth/register', userData),
-  getProfile: () => api.get('/auth/me'),
-  updateProfile: (userData) => api.put('/auth/me', userData),
-  changePassword: (data) => api.put('/auth/change-password', data),
+  getProfile: () => api.get('/auth/profile'),
 };
 
 // Cars API
 export const carsAPI = {
   getAllCars: (params) => api.get('/cars', { params }),
   getCarById: (id) => api.get(`/cars/${id}`),
-  checkAvailability: (carId, startDate, endDate) => 
-    api.get(`/cars/${carId}/availability`, { params: { startDate, endDate }}),
-};
-
-// Bookings API
-export const bookingsAPI = {
-  getUserBookings: () => api.get('/bookings/me'),
-  getBookingById: (id) => api.get(`/bookings/${id}`),
-  createBooking: (bookingData) => api.post('/bookings', bookingData),
-  cancelBooking: (id) => api.put(`/bookings/${id}/cancel`),
+  checkAvailability: (carId, dates) => api.post(`/cars/${carId}/check-availability`, dates),
 };
 
 // Categories API
@@ -80,11 +69,19 @@ export const categoriesAPI = {
   getCategoryById: (id) => api.get(`/categories/${id}`),
 };
 
+// Bookings API
+export const bookingsAPI = {
+  getUserBookings: () => api.get('/bookings/user'),
+  getBookingById: (id) => api.get(`/bookings/${id}`),
+  createBooking: (bookingData) => api.post('/bookings', bookingData),
+  cancelBooking: (id) => api.patch(`/bookings/${id}/cancel`),
+};
+
 // Website info API
 export const websiteAPI = {
   getInfo: () => api.get('/website/info'),
   getContact: () => api.get('/website/contact'),
-  sendContactMessage: (data) => api.post('/website/contact', data),
+  sendContactForm: (data) => api.post('/website/contact', data),
 };
 
 export default api; 

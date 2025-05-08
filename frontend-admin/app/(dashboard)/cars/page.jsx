@@ -6,44 +6,76 @@ import Image from "next/image";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import CarFormModal from "./CarFormModal";
 import DeleteCarModal from "./DeleteCarModal";
-import { carsAPI, categoriesAPI, uploadAPI } from "@/lib/api";
 
 const CarsPage = () => {
-  const [cars, setCars] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [cars, setCars] = useState([
+    {
+      id: 1,
+      name: "Toyota Camry",
+      brand: "Toyota",
+      model: "Camry",
+      year: 2022,
+      category: "Sedan",
+      specifications: {
+        transmission: "Automatic",
+        fuelType: "Gasoline",
+        seats: 5
+      },
+      price: { daily: 55 },
+      availability: true,
+      image: "/images/cars/toyota-camry.png",
+      createdAt: "2023-01-10",
+    },
+    {
+      id: 2,
+      name: "Honda Civic",
+      brand: "Honda",
+      model: "Civic",
+      year: 2023,
+      category: "Sedan",
+      specifications: {
+        transmission: "Automatic",
+        fuelType: "Gasoline",
+        seats: 5
+      },
+      price: { daily: 45 },
+      availability: true,
+      image: "/images/cars/honda-civic.png",
+      createdAt: "2023-02-15",
+    },
+    {
+      id: 3,
+      name: "Ford Mustang",
+      brand: "Ford",
+      model: "Mustang",
+      year: 2022,
+      category: "Sports",
+      specifications: {
+        transmission: "Automatic",
+        fuelType: "Gasoline",
+        seats: 4
+      },
+      price: { daily: 75 },
+      availability: false,
+      image: "/images/cars/ford-mustang.png",
+      createdAt: "2023-03-05",
+    },
+  ]);
+  
+  const [categories, setCategories] = useState([
+    { id: 1, name: "Sedan" },
+    { id: 2, name: "SUV" },
+    { id: 3, name: "Sports" },
+    { id: 4, name: "Electric" }
+  ]);
+  
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentCar, setCurrentCar] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
-
-  // Fetch cars and categories data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch cars and categories in parallel
-        const [carsResponse, categoriesResponse] = await Promise.all([
-          carsAPI.getAllCars(),
-          categoriesAPI.getAllCategories()
-        ]);
-        
-        setCars(carsResponse.data.data || []);
-        setCategories(categoriesResponse.data.data || []);
-        
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to load cars. Please try again later.");
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   // Handle opening form for creating a new car
   const handleCreateCar = () => {
@@ -62,23 +94,19 @@ const CarsPage = () => {
   // Handle saving a car (create or update)
   const handleSaveCar = async (carData) => {
     try {
-      if (carData.imageFile) {
-        // Handle image upload if there's a new image
-        const uploadResponse = await uploadAPI.uploadImage(carData.imageFile, 'cars');
-        carData.image = uploadResponse.data.imageUrl;
-        delete carData.imageFile; // Remove the file object before sending to API
-      }
-      
       if (isEditMode && currentCar) {
         // Update existing car
-        const response = await carsAPI.updateCar(currentCar.id, carData);
         setCars((prevCars) =>
-          prevCars.map((car) => (car.id === currentCar.id ? response.data.data : car))
+          prevCars.map((car) => (car.id === currentCar.id ? {...carData, id: car.id} : car))
         );
       } else {
         // Create new car
-        const response = await carsAPI.createCar(carData);
-        setCars((prevCars) => [...prevCars, response.data.data]);
+        const newCar = {
+          ...carData,
+          id: Math.max(...cars.map(car => car.id), 0) + 1,
+          createdAt: new Date().toISOString().split('T')[0]
+        };
+        setCars((prevCars) => [...prevCars, newCar]);
       }
       
       setIsFormModalOpen(false);
@@ -98,7 +126,6 @@ const CarsPage = () => {
   const handleDeleteCar = async () => {
     if (currentCar) {
       try {
-        await carsAPI.deleteCar(currentCar.id);
         setCars((prevCars) =>
           prevCars.filter((car) => car.id !== currentCar.id)
         );

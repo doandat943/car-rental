@@ -5,12 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import BookingDetailsModal from "./BookingDetailsModal";
-import { Metadata } from "next";
-
-export const metadata = {
-  title: "Booking Management | Car Rental Admin",
-  description: "Manage bookings in the car rental system",
-};
 
 interface Customer {
   id: number;
