@@ -42,7 +42,7 @@ const Sidebar = () => {
     { name: 'Quản lý xe', icon: <Car className="h-5 w-5" />, path: '/dashboard/cars' },
     { name: 'Đơn đặt xe', icon: <CalendarCheck className="h-5 w-5" />, path: '/dashboard/bookings' },
     { name: 'Người dùng', icon: <Users className="h-5 w-5" />, path: '/dashboard/users' },
-    { name: 'Thống kê & Báo cáo', icon: <BarChart3 className="h-5 w-5" />, path: '/dashboard/reports' }
+    { name: 'Thống kê & Báo cáo', icon: <BarChart3 className="h-5 w-5" />, path: '/dashboard/statistics' }
   ];
 
   const pagesItems = [

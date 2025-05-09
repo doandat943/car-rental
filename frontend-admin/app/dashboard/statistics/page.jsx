@@ -17,27 +17,181 @@ import {
   Clock
 } from 'lucide-react';
 import Link from 'next/link';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line, Bar, Pie } from 'react-chartjs-2';
 
-// Mock imports for charts
-const LineChart = ({ data, options }) => (
-  <div className="w-full h-64 bg-gray-50 border rounded-md p-4 flex items-center justify-center">
-    <div className="text-center">
-      <BarChart2 className="h-12 w-12 text-blue-500 mx-auto mb-2" />
-      <p className="text-gray-600 text-sm">Biểu đồ dữ liệu (Demo)</p>
-      <p className="text-gray-500 text-xs mt-1">Chart.js sẽ hiển thị ở đây</p>
-    </div>
-  </div>
+// Đăng ký các thành phần của Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
 );
 
-const PieChartComponent = ({ data, options }) => (
-  <div className="w-full h-64 bg-gray-50 border rounded-md p-4 flex items-center justify-center">
-    <div className="text-center">
-      <PieChart className="h-12 w-12 text-blue-500 mx-auto mb-2" />
-      <p className="text-gray-600 text-sm">Biểu đồ tròn (Demo)</p>
-      <p className="text-gray-500 text-xs mt-1">Chart.js sẽ hiển thị ở đây</p>
+// Theme colors
+const colors = {
+  blue: {
+    primary: 'rgb(53, 162, 235)',
+    light: 'rgba(53, 162, 235, 0.5)',
+  },
+  green: {
+    primary: 'rgb(75, 192, 192)',
+    light: 'rgba(75, 192, 192, 0.5)',
+  },
+  yellow: {
+    primary: 'rgb(255, 206, 86)',
+    light: 'rgba(255, 206, 86, 0.5)',
+  },
+  red: {
+    primary: 'rgb(255, 99, 132)',
+    light: 'rgba(255, 99, 132, 0.5)',
+  },
+  purple: {
+    primary: 'rgb(153, 102, 255)',
+    light: 'rgba(153, 102, 255, 0.5)',
+  },
+  orange: {
+    primary: 'rgb(255, 159, 64)',
+    light: 'rgba(255, 159, 64, 0.5)',
+  }
+};
+
+// Thiết lập theme cho Chart.js
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'top',
+      labels: {
+        font: {
+          size: 12
+        },
+        color: function(context) {
+          // Hỗ trợ dark mode
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgb(229, 231, 235)' 
+            : 'rgb(55, 65, 81)';
+        }
+      }
+    },
+    tooltip: {
+      mode: 'index',
+      intersect: false,
+    },
+  },
+  scales: {
+    x: {
+      grid: {
+        color: function(context) {
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgba(229, 231, 235, 0.1)' 
+            : 'rgba(55, 65, 81, 0.1)';
+        }
+      },
+      ticks: {
+        color: function(context) {
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgb(229, 231, 235)' 
+            : 'rgb(55, 65, 81)';
+        }
+      }
+    },
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: function(context) {
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgba(229, 231, 235, 0.1)' 
+            : 'rgba(55, 65, 81, 0.1)';
+        }
+      },
+      ticks: {
+        color: function(context) {
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgb(229, 231, 235)' 
+            : 'rgb(55, 65, 81)';
+        }
+      }
+    },
+  },
+};
+
+// Thay thế các mock components bằng components thực
+const LineChart = ({ data, options = {} }) => {
+  const mergedOptions = {
+    ...chartOptions,
+    ...options,
+  };
+  
+  return (
+    <div className="w-full h-64">
+      <Line data={data} options={mergedOptions} />
     </div>
-  </div>
-);
+  );
+};
+
+const BarChart = ({ data, options = {} }) => {
+  const mergedOptions = {
+    ...chartOptions,
+    ...options,
+  };
+  
+  return (
+    <div className="w-full h-64">
+      <Bar data={data} options={mergedOptions} />
+    </div>
+  );
+};
+
+const PieChartComponent = ({ data, options = {} }) => {
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: {
+          font: {
+            size: 12
+          },
+          color: function(context) {
+            return document.documentElement.classList.contains('dark') 
+              ? 'rgb(229, 231, 235)' 
+              : 'rgb(55, 65, 81)';
+          }
+        }
+      }
+    }
+  };
+  
+  const mergedOptions = {
+    ...pieOptions,
+    ...options,
+  };
+  
+  return (
+    <div className="w-full h-64">
+      <Pie data={data} options={mergedOptions} />
+    </div>
+  );
+};
 
 export default function StatisticsPage() {
   const [loading, setLoading] = useState(true);
@@ -69,6 +223,37 @@ export default function StatisticsPage() {
   const [timeFrame, setTimeFrame] = useState('month');
 
   useEffect(() => {
+    // Thêm event listener để tự động cập nhật chart khi chuyển dark/light mode
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.attributeName === 'class' &&
+          mutation.target === document.documentElement &&
+          ChartJS.instances
+        ) {
+          // Cập nhật lại tất cả biểu đồ
+          Object.values(ChartJS.instances).forEach(chart => {
+            chart.update();
+          });
+        }
+      });
+    });
+
+    // Bắt đầu quan sát
+    if (typeof document !== 'undefined') {
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    }
+
+    // Dọn dẹp khi component unmount
+    return () => {
+      observer?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     fetchDashboardData();
   }, [timeFrame]);
 
@@ -77,9 +262,25 @@ export default function StatisticsPage() {
       setLoading(true);
       setError('');
       
-      // In a real implementation, fetch all the data from backend
-      // For demo purposes, we'll generate mock data
-      await generateMockData();
+      // Thử gọi API thực tế trước
+      let statsData;
+      try {
+        const response = await dashboardAPI.getStatistics({ timeFrame });
+        statsData = response.data;
+        
+        // Cập nhật dữ liệu từ API
+        setStats(statsData.overview);
+        setRevenueData(statsData.revenueChart);
+        setBookingsData(statsData.bookingsChart);
+        setCarStatusData(statsData.carStatusChart);
+        setTopCars(statsData.topCars);
+        setRecentBookings(statsData.recentBookings);
+        
+      } catch (apiError) {
+        console.warn('Không thể lấy dữ liệu từ API, sử dụng dữ liệu giả:', apiError);
+        // Nếu API thất bại, sử dụng dữ liệu giả
+        await generateMockData();
+      }
       
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
@@ -115,43 +316,73 @@ export default function StatisticsPage() {
     else if (timeFrame === 'month') labels = weeks;
     else labels = days;
     
+    const getRandomRevenueData = () => {
+      return Array.from({ length: labels.length }, () => Math.floor(Math.random() * 100000000) + 20000000);
+    };
+
+    const getRandomBookingData = () => {
+      return Array.from({ length: labels.length }, () => Math.floor(Math.random() * 30) + 5);
+    };
+    
+    // Tạo dữ liệu doanh thu
     const mockRevenueData = {
       labels,
       datasets: [
         {
           label: 'Doanh thu',
-          data: Array.from({ length: labels.length }, () => Math.floor(Math.random() * 100000000) + 20000000)
+          data: getRandomRevenueData(),
+          borderColor: colors.blue.primary,
+          backgroundColor: colors.blue.light,
+          tension: 0.3
         }
       ]
     };
     
-    // Generate bookings chart data
+    // Tạo dữ liệu lượt đặt xe
     const mockBookingsData = {
       labels,
       datasets: [
         {
           label: 'Số lượng đặt xe',
-          data: Array.from({ length: labels.length }, () => Math.floor(Math.random() * 30) + 5)
+          data: getRandomBookingData(),
+          borderColor: colors.green.primary,
+          backgroundColor: colors.green.light,
+          tension: 0.3
         }
       ]
     };
     
-    // Generate car status data
+    // Tạo dữ liệu trạng thái xe
     const mockCarStatusData = {
       labels: ['Có sẵn', 'Đang thuê', 'Bảo trì', 'Không hoạt động'],
       datasets: [
         {
-          data: [32, 8, 2, 0]
+          label: 'Trạng thái xe',
+          data: [32, 8, 2, 0],
+          backgroundColor: [
+            colors.green.light,
+            colors.blue.light,
+            colors.yellow.light,
+            colors.red.light,
+          ],
+          borderColor: [
+            colors.green.primary,
+            colors.blue.primary,
+            colors.yellow.primary,
+            colors.red.primary,
+          ],
+          borderWidth: 1
         }
       ]
     };
     
     // Generate top cars
     const mockTopCars = [];
-    for (let i = 1; i <= 5; i++) {
+    const carNames = ['Toyota Fortuner', 'Honda CRV', 'Kia Seltos', 'VinFast Lux A', 'Mazda CX-5'];
+    for (let i = 0; i < 5; i++) {
       mockTopCars.push({
-        _id: `car-${i}`,
-        name: `${i === 1 ? 'Toyota Fortuner' : i === 2 ? 'Honda CRV' : i === 3 ? 'Kia Seltos' : i === 4 ? 'VinFast Lux A' : 'Mazda CX-5'}`,
+        _id: `car-${i+1}`,
+        name: carNames[i],
         bookingsCount: Math.floor(Math.random() * 30) + 10,
         revenue: (Math.floor(Math.random() * 100) + 50) * 1000000,
         utilization: Math.floor(Math.random() * 40) + 60 // percentage
@@ -173,7 +404,7 @@ export default function StatisticsPage() {
           name: `Khách hàng ${i}`
         },
         car: {
-          name: `${i === 1 ? 'Toyota Fortuner' : i === 2 ? 'Honda CRV' : i === 3 ? 'Kia Seltos' : i === 4 ? 'VinFast Lux A' : 'Mazda CX-5'}`
+          name: carNames[i-1]
         },
         totalAmount: (Math.floor(Math.random() * 5) + 1) * 1000000,
         status: statuses[Math.floor(Math.random() * statuses.length)],
@@ -196,8 +427,21 @@ export default function StatisticsPage() {
     return new Intl.NumberFormat('vi-VN', { 
       style: 'currency', 
       currency: 'VND',
-      minimumFractionDigits: 0 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value);
+  };
+
+  const formatCurrencyCompact = (value) => {
+    // Định dạng dạng gọn, ví dụ: 1.2 tỷ, 5.6 triệu
+    if (value >= 1000000000) {
+      return `${(value / 1000000000).toFixed(1)} tỷ`;
+    } else if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)} triệu`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}k`;
+    }
+    return value.toString();
   };
 
   const formatDate = (dateString) => {
@@ -208,15 +452,15 @@ export default function StatisticsPage() {
   const getStatusClass = (status) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
       case 'confirmed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
       case 'completed':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
     }
   };
 
@@ -416,7 +660,7 @@ export default function StatisticsPage() {
               </thead>
               <tbody>
                 {topCars.map((car, index) => (
-                  <tr key={car._id} className={`bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${index % 2 === 0 ? '' : ''}`}>
+                  <tr key={car._id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       <Link href={`/dashboard/cars/${car._id}`} className="hover:text-blue-600 dark:hover:text-blue-400">
                         {car.name}

@@ -417,43 +417,68 @@ export const authAPI = {
 };
 
 /**
- * APIs thống kê
+ * APIs quản lý dashboard và thống kê
  */
 export const dashboardAPI = {
-  // Lấy thống kê tổng quan
-  getStats: async () => {
-    return fetchWithAuth('/dashboard/stats', {
+  // Lấy dữ liệu thống kê tổng quan
+  getStatistics: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    // Thêm các tham số
+    if (params.timeFrame) queryParams.append('timeFrame', params.timeFrame);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    
+    return fetchWithAuth(`/dashboard/statistics${queryString}`, {
       method: 'GET',
     });
   },
 
-  // Lấy biểu đồ doanh thu
-  getRevenueChart: async (period = 'month') => {
-    return fetchWithAuth(`/dashboard/revenue?period=${period}`, {
+  // Lấy dữ liệu doanh thu theo thời gian
+  getRevenueData: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params.timeFrame) queryParams.append('timeFrame', params.timeFrame);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    
+    return fetchWithAuth(`/dashboard/revenue${queryString}`, {
       method: 'GET',
     });
   },
 
-  // Lấy biểu đồ đặt xe
-  getBookingsChart: async (period = 'month') => {
-    return fetchWithAuth(`/dashboard/bookings?period=${period}`, {
+  // Lấy dữ liệu đặt xe theo thời gian
+  getBookingsData: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params.timeFrame) queryParams.append('timeFrame', params.timeFrame);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    
+    return fetchWithAuth(`/dashboard/bookings${queryString}`, {
       method: 'GET',
     });
   },
-
-  // Lấy top xe được đặt nhiều nhất
+  
+  // Lấy dữ liệu xe hàng đầu
   getTopCars: async (limit = 5) => {
     return fetchWithAuth(`/dashboard/top-cars?limit=${limit}`, {
       method: 'GET',
     });
   },
-
-  // Lấy thông tin về xe theo trạng thái
-  getCarsByStatus: async () => {
-    return fetchWithAuth('/dashboard/cars-by-status', {
+  
+  // Lấy dữ liệu người dùng hàng đầu
+  getTopUsers: async (limit = 5) => {
+    return fetchWithAuth(`/dashboard/top-users?limit=${limit}`, {
       method: 'GET',
     });
-  },
+  }
 };
 
 /**
