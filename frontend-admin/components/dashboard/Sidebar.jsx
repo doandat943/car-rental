@@ -7,17 +7,16 @@ import Image from 'next/image';
 
 // Các icon
 import { 
-  Home, Mail, CheckSquare, 
+  Home, CheckSquare, 
   Shield, AlertTriangle, Settings,
-  ChevronDown, ChevronRight, Package,
+  ChevronDown, ChevronRight, Bell
 } from 'lucide-react';
 
 const Sidebar = () => {
   const pathname = usePathname();
   const [openedSections, setOpenedSections] = useState({
     general: true,
-    pages: true,
-    components: false,
+    pages: true
   });
 
   const toggleSection = (section) => {
@@ -33,25 +32,14 @@ const Sidebar = () => {
   // Define main navigation items
   const generalItems = [
     { name: 'Home', icon: <Home className="h-5 w-5" />, path: '/dashboard' },
-    { name: 'Email', icon: <Mail className="h-5 w-5" />, path: '/dashboard/email' },
     { name: 'Tasks', icon: <CheckSquare className="h-5 w-5" />, path: '/dashboard/tasks', isNew: true },
+    { name: 'Notifications', icon: <Bell className="h-5 w-5" />, path: '/dashboard/notifications' }
   ];
 
   const pagesItems = [
     { name: 'Authentication', icon: <Shield className="h-5 w-5" />, path: '/dashboard/authentication' },
     { name: 'Errors', icon: <AlertTriangle className="h-5 w-5" />, path: '/dashboard/errors' },
     { name: 'Settings', icon: <Settings className="h-5 w-5" />, path: '/dashboard/settings', isNew: true },
-  ];
-
-  // Components list
-  const componentItems = [
-    'Accordion', 'Alert', 'Alert Dialog', 'Aspect Ratio', 'Avatar', 'Badge', 
-    'Breadcrumb', 'Button', 'Calendar', 'Card', 'Carousel', 'Checkbox', 
-    'Collapsible', 'Combobox', 'Command', 'Context Menu', 'Dialog', 
-    'Dropdown Menu', 'Form', 'Hover Card', 'Input', 'Label', 'Menubar', 
-    'Navigation Menu', 'Popover', 'Progress', 'Radio Group', 'Scroll Area', 
-    'Select', 'Separator', 'Sheet', 'Skeleton', 'Slider', 'Switch', 
-    'Table', 'Tabs', 'Textarea', 'Toast', 'Toggle', 'Tooltip'
   ];
 
   return (
@@ -140,41 +128,6 @@ const Sidebar = () => {
                         New
                       </span>
                     )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Components Section */}
-        <div className="mb-4">
-          <button
-            onClick={() => toggleSection('components')}
-            className="flex w-full items-center justify-between rounded-md p-2 text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800"
-          >
-            <span className="text-sm font-medium">Components</span>
-            {openedSections.components ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </button>
-          
-          {openedSections.components && (
-            <ul className="mt-2 space-y-1">
-              {componentItems.map((name) => (
-                <li key={name}>
-                  <Link
-                    href={`/dashboard/components/${name.toLowerCase().replace(/\s+/g, '-')}`}
-                    className={`flex items-center rounded-md px-3 py-2 text-sm ${
-                      isActive(`/dashboard/components/${name.toLowerCase().replace(/\s+/g, '-')}`)
-                        ? 'bg-gray-100 text-blue-600 dark:bg-gray-800 dark:text-blue-400'
-                        : 'text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    <Package className="h-5 w-5" />
-                    <span className="ml-3">{name}</span>
                   </Link>
                 </li>
               ))}
