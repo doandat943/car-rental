@@ -518,6 +518,46 @@ export const reviewsAPI = {
 };
 
 /**
+ * APIs quản lý thông báo
+ */
+export const notificationsAPI = {
+  // Lấy tất cả thông báo
+  getAllNotifications: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.read !== undefined) queryParams.append('read', params.read);
+    
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    
+    return fetchWithAuth(`/notifications${queryString}`, {
+      method: 'GET',
+    });
+  },
+
+  // Đánh dấu thông báo đã đọc
+  markAsRead: async (id) => {
+    return fetchWithAuth(`/notifications/${id}/mark-read`, {
+      method: 'PUT',
+    });
+  },
+
+  // Đánh dấu tất cả thông báo đã đọc
+  markAllAsRead: async () => {
+    return fetchWithAuth('/notifications/mark-all-read', {
+      method: 'PUT',
+    });
+  },
+
+  // Xóa thông báo
+  deleteNotification: async (id) => {
+    return fetchWithAuth(`/notifications/${id}`, {
+      method: 'DELETE',
+    });
+  }
+};
+
+/**
  * Axios API client (giữ lại từ src/lib/api.js để tham khảo trong tương lai)
  * 
  * Example usage:
