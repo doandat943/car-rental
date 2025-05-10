@@ -17,6 +17,8 @@ const User = require('./models/user');
 const Booking = require('./models/booking');
 const Review = require('./models/review');
 const Setting = require('./models/setting');
+const Statistic = require('./models/statistic');
+const Notification = require('./models/notification');
 
 // Import utility functions
 let uploadHelper;
@@ -474,11 +476,11 @@ async function hashPassword(password) {
 // Thực hiện seeding tất cả các dữ liệu
 async function seedDatabase() {
   try {
-    // Kết nối đến cơ sở dữ liệu
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    // Kiểm tra kết nối tới database
+    if (mongoose.connection.readyState !== 1) {
+      console.log('Please connect to MongoDB first');
+      return;
+    }
     
     // Xóa toàn bộ dữ liệu cũ
     await Promise.all([
@@ -487,7 +489,9 @@ async function seedDatabase() {
       User.deleteMany({}),
       Booking.deleteMany({}),
       Review.deleteMany({}),
-      Setting.deleteMany({})
+      Setting.deleteMany({}),
+      Statistic.deleteMany({}),
+      Notification.deleteMany({})
     ]);
 
     // Thêm categories mới
@@ -531,6 +535,12 @@ async function seedDatabase() {
 
     // Copy assets from frontend to backend
     await copyPublicAssets();
+
+    // Tạo thống kê
+    await createStatistics();
+    
+    // Tạo thông báo
+    await createNotifications(createdUsers);
 
     // Đóng kết nối
     await mongoose.connection.close();
@@ -689,6 +699,124 @@ const copyPublicAssets = async () => {
   }
 };
 
+// Tạo thống kê
+async function createStatistics() {
+  console.log('Seeding statistics...');
+  
+  // Clear existing statistics
+  await Statistic.deleteMany({});
+  
+  // Create overview stats
+  const totalUsers = await User.countDocuments();
+  const totalCars = await Car.countDocuments();
+  const totalBookings = await Booking.countDocuments();
+  const pendingBookings = await Booking.countDocuments({ status: 'pending' });
+  const availableCars = await Car.countDocuments({ status: 'available' });
+  
+  // Calculate total revenue from bookings
+  const bookings = await Booking.find();
+  const totalRevenue = bookings.reduce((total, booking) => {
+    return total + (booking.totalAmount || 0);
+  }, 0);
+  
+  // Generate monthly data (mock for last 6 months)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentMonth = new Date().getMonth();
+  
+  const monthlyRevenue = [];
+  const monthlyBookings = [];
+  
+  for (let i = 5; i >= 0; i--) {
+    const monthIndex = (currentMonth - i + 12) % 12;
+    
+    // Random values for demonstration
+    const randomRevenue = 5000 + Math.floor(Math.random() * 15000);
+    const randomBookings = 10 + Math.floor(Math.random() * 40);
+    
+    monthlyRevenue.push({
+      label: months[monthIndex],
+      value: randomRevenue
+    });
+    
+    monthlyBookings.push({
+      label: months[monthIndex],
+      value: randomBookings
+    });
+  }
+  
+  // Car status distribution
+  const carStatus = [
+    { status: 'available', count: availableCars, label: 'Available' },
+    { status: 'maintenance', count: Math.floor(Math.random() * 10), label: 'Maintenance' },
+    { status: 'rented', count: Math.floor(Math.random() * 15), label: 'Rented' }
+  ];
+  
+  // Create statistics document
+  const statistic = new Statistic({
+    overview: {
+      totalRevenue,
+      totalBookings,
+      totalUsers,
+      totalCars,
+      pendingBookings,
+      availableCars,
+      monthlyRevenue: monthlyRevenue[5].value,
+      monthlyBookings: monthlyBookings[5].value
+    },
+    monthlyRevenue,
+    monthlyBookings,
+    carStatus,
+    date: new Date()
+  });
+  
+  await statistic.save();
+  console.log('Statistics created successfully!');
+}
+
+// Tạo dữ liệu thông báo giả
+async function createNotifications(users) {
+  console.log("Creating notifications data...");
+  
+  const notificationTypes = ['booking', 'system', 'user', 'payment'];
+  const notificationActions = ['created', 'updated', 'cancelled', 'completed', 'pending'];
+  const notifications = [];
+  
+  // Tạo thông báo hệ thống (không liên quan đến user cụ thể)
+  for (let i = 0; i < 5; i++) {
+    notifications.push({
+      title: `Thông báo hệ thống #${i+1}`,
+      content: `Nội dung thông báo hệ thống ${i+1} - ${Math.random().toString(36).substring(7)}`,
+      type: 'system',
+      read: Math.random() > 0.5,
+      createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
+    });
+  }
+  
+  // Tạo thông báo cho mỗi user
+  for (const user of users) {
+    const userNotificationCount = Math.floor(Math.random() * 5) + 2;
+    
+    for (let i = 0; i < userNotificationCount; i++) {
+      const type = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
+      const action = notificationActions[Math.floor(Math.random() * notificationActions.length)];
+      
+      notifications.push({
+        user: user._id,
+        title: `Thông báo ${type} ${action}`,
+        content: `Thông báo cho ${user.name} - ${type} đã được ${action} - ${Math.random().toString(36).substring(7)}`,
+        type: type,
+        read: Math.random() > 0.7,
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
+      });
+    }
+  }
+  
+  // Lưu thông báo vào DB
+  await Notification.insertMany(notifications);
+  
+  console.log(`${notifications.length} notifications created successfully!`);
+}
+
 /**
  * Dữ liệu mô phỏng (mock data) cho API responses
  * Giữ lại để tham khảo và dễ dàng cập nhật nếu cần
@@ -756,6 +884,7 @@ if (require.main === module) {
     categories,
     cars,
     users,
-    MOCK_DATA
+    MOCK_DATA,
+    hashPassword
   };
 } 

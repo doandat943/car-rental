@@ -38,15 +38,16 @@ export default function NotificationsPage() {
   }, [page, filter]);
 
   const fetchNotifications = async () => {
-    setLoading(true);
-    setError(null);
-
     try {
+      setLoading(true);
+      setError('');
+      
+      // Build query parameters
       const params = {
         page,
         limit: LIMIT
       };
-
+      
       // Thêm bộ lọc vào params nếu có
       if (filter.read !== 'all') {
         params.read = filter.read === 'read';
@@ -66,75 +67,11 @@ export default function NotificationsPage() {
     } catch (error) {
       console.error('Error fetching notifications:', error);
       setError('Không thể tải thông báo. Vui lòng thử lại sau.');
-      
-      // Sử dụng dữ liệu mẫu khi API lỗi
-      setNotifications(generateMockNotifications());
-      setTotalPages(3);
+      setNotifications([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Tạo dữ liệu mẫu trong trường hợp API lỗi
-  const generateMockNotifications = () => {
-    const mockData = [];
-    const types = ['booking_new', 'booking_canceled', 'booking_completed', 'review_new', 'message_new', 'payment_received'];
-    const now = Date.now();
-    
-    for (let i = 0; i < LIMIT; i++) {
-      const type = types[Math.floor(Math.random() * types.length)];
-      const read = Math.random() > 0.5;
-      const createdAt = new Date(now - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString();
-      
-      let title, message;
-      switch (type) {
-        case 'booking_new':
-          title = 'Yêu cầu đặt xe mới';
-          message = `Khách hàng ${getRandomName()} vừa yêu cầu đặt xe ${getRandomCar()}`;
-          break;
-        case 'booking_canceled':
-          title = 'Đơn đặt xe đã bị hủy';
-          message = `Khách hàng ${getRandomName()} đã hủy đơn đặt xe ${getRandomCar()}`;
-          break;
-        case 'booking_completed':
-          title = 'Đơn đặt xe hoàn thành';
-          message = `Đơn đặt xe ${getRandomCar()} của khách hàng ${getRandomName()} đã hoàn thành`;
-          break;
-        case 'review_new':
-          title = 'Đánh giá mới';
-          message = `Có một đánh giá ${Math.floor(Math.random() * 3) + 3} sao mới đã được gửi cho xe ${getRandomCar()}`;
-          break;
-        case 'message_new':
-          title = 'Tin nhắn mới';
-          message = `Bạn có tin nhắn mới từ khách hàng ${getRandomName()}`;
-          break;
-        case 'payment_received':
-          title = 'Thanh toán thành công';
-          message = `Đã nhận thanh toán ${Math.floor(Math.random() * 300) + 100}$ từ khách hàng ${getRandomName()}`;
-          break;
-      }
-      
-      mockData.push({
-        _id: `mock-${i + 1}`,
-        title,
-        message,
-        type,
-        read,
-        createdAt
-      });
-    }
-    
-    return mockData;
-  };
-  
-  const getRandomName = () => {
-    const names = ['John Doe', 'Jane Smith', 'Mike Johnson', 'Emily Davis', 'David Brown', 'Sarah Wilson'];
-    return names[Math.floor(Math.random() * names.length)];
-  };
-  
-  const getRandomCar = () => {
-    const cars = ['Toyota Camry', 'Honda Civic', 'Tesla Model 3', 'BMW X5', 'Mercedes C-Class', 'Audi A4'];
-    return cars[Math.floor(Math.random() * cars.length)];
   };
 
   // Đánh dấu một thông báo đã đọc

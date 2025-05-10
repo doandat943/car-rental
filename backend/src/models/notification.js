@@ -1,42 +1,32 @@
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false // Cho phép thông báo hệ thống không thuộc về user cụ thể
+  },
   title: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
-  message: {
+  content: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
   type: {
     type: String,
-    required: true,
-    enum: ['booking_new', 'booking_canceled', 'booking_completed', 'review_new', 'message_new', 'payment_received', 'system'],
+    enum: ['booking', 'system', 'user', 'payment'],
     default: 'system'
   },
   read: {
     type: Boolean,
     default: false
   },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  entityId: {
-    type: mongoose.Schema.Types.ObjectId,
-    // Tham chiếu đến booking, review, message, v.v. tùy theo type
-    default: null
-  },
-  metadata: {
-    type: Object,
-    default: {}
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-}, {
-  timestamps: true // Thêm createdAt và updatedAt tự động
 });
 
 // Tạo index để tăng tốc truy vấn

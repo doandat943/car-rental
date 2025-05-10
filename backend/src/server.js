@@ -27,6 +27,13 @@ if (process.env.NODE_ENV === 'development') {
 
 // Import routes
 const setRoutes = require('./routes');
+const users = require('./routes/users');
+const cars = require('./routes/cars');
+const bookings = require('./routes/bookings');
+const reviews = require('./routes/reviews');
+const auth = require('./routes/auth');
+const notifications = require('./routes/notifications');
+const statistics = require('./routes/statistics');
 
 // Connect to MongoDB and initialize database
 (async () => {
@@ -39,6 +46,15 @@ const setRoutes = require('./routes');
     
     // Set routes
     setRoutes(app);
+    
+    // Mount routers
+    app.use('/api/v1/users', users);
+    app.use('/api/v1/cars', cars);
+    app.use('/api/v1/bookings', bookings);
+    app.use('/api/v1/reviews', reviews);
+    app.use('/api/v1/auth', auth);
+    app.use('/api/v1/notifications', notifications);
+    app.use('/api/v1/statistics', statistics);
     
     // Start server
     const PORT = process.env.PORT || 5000;

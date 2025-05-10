@@ -1,7 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 // Kích hoạt chế độ mô phỏng API khi không thể kết nối tới backend
-const MOCK_API_ENABLED = true;
+const MOCK_API_ENABLED = false;
 
 // Import dữ liệu mô phỏng từ seed-data
 import { MOCK_DATA } from './seed-data';
@@ -142,8 +142,8 @@ async function fetchWithAuth(endpoint, options = {}) {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    // Kiểm tra xem có nên sử dụng API mô phỏng không
-    if (MOCK_API_ENABLED) {
+    // Kiểm tra xem có nên sử dụng API mô phỏng không - giữ lại phần này để có thể bật tính năng này trong tương lai nếu cần
+    if (MOCK_API_ENABLED && typeof mockApiResponse === 'function') {
       return mockApiResponse(endpoint, { ...options, headers });
     }
 
@@ -156,13 +156,6 @@ async function fetchWithAuth(endpoint, options = {}) {
     // Kiểm tra lỗi
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      
-      // Nếu lỗi không được ủy quyền (401 hoặc 403), chuyển sang API mô phỏng
-      if (response.status === 401 || response.status === 403 || errorData.error === "Not authorized to access this route") {
-        console.warn('API authorization failed, falling back to mock data');
-        return mockApiResponse(endpoint, options);
-      }
-      
       throw new Error(errorData.message || `API Error: ${response.status}`);
     }
 
@@ -171,13 +164,6 @@ async function fetchWithAuth(endpoint, options = {}) {
     return { data, status: response.status };
   } catch (error) {
     console.error(`API Error: ${error.message}`);
-    
-    // Nếu có lỗi kết nối, chuyển sang API mô phỏng
-    if (MOCK_API_ENABLED) {
-      console.warn('API connection failed, falling back to mock data');
-      return mockApiResponse(endpoint, options);
-    }
-    
     throw error;
   }
 }

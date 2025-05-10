@@ -83,43 +83,38 @@ export default function UsersManagement() {
       
       // API call
       const response = await usersAPI.getAllUsers(params);
-      const { users, pagination } = response.data;
       
-      setUsers(users || []);
-      setTotalPages(pagination?.totalPages || 1);
-      setTotalItems(pagination?.totalItems || 0);
+      // Handle different response formats
+      let usersData = [];
+      let paginationData = { totalPages: 1, totalItems: 0 };
+      
+      if (response.data) {
+        // If response has nested data structure
+        if (response.data.users) {
+          usersData = response.data.users;
+          paginationData = response.data.pagination || paginationData;
+        } else if (Array.isArray(response.data)) {
+          // If response.data is directly the array of users
+          usersData = response.data;
+        }
+      } else if (Array.isArray(response)) {
+        // If response itself is the array of users
+        usersData = response;
+      }
+      
+      setUsers(usersData);
+      setTotalPages(paginationData.totalPages || 1);
+      setTotalItems(paginationData.totalItems || usersData.length);
       
     } catch (err) {
       console.error('Failed to fetch users:', err);
       setError('Không thể tải danh sách người dùng. Vui lòng thử lại sau.');
-      
-      // Generate mock data if API fails
-      generateMockUsers();
+      setUsers([]);
+      setTotalPages(1);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateMockUsers = () => {
-    const roles = ['user', 'admin', 'staff'];
-    const statuses = ['active', 'inactive'];
-    const mockUsers = [];
-    
-    for (let i = 1; i <= 15; i++) {
-      mockUsers.push({
-        _id: `user-${i}`,
-        name: `Người dùng ${i}`,
-        email: `user${i}@example.com`,
-        phone: `09${Math.floor(10000000 + Math.random() * 90000000)}`,
-        role: roles[Math.floor(Math.random() * roles.length)],
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 365) * 24 * 60 * 60 * 1000).toISOString()
-      });
-    }
-    
-    setUsers(mockUsers);
-    setTotalPages(2);
-    setTotalItems(15);
   };
 
   const handlePageChange = (newPage) => {

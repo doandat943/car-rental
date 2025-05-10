@@ -1,67 +1,36 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
 /**
  * Các hàm tiện ích cho việc gọi API
  */
-async function fetchWithAuth(endpoint, options = {}) {
+export const fetchWithAuth = async (url, options = {}) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(options.headers || {})
+  };
+  
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  
   try {
-    // Lấy token từ localStorage (nếu đã đăng nhập)
-    let token = null;
-    if (typeof window !== 'undefined') {
-      token = localStorage.getItem('admin_token');
-    }
-
-    // Thiết lập headers
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
-
-    // Thêm token nếu có
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    // Tạo request với headers đã cấu hình
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(fullUrl, {
       ...options,
-      headers,
+      headers
     });
-
-    // Kiểm tra lỗi
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      
-      // Xử lý lỗi xác thực (401, 403)
-      if (response.status === 401 || response.status === 403 || errorData.error === "Not authorized to access this route") {
-        console.warn('Lỗi xác thực, cần đăng nhập lại');
-        
-        // Xóa token hiện tại nếu không hợp lệ
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('admin_token');
-          localStorage.removeItem('admin_user');
-          document.cookie = 'admin_token=; Max-Age=0; path=/; SameSite=Lax';
-          
-          // Chuyển hướng đến trang thông báo lỗi phiên hết hạn
-          if (window.location.pathname !== '/auth/login' && window.location.pathname !== '/auth/unauthorized') {
-            console.log('Chuyển hướng đến trang lỗi xác thực...');
-            window.location.href = '/auth/unauthorized';
-            return new Promise(() => {}); // Pending promise để ngừng thực thi
-          }
-        }
-      }
-      
-      throw new Error(errorData.message || `API Error: ${response.status}`);
+      throw errorData;
     }
-
-    // Parse JSON response
-    const data = await response.json();
-    return { data, status: response.status };
+    
+    return response.json();
   } catch (error) {
-    console.error(`API Error: ${error.message}`);
+    console.error('API request failed:', error);
     throw error;
   }
-}
+};
 
 /**
  * APIs quản lý xe
@@ -421,19 +390,16 @@ export const authAPI = {
  */
 export const dashboardAPI = {
   // Lấy dữ liệu thống kê tổng quan
-  getStatistics: async (params = {}) => {
-    const queryParams = new URLSearchParams();
-    
-    // Thêm các tham số
-    if (params.timeFrame) queryParams.append('timeFrame', params.timeFrame);
-    if (params.startDate) queryParams.append('startDate', params.startDate);
-    if (params.endDate) queryParams.append('endDate', params.endDate);
-    
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    
-    return fetchWithAuth(`/dashboard/statistics${queryString}`, {
-      method: 'GET',
-    });
+  getStatistics: async () => {
+    try {
+      const { data } = await fetchWithAuth('/statistics', {
+        method: 'GET',
+      });
+      return data;
+    } catch (error) {
+      console.error('Error getting statistics:', error);
+      throw error;
+    }
   },
 
   // Lấy dữ liệu doanh thu theo thời gian
@@ -467,10 +433,16 @@ export const dashboardAPI = {
   },
   
   // Lấy dữ liệu xe hàng đầu
-  getTopCars: async (limit = 5) => {
-    return fetchWithAuth(`/dashboard/top-cars?limit=${limit}`, {
-      method: 'GET',
-    });
+  getTopCars: async () => {
+    try {
+      const { data } = await fetchWithAuth('/statistics/top-cars', {
+        method: 'GET',
+      });
+      return data;
+    } catch (error) {
+      console.error('Error getting top cars:', error);
+      throw error;
+    }
   },
   
   // Lấy dữ liệu người dùng hàng đầu
@@ -478,6 +450,18 @@ export const dashboardAPI = {
     return fetchWithAuth(`/dashboard/top-users?limit=${limit}`, {
       method: 'GET',
     });
+  },
+
+  getRecentBookings: async () => {
+    try {
+      const { data } = await fetchWithAuth('/statistics/recent-bookings', {
+        method: 'GET',
+      });
+      return data;
+    } catch (error) {
+      console.error('Error getting recent bookings:', error);
+      throw error;
+    }
   }
 };
 

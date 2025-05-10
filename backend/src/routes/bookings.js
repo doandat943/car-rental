@@ -1,19 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middlewares/auth');
-
-// Tạm thời sử dụng controller giả để tránh lỗi
-const tempController = (req, res) => {
-  res.status(200).json({ message: 'This endpoint is under development' });
-};
+const bookingController = require('../controllers/booking');
 
 // Protected routes - Authenticated users
-router.get('/', protect, tempController);
-router.get('/:id', protect, tempController);
-router.post('/', protect, tempController);
-router.patch('/:id/status', protect, tempController);
+router.get('/', protect, bookingController.getBookings);
+router.get('/:id', protect, bookingController.getBookingById);
+router.post('/', protect, bookingController.createBooking);
+router.patch('/:id/status', protect, bookingController.updateBookingStatus);
 
 // Protected routes - Admin only
-router.delete('/:id', protect, authorize('admin'), tempController);
+router.delete('/:id', protect, authorize('admin'), bookingController.deleteBooking);
 
 module.exports = router; 

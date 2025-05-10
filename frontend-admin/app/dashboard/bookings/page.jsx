@@ -88,59 +88,38 @@ export default function BookingsManagement() {
       
       // API call
       const response = await bookingsAPI.getAllBookings(params);
-      const { bookings, pagination } = response.data;
       
-      setBookings(bookings || []);
-      setTotalPages(pagination?.totalPages || 1);
-      setTotalItems(pagination?.totalItems || 0);
+      // Handle different response formats
+      let bookingsData = [];
+      let paginationData = { totalPages: 1, totalItems: 0 };
+      
+      if (response.data) {
+        // If response has nested data structure
+        if (response.data.bookings) {
+          bookingsData = response.data.bookings;
+          paginationData = response.data.pagination || paginationData;
+        } else if (Array.isArray(response.data)) {
+          // If response.data is directly the array of bookings
+          bookingsData = response.data;
+        }
+      } else if (Array.isArray(response)) {
+        // If response itself is the array of bookings
+        bookingsData = response;
+      }
+      
+      setBookings(bookingsData);
+      setTotalPages(paginationData.totalPages || 1);
+      setTotalItems(paginationData.totalItems || bookingsData.length);
       
     } catch (err) {
       console.error('Failed to fetch bookings:', err);
       setError('Không thể tải danh sách đặt xe. Vui lòng thử lại sau.');
-      
-      // Generate mock data if API fails
-      generateMockBookings();
+      setBookings([]);
+      setTotalPages(1);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateMockBookings = () => {
-    const statuses = ['pending', 'confirmed', 'cancelled', 'completed'];
-    const mockBookings = [];
-    
-    for (let i = 1; i <= 15; i++) {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() + Math.floor(Math.random() * 30));
-      
-      const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 7) + 1);
-      
-      mockBookings.push({
-        _id: `booking-${i}`,
-        bookingCode: `B${100000 + i}`,
-        user: {
-          _id: `user-${i}`,
-          name: `Khách hàng ${i}`,
-          email: `customer${i}@example.com`,
-          phone: `09${Math.floor(10000000 + Math.random() * 90000000)}`
-        },
-        car: {
-          _id: `car-${i}`,
-          name: `Xe mẫu ${i}`,
-          licensePlate: `51F-${100 + i}.${10 + i}`
-        },
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        totalAmount: Math.floor(50 + Math.random() * 200) * (endDate - startDate) / (1000 * 60 * 60 * 24),
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString()
-      });
-    }
-    
-    setBookings(mockBookings);
-    setTotalPages(2);
-    setTotalItems(15);
   };
 
   const handlePageChange = (newPage) => {

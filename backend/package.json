@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "jest"
+    "test": "jest",
+    "seed": "node src/seed-data-runner.js"
   },
   "author": "",
   "license": "ISC",

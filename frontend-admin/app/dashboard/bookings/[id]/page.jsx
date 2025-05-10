@@ -40,62 +40,19 @@ export default function BookingDetailsPage({ params }) {
       setLoading(true);
       setError('');
       
-      // API call
       const response = await bookingsAPI.getBookingById(bookingId);
-      setBooking(response.data.booking);
       
+      if (response && response.data) {
+        setBooking(response.data);
+      } else {
+        setError('Không tìm thấy thông tin đơn đặt xe.');
+      }
     } catch (err) {
       console.error('Failed to fetch booking details:', err);
       setError('Không thể tải thông tin đơn đặt xe. Vui lòng thử lại sau.');
-      
-      // Generate mock data if API fails
-      generateMockBooking();
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateMockBooking = () => {
-    const statuses = ['pending', 'confirmed', 'cancelled', 'completed'];
-    const mockBooking = {
-      _id: bookingId,
-      bookingCode: `B${100000 + parseInt(bookingId.slice(-4), 16)}`,
-      user: {
-        _id: 'user-123',
-        name: 'Nguyễn Văn A',
-        email: 'nguyenvana@example.com',
-        phone: '0987654321'
-      },
-      car: {
-        _id: 'car-456',
-        name: 'Toyota Fortuner',
-        licensePlate: '51F-123.45',
-        price: {
-          daily: 1200000,
-          weekly: 7000000,
-          monthly: 25000000
-        },
-        category: {
-          name: 'SUV'
-        },
-        images: [
-          { url: 'https://via.placeholder.com/500x300' }
-        ]
-      },
-      startDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-      totalDays: 3,
-      pickupLocation: 'Sân bay Tân Sơn Nhất, TP.HCM',
-      dropoffLocation: 'Sân bay Tân Sơn Nhất, TP.HCM',
-      totalAmount: 3600000,
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      paymentMethod: 'Tiền mặt khi nhận xe',
-      notes: 'Cần có ghế trẻ em và GPS',
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-    };
-    
-    setBooking(mockBooking);
   };
 
   const formatDate = (dateString) => {
