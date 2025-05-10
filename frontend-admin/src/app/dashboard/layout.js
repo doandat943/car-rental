@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import Header from '../../components/dashboard/Header';
-import Sidebar from '../../components/dashboard/Sidebar';
+import Header from '@/components/dashboard/Header';
+import Sidebar from '@/components/dashboard/Sidebar';
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
