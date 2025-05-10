@@ -1,6 +1,5 @@
 import '../styles/globals.css';
 import { Inter } from 'next/font/google';
-import Header from '../components/Header';
 import Providers from './Providers';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -20,8 +19,7 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-screen bg-background`} suppressHydrationWarning>
         <Providers>
           <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1 p-4">
+            <main className="flex-1">
               {children}
             </main>
           </div>
