@@ -32,10 +32,10 @@ const reviewSchema = new mongoose.Schema({
   }
 });
 
-// Đảm bảo người dùng chỉ đánh giá mỗi xe một lần
+// Ensure user can only review each car once
 reviewSchema.index({ user: 1, car: 1 }, { unique: true });
 
-// Cập nhật rating trung bình cho xe
+// Update average rating for car
 reviewSchema.post('save', async function() {
   const Review = this.constructor;
   const Car = mongoose.model('Car');
@@ -58,6 +58,7 @@ reviewSchema.post('save', async function() {
   }
 });
 
-const Review = mongoose.model('Review', reviewSchema);
+// Create model with the schema
+const Review = mongoose.models.Review || mongoose.model('Review', reviewSchema);
 
 module.exports = Review; 

@@ -3,30 +3,30 @@ const router = express.Router();
 const { protect } = require('../middlewares/auth');
 const notificationController = require('../controllers/notification');
 
-// Middleware bắt buộc xác thực cho tất cả routes
+// Authentication middleware required for all routes
 router.use(protect);
 
-// Lấy tất cả thông báo của người dùng hiện tại
+// Get all notifications for the current user
 router.get('/', notificationController.getNotifications);
 
 // Count unread notifications
 router.get('/unread-count', notificationController.getUnreadCount);
 
-// Đánh dấu một thông báo đã đọc
+// Mark a notification as read
 router.patch('/:id/mark-read', notificationController.markAsRead);
 
-// Đánh dấu tất cả thông báo đã đọc
+// Mark all notifications as read
 router.patch('/mark-all-read', notificationController.markAllAsRead);
 
-// Xóa một thông báo
+// Delete a notification
 router.delete('/:id', notificationController.deleteNotification);
 
-// Route chỉ dùng cho phát triển
+// Routes only used for development
 if (process.env.NODE_ENV === 'development') {
-  // Tạo thông báo kiểm thử
+  // Create test notification
   router.post('/test', notificationController.createTestNotification);
   
-  // Tạo nhiều thông báo kiểm thử
+  // Create multiple test notifications
   router.post('/test-multiple', notificationController.createMultipleTestNotifications);
 }
 

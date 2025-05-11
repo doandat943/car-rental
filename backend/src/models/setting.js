@@ -63,10 +63,13 @@ const SettingSchema = new mongoose.Schema({
   }
 });
 
-// Middleware tự động cập nhật thời gian khi thay đổi
+// Middleware to automatically update timestamp when changed
 SettingSchema.pre('save', function(next) {
   this.lastUpdated = new Date();
   next();
 });
 
-module.exports = mongoose.model('Setting', SettingSchema); 
+// Create model with the schema
+const Setting = mongoose.models.Setting || mongoose.model('Setting', SettingSchema);
+
+module.exports = Setting; 

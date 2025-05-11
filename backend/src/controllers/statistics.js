@@ -1,29 +1,26 @@
-const Statistic = require('../models/statistic');
-const Booking = require('../models/booking');
-const User = require('../models/user');
-const Car = require('../models/car');
+const { Statistic, Booking, User, Car } = require('../models');
 
-// Lấy dữ liệu thống kê tổng quan
+// Get overview statistics data
 exports.getStatistics = async (req, res) => {
   try {
-    // Lấy dữ liệu thống kê mới nhất
+    // Get the latest statistics
     const latestStatistic = await Statistic.findOne().sort({ date: -1 });
     
     if (!latestStatistic) {
-      // Nếu không có dữ liệu sẵn có, tạo dữ liệu thống kê mới
+      // If no data is available, create new statistics
       const totalUsers = await User.countDocuments();
       const totalCars = await Car.countDocuments();
       const totalBookings = await Booking.countDocuments();
       const pendingBookings = await Booking.countDocuments({ status: 'pending' });
       const availableCars = await Car.countDocuments({ status: 'available' });
       
-      // Tính tổng doanh thu từ đơn đặt xe
+      // Calculate total revenue from bookings
       const bookings = await Booking.find();
       const totalRevenue = bookings.reduce((total, booking) => {
         return total + (booking.totalAmount || 0);
       }, 0);
       
-      // Tạo dữ liệu theo tháng (lấy 6 tháng gần nhất)
+      // Create monthly data (get the last 6 months)
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const currentMonth = new Date().getMonth();
       
@@ -33,7 +30,7 @@ exports.getStatistics = async (req, res) => {
       for (let i = 5; i >= 0; i--) {
         const monthIndex = (currentMonth - i + 12) % 12;
         
-        // Random values hoặc tính toán từ dữ liệu thực tế
+        // Random values or calculate from actual data
         const randomRevenue = 5000 + Math.floor(Math.random() * 15000);
         const randomBookings = 10 + Math.floor(Math.random() * 40);
         
@@ -48,14 +45,14 @@ exports.getStatistics = async (req, res) => {
         });
       }
       
-      // Trạng thái xe
+      // Car status
       const carStatus = [
         { status: 'available', count: availableCars, label: 'Available' },
         { status: 'maintenance', count: Math.floor(Math.random() * 10), label: 'Maintenance' },
         { status: 'rented', count: Math.floor(Math.random() * 15), label: 'Rented' }
       ];
       
-      // Trả về dữ liệu được tính toán
+      // Return calculated data
       return res.status(200).json({
         success: true,
         data: {
@@ -76,7 +73,7 @@ exports.getStatistics = async (req, res) => {
       });
     }
     
-    // Trả về dữ liệu từ database
+    // Return data from database
     res.status(200).json({
       success: true,
       data: {
@@ -96,7 +93,7 @@ exports.getStatistics = async (req, res) => {
   }
 };
 
-// Lấy danh sách các đơn đặt xe gần đây
+// Get list of recent bookings
 exports.getRecentBookings = async (req, res) => {
   try {
     const recentBookings = await Booking.find()
@@ -119,13 +116,13 @@ exports.getRecentBookings = async (req, res) => {
   }
 };
 
-// Lấy danh sách các xe được đặt nhiều nhất
+// Get list of most booked cars
 exports.getTopCars = async (req, res) => {
   try {
-    // Lấy đơn đặt xe đã hoàn thành
+    // Get completed bookings
     const bookings = await Booking.find({ status: 'completed' });
     
-    // Tính toán số lần đặt cho mỗi xe
+    // Calculate booking count for each car
     const carBookings = {};
     
     bookings.forEach(booking => {
@@ -140,7 +137,7 @@ exports.getTopCars = async (req, res) => {
       carBookings[carId].revenue += booking.totalAmount || 0;
     });
     
-    // Chuyển đổi thành mảng và sắp xếp
+    // Convert to array and sort
     const sortedCars = Object.entries(carBookings)
       .map(([carId, data]) => ({
         carId,
@@ -149,15 +146,15 @@ exports.getTopCars = async (req, res) => {
       }))
       .sort((a, b) => b.bookingsCount - a.bookingsCount);
     
-    // Lấy top 5 xe
+    // Get top 5 cars
     const topCarIds = sortedCars.slice(0, 5).map(car => car.carId);
     
-    // Lấy thông tin chi tiết của các xe
+    // Get detailed information of the cars
     const topCars = await Car.find({
       _id: { $in: topCarIds }
     });
     
-    // Kết hợp thông tin xe với dữ liệu đặt xe
+    // Combine car info with booking data
     const result = topCars.map(car => {
       const carData = sortedCars.find(item => item.carId === car._id.toString());
       return {
@@ -169,15 +166,30 @@ exports.getTopCars = async (req, res) => {
       };
     });
     
-    res.status(200).json({
+    // Return calculated data
+    res.json({
       success: true,
       data: result
     });
   } catch (error) {
-    console.error('Error fetching top cars:', error);
+    console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Error retrieving top cars',
+      message: 'An error occurred while calculating statistics'
+    });
+  }
+};
+
+// Get user statistics from database
+exports.getDatabaseStatistics = async (req, res) => {
+  try {
+    // Return data from database
+    // Implementation needed
+  } catch (error) {
+    console.error('Error fetching database statistics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving database statistics',
       error: error.message
     });
   }

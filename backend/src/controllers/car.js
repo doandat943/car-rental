@@ -63,10 +63,10 @@ exports.getCars = async (req, res) => {
       );
     }
     
-    // Trả về dữ liệu theo format mà frontend mong đợi
+    // Return data in the format expected by the frontend
     const responseObj = {
       success: true,
-      data: cars,  // Trả về trực tiếp mảng cars thay vì đặt trong object
+      data: cars,  // Return the cars array directly instead of embedding in an object
       meta: {
         currentPage: Number(page),
         totalPages: Math.ceil(totalCars / Number(limit)),

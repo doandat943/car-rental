@@ -32,7 +32,7 @@ export default function NotificationsPage() {
 
   const LIMIT = 10; // Number of notifications per page
 
-  // Lấy thông báo dựa theo bộ lọc và phân trang
+  // Get notifications based on filters and pagination
   useEffect(() => {
     fetchNotifications();
   }, [page, filter]);
@@ -48,7 +48,7 @@ export default function NotificationsPage() {
         limit: LIMIT
       };
       
-      // Thêm bộ lọc vào params nếu có
+      // Add filters to params if available
       if (filter.read !== 'all') {
         params.read = filter.read === 'read';
       }
@@ -60,7 +60,7 @@ export default function NotificationsPage() {
       const response = await notificationsAPI.getAllNotifications(params);
       setNotifications(response?.data?.data || []);
       
-      // Tính tổng số trang
+      // Calculate total pages
       const total = response?.data?.total || 0;
       setTotalPages(Math.ceil(total / LIMIT) || 1);
       
@@ -74,7 +74,7 @@ export default function NotificationsPage() {
     }
   };
 
-  // Đánh dấu một thông báo đã đọc
+  // Mark a notification as read
   const handleMarkAsRead = async (id) => {
     try {
       await notificationsAPI.markAsRead(id);
@@ -85,7 +85,7 @@ export default function NotificationsPage() {
       );
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      // Cập nhật UI ngay cả khi API lỗi để UX tốt hơn
+      // Update UI even when API fails for better UX
       setNotifications(prevNotifications => 
         prevNotifications.map(notification => 
           notification._id === id ? { ...notification, read: true } : notification
@@ -94,7 +94,7 @@ export default function NotificationsPage() {
     }
   };
 
-  // Đánh dấu tất cả thông báo đã đọc
+  // Mark all notifications as read
   const handleMarkAllAsRead = async () => {
     try {
       await notificationsAPI.markAllAsRead();
@@ -103,14 +103,14 @@ export default function NotificationsPage() {
       );
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
-      // Cập nhật UI ngay cả khi API lỗi
+      // Update UI even when API fails
       setNotifications(prevNotifications => 
         prevNotifications.map(notification => ({ ...notification, read: true }))
       );
     }
   };
 
-  // Xóa một thông báo
+  // Delete a notification
   const handleDeleteNotification = async (id) => {
     try {
       await notificationsAPI.deleteNotification(id);
@@ -119,14 +119,14 @@ export default function NotificationsPage() {
       );
     } catch (error) {
       console.error('Error deleting notification:', error);
-      // Cập nhật UI ngay cả khi API lỗi
+      // Update UI even when API fails
       setNotifications(prevNotifications => 
         prevNotifications.filter(notification => notification._id !== id)
       );
     }
   };
 
-  // Xóa tất cả thông báo đã đọc
+  // Delete all read notifications
   const handleDeleteAllRead = async () => {
     try {
       // Filter out IDs of all read notifications

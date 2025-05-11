@@ -49,7 +49,7 @@ try {
   };
 }
 
-// Dữ liệu mẫu cho Categories (mở rộng từ dữ liệu mô phỏng)
+// Sample data for Categories (extended from mock data)
 const categories = [
   {
     name: 'Sedan',
@@ -83,7 +83,7 @@ const categories = [
   }
 ];
 
-// Dữ liệu mẫu cho Cars (kết hợp từ dữ liệu mô phỏng)
+// Sample data for Cars (combined from mock data)
 const cars = [
   {
     name: 'Toyota Camry',
@@ -308,7 +308,7 @@ const cars = [
   }
 ];
 
-// Dữ liệu mẫu cho Users
+// Sample data for Users
 const users = [
   {
     name: 'Admin User',
@@ -361,7 +361,7 @@ const users = [
   }
 ];
 
-// Dữ liệu mẫu cho đánh giá
+// Sample data for reviews
 const reviewsData = [
   {
     user: 'John Smith',
@@ -400,7 +400,7 @@ const reviewsData = [
   }
 ];
 
-// Dữ liệu mẫu cho đặt xe
+// Sample data for bookings
 const bookingsData = [
   {
     user: 'John Smith',
@@ -449,7 +449,7 @@ const bookingsData = [
   }
 ];
 
-// Dữ liệu mẫu cho cài đặt hệ thống
+// Sample data for system settings
 const settingsData = {
   siteName: 'Car Rental Service',
   contactEmail: 'support@carrental.example.com',
@@ -467,22 +467,22 @@ const settingsData = {
   privacyPolicy: 'Privacy policy for user data and booking information',
 };
 
-// Hàm để hash password trước khi lưu vào database
+// Function to hash password before saving to database
 async function hashPassword(password) {
   const salt = await bcrypt.genSalt(10);
   return await bcrypt.hash(password, salt);
 }
 
-// Thực hiện seeding tất cả các dữ liệu
+// Execute seeding of all data
 async function seedDatabase() {
   try {
-    // Kiểm tra kết nối tới database
+    // Check connection to database
     if (mongoose.connection.readyState !== 1) {
       console.log('Please connect to MongoDB first');
       return;
     }
     
-    // Xóa toàn bộ dữ liệu cũ
+    // Delete all existing data
     await Promise.all([
       Category.deleteMany({}),
       Car.deleteMany({}),
@@ -494,11 +494,11 @@ async function seedDatabase() {
       Notification.deleteMany({})
     ]);
 
-    // Thêm categories mới
+    // Add new categories
     const createdCategories = await Category.insertMany(categories);
     console.log(`${createdCategories.length} categories added`);
 
-    // Map category ID vào car data
+    // Map category ID to car data
     const carData = cars.map(car => {
       const categoryName = car.categoryName || (car.name.includes('Sedan') ? 'Sedan' : 
                            car.name.includes('SUV') ? 'SUV' : 
@@ -513,36 +513,36 @@ async function seedDatabase() {
       };
     });
 
-    // Thêm cars mới
+    // Add new cars
     const createdCars = await Car.insertMany(carData);
     console.log(`${createdCars.length} cars added`);
 
-    // Tạo user
+    // Create users
     const createdUsers = await createUsers();
     console.log(`${createdUsers.length} users added`);
     
-    // Tạo bookings
+    // Create bookings
     const createdBookings = await createBookings(createdUsers, createdCars);
     console.log(`${createdBookings.length} bookings added`);
     
-    // Tạo reviews
+    // Create reviews
     const createdReviews = await createReviews(createdUsers, createdCars);
     console.log(`${createdReviews.length} reviews added`);
     
-    // Tạo settings
+    // Create settings
     const createdSettings = await createSettings();
     console.log('System settings added');
 
     // Copy assets from frontend to backend
     await copyPublicAssets();
 
-    // Tạo thống kê
+    // Create statistics
     await createStatistics();
     
-    // Tạo thông báo
+    // Create notifications
     await createNotifications(createdUsers);
 
-    // Đóng kết nối
+    // Close connection
     await mongoose.connection.close();
     
     console.log('Database seeded successfully');
@@ -562,7 +562,7 @@ async function seedDatabase() {
   }
 }
 
-// Tạo users
+// Create users
 async function createUsers() {
   const hashedUsers = await Promise.all(
     users.map(async (user) => {
@@ -578,7 +578,7 @@ async function createUsers() {
   return createdUsers;
 }
 
-// Tạo bookings
+// Create bookings
 async function createBookings(users, cars) {
   const bookings = await Promise.all(
     bookingsData.map(async (booking) => {
@@ -604,7 +604,7 @@ async function createBookings(users, cars) {
   return createdBookings;
 }
 
-// Tạo reviews
+// Create reviews
 async function createReviews(users, cars) {
   const reviews = await Promise.all(
     reviewsData.map(async (review) => {
@@ -628,7 +628,7 @@ async function createReviews(users, cars) {
   return createdReviews;
 }
 
-// Tạo settings
+// Create settings
 async function createSettings() {
   const createdSettings = await Setting.create(settingsData);
   return createdSettings;
@@ -699,7 +699,7 @@ const copyPublicAssets = async () => {
   }
 };
 
-// Tạo thống kê
+// Create statistics
 async function createStatistics() {
   console.log('Seeding statistics...');
   
@@ -796,7 +796,7 @@ async function createStatistics() {
   console.log('Statistics created successfully!');
 }
 
-// Tạo dữ liệu thông báo giả
+// Create mock notification data
 async function createNotifications(users) {
   console.log("Creating notifications data...");
   
@@ -804,18 +804,18 @@ async function createNotifications(users) {
   const notificationActions = ['created', 'updated', 'cancelled', 'completed', 'pending'];
   const notifications = [];
   
-  // Tạo thông báo hệ thống (không liên quan đến user cụ thể)
+  // Create system notifications (not related to specific users)
   for (let i = 0; i < 5; i++) {
     notifications.push({
-      title: `Thông báo hệ thống #${i+1}`,
-      content: `Nội dung thông báo hệ thống ${i+1} - ${Math.random().toString(36).substring(7)}`,
+      title: `System notification #${i+1}`,
+      content: `System notification content ${i+1} - ${Math.random().toString(36).substring(7)}`,
       type: 'system',
       read: Math.random() > 0.5,
       createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
     });
   }
   
-  // Tạo thông báo cho mỗi user
+  // Create notifications for each user
   for (const user of users) {
     const userNotificationCount = Math.floor(Math.random() * 5) + 2;
     
@@ -825,8 +825,8 @@ async function createNotifications(users) {
       
       notifications.push({
         user: user._id,
-        title: `Thông báo ${type} ${action}`,
-        content: `Thông báo cho ${user.name} - ${type} đã được ${action} - ${Math.random().toString(36).substring(7)}`,
+        title: `${type} ${action} notification`,
+        content: `Notification for ${user.name} - ${type} has been ${action} - ${Math.random().toString(36).substring(7)}`,
         type: type,
         read: Math.random() > 0.7,
         createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
@@ -834,16 +834,16 @@ async function createNotifications(users) {
     }
   }
   
-  // Lưu thông báo vào DB
+  // Save notifications to DB
   await Notification.insertMany(notifications);
   
   console.log(`${notifications.length} notifications created successfully!`);
 }
 
 if (require.main === module) {
-  // Chạy trực tiếp từ dòng lệnh node seed-data.js
+  // Run directly from command line node seed-data.js
   if (process.argv.includes('--copyAssets')) {
-    // Chỉ chạy hàm copy assets
+    // Only run the copy assets function
     copyPublicAssets()
       .then(() => {
         console.log('Assets copied successfully');
@@ -854,7 +854,7 @@ if (require.main === module) {
         process.exit(1);
       });
   } else if (process.argv.includes('--runAll')) {
-    // Chạy tất cả các hàm
+    // Run all functions
     seedDatabase()
       .then(() => process.exit(0))
       .catch(err => {
@@ -866,7 +866,7 @@ if (require.main === module) {
     process.exit(1);
   }
 } else {
-  // Export để sử dụng trong module khác
+  // Export for use in other modules
   module.exports = {
     seedDatabase,
     copyPublicAssets,

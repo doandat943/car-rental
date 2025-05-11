@@ -5,7 +5,7 @@ import Image from 'next/image';
 const CarCard = ({ car }) => {
   // Handle fields that might differ between API and mock data
   const carId = car._id || car.id;
-  const carImage = car.images?.[0] || "/placeholder-car.jpg";
+  const carImage = car.images?.[0] || car.image || "/placeholder-car.jpg";
   const carPrice = car.price?.daily || car.price || 0;
   const carSeats = car.specifications?.seats || 5;
   const carTransmission = car.specifications?.transmission || 'Automatic';

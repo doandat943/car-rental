@@ -1,18 +1,17 @@
 const mongoose = require('mongoose');
-const User = require('../models/user');
-const Notification = require('../models/notification');
+const { User, Notification } = require('../models');
 
-// Tạo dữ liệu mẫu cho thông báo
+// Create sample data for notifications
 const seedNotifications = async () => {
   try {
-    // Kiểm tra đã có thông báo trong cơ sở dữ liệu chưa
+    // Check if notifications already exist in the database
     const count = await Notification.countDocuments();
     if (count > 0) {
       console.log('Notifications already seeded');
       return;
     }
 
-    // Lấy tất cả user admin để tạo thông báo cho họ
+    // Get all admin users to create notifications for them
     const adminUsers = await User.find({ role: 'admin' });
     
     if (adminUsers.length === 0) {
@@ -20,7 +19,7 @@ const seedNotifications = async () => {
       return;
     }
 
-    // Danh sách loại thông báo
+    // List of notification types
     const types = [
       'booking_new',
       'booking_canceled',
@@ -31,49 +30,49 @@ const seedNotifications = async () => {
       'system'
     ];
 
-    // Tạo thông báo cho mỗi admin
+    // Create notifications for each admin
     const notificationsToCreate = [];
 
     for (const user of adminUsers) {
-      // Tạo khoảng 15-20 thông báo cho mỗi user
+      // Create about 15-20 notifications for each user
       const notificationCount = Math.floor(Math.random() * 6) + 15;
       
       for (let i = 0; i < notificationCount; i++) {
         const type = types[Math.floor(Math.random() * types.length)];
-        const read = Math.random() > 0.3; // 30% chưa đọc, 70% đã đọc
-        // Tạo ngẫu nhiên trong 7 ngày qua
+        const read = Math.random() > 0.3; // 30% unread, 70% read
+        // Create random dates within the last 7 days
         const createdAt = new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000));
         
         let title, message;
         
         switch (type) {
           case 'booking_new':
-            title = 'Yêu cầu đặt xe mới';
-            message = `Khách hàng ${getRandomName()} vừa yêu cầu đặt xe ${getRandomCar()}.`;
+            title = 'New booking request';
+            message = `Customer ${getRandomName()} has requested to book ${getRandomCar()}.`;
             break;
           case 'booking_canceled':
-            title = 'Đơn đặt xe đã bị hủy';
-            message = `Khách hàng ${getRandomName()} đã hủy đơn đặt xe ${getRandomCar()}.`;
+            title = 'Booking canceled';
+            message = `Customer ${getRandomName()} has canceled the booking for ${getRandomCar()}.`;
             break;
           case 'booking_completed':
-            title = 'Đơn đặt xe hoàn thành';
-            message = `Đơn đặt xe ${getRandomCar()} của khách hàng ${getRandomName()} đã hoàn thành.`;
+            title = 'Booking completed';
+            message = `The booking for ${getRandomCar()} by customer ${getRandomName()} has been completed.`;
             break;
           case 'review_new':
-            title = 'Đánh giá mới';
-            message = `Có một đánh giá ${Math.floor(Math.random() * 3) + 3} sao mới đã được gửi cho xe ${getRandomCar()}.`;
+            title = 'New review';
+            message = `A new ${Math.floor(Math.random() * 3) + 3} star review has been submitted for ${getRandomCar()}.`;
             break;
           case 'message_new':
-            title = 'Tin nhắn mới';
-            message = `Bạn có tin nhắn mới từ khách hàng ${getRandomName()}.`;
+            title = 'New message';
+            message = `You have a new message from customer ${getRandomName()}.`;
             break;
           case 'payment_received':
-            title = 'Thanh toán thành công';
-            message = `Đã nhận thanh toán ${Math.floor(Math.random() * 300) + 100}$ từ khách hàng ${getRandomName()}.`;
+            title = 'Payment successful';
+            message = `Payment of ${Math.floor(Math.random() * 300) + 100}$ received from customer ${getRandomName()}.`;
             break;
           default:
-            title = 'Thông báo hệ thống';
-            message = 'Chào mừng bạn đến với hệ thống quản lý cho thuê xe.';
+            title = 'System notification';
+            message = 'Welcome to the car rental management system.';
         }
         
         notificationsToCreate.push({
@@ -87,7 +86,7 @@ const seedNotifications = async () => {
       }
     }
 
-    // Tạo thông báo trong cơ sở dữ liệu
+    // Create notifications in the database
     await Notification.insertMany(notificationsToCreate);
     
     console.log(`${notificationsToCreate.length} notifications seeded successfully`);
@@ -96,7 +95,7 @@ const seedNotifications = async () => {
   }
 };
 
-// Hàm random tên khách hàng
+// Function to generate random customer names
 function getRandomName() {
   const names = [
     'John Doe',
@@ -114,7 +113,7 @@ function getRandomName() {
   return names[Math.floor(Math.random() * names.length)];
 }
 
-// Random car name function
+// Function to generate random car names
 function getRandomCar() {
   const cars = [
     'Toyota Camry',
