@@ -3,9 +3,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const CarCard = ({ car }) => {
-  // Xử lý các trường dữ liệu có thể khác nhau giữa API và mock data
+  // Handle fields that might differ between API and mock data
   const carId = car._id || car.id;
-  const carImage = car.images?.[0] || car.image || "/placeholder-car.jpg";
+  const carImage = car.images?.[0] || "/placeholder-car.jpg";
   const carPrice = car.price?.daily || car.price || 0;
   const carSeats = car.specifications?.seats || 5;
   const carTransmission = car.specifications?.transmission || 'Automatic';
@@ -58,7 +58,7 @@ const CarCard = ({ car }) => {
 };
 
 const CarList = ({ cars = [], title = "Featured Cars" }) => {
-  // Đảm bảo cars là một mảng
+  // Ensure cars is an array
   const carsList = Array.isArray(cars) ? cars : [];
   
   if (!carsList.length) {

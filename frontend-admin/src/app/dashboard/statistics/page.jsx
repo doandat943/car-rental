@@ -1,64 +1,359 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { dashboardAPI } from '../../../lib/api';
+import { dashboardAPI, carsAPI, bookingsAPI } from '../../../lib/api';
+import { 
+  TrendingUp, 
+  Users, 
+  Calendar,
+  Car,
+  DollarSign,
+  Truck,
+  RefreshCw,
+  BarChart2,
+  PieChart,
+  CheckCircle,
+  XCircle,
+  Clock
+} from 'lucide-react';
 import Link from 'next/link';
-import { formatCurrency } from '../../../lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line, Bar, Pie } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+// Theme colors
+const colors = {
+  blue: {
+    primary: 'rgb(53, 162, 235)',
+    light: 'rgba(53, 162, 235, 0.5)',
+  },
+  green: {
+    primary: 'rgb(75, 192, 192)',
+    light: 'rgba(75, 192, 192, 0.5)',
+  },
+  yellow: {
+    primary: 'rgb(255, 206, 86)',
+    light: 'rgba(255, 206, 86, 0.5)',
+  },
+  red: {
+    primary: 'rgb(255, 99, 132)',
+    light: 'rgba(255, 99, 132, 0.5)',
+  },
+  purple: {
+    primary: 'rgb(153, 102, 255)',
+    light: 'rgba(153, 102, 255, 0.5)',
+  },
+  orange: {
+    primary: 'rgb(255, 159, 64)',
+    light: 'rgba(255, 159, 64, 0.5)',
+  }
+};
+
+// Setup Chart.js theme
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'top',
+      labels: {
+        font: {
+          size: 12
+        },
+        color: function(context) {
+          // Support dark mode
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgb(229, 231, 235)' 
+            : 'rgb(55, 65, 81)';
+        }
+      }
+    },
+    tooltip: {
+      mode: 'index',
+      intersect: false,
+    },
+  },
+  scales: {
+    x: {
+      grid: {
+        color: function(context) {
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgba(229, 231, 235, 0.1)' 
+            : 'rgba(55, 65, 81, 0.1)';
+        }
+      },
+      ticks: {
+        color: function(context) {
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgb(229, 231, 235)' 
+            : 'rgb(55, 65, 81)';
+        }
+      }
+    },
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: function(context) {
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgba(229, 231, 235, 0.1)' 
+            : 'rgba(55, 65, 81, 0.1)';
+        }
+      },
+      ticks: {
+        color: function(context) {
+          return document.documentElement.classList.contains('dark') 
+            ? 'rgb(229, 231, 235)' 
+            : 'rgb(55, 65, 81)';
+        }
+      }
+    },
+  },
+};
+
+// Replace mock components with real components
+const LineChart = ({ data, options = {} }) => {
+  const mergedOptions = {
+    ...chartOptions,
+    ...options,
+  };
+  
+  return (
+    <div className="w-full h-64">
+      <Line data={data} options={mergedOptions} />
+    </div>
+  );
+};
+
+const BarChart = ({ data, options = {} }) => {
+  const mergedOptions = {
+    ...chartOptions,
+    ...options,
+  };
+  
+  return (
+    <div className="w-full h-64">
+      <Bar data={data} options={mergedOptions} />
+    </div>
+  );
+};
+
+const PieChartComponent = ({ data, options = {} }) => {
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: {
+          font: {
+            size: 12
+          },
+          color: function(context) {
+            return document.documentElement.classList.contains('dark') 
+              ? 'rgb(229, 231, 235)' 
+              : 'rgb(55, 65, 81)';
+          }
+        }
+      }
+    }
+  };
+  
+  const mergedOptions = {
+    ...pieOptions,
+    ...options,
+  };
+  
+  return (
+    <div className="w-full h-64">
+      <Pie data={data} options={mergedOptions} />
+    </div>
+  );
+};
 
 export default function StatisticsPage() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [statistics, setStatistics] = useState({
-    overview: {
-      totalRevenue: 0,
-      totalBookings: 0,
-      totalUsers: 0,
-      totalCars: 0,
-      pendingBookings: 0,
-      availableCars: 0,
-      monthlyRevenue: 0,
-      monthlyBookings: 0,
-    },
-    monthlyRevenue: [],
-    monthlyBookings: [],
-    carStatus: [],
+  const [error, setError] = useState('');
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalBookings: 0,
+    totalUsers: 0,
+    totalCars: 0,
+    pendingBookings: 0,
+    availableCars: 0,
+    monthlyRevenue: 0,
+    monthlyBookings: 0
   });
-  const [recentBookings, setRecentBookings] = useState([]);
+  const [revenueData, setRevenueData] = useState({
+    labels: [],
+    datasets: []
+  });
+  const [bookingsData, setBookingsData] = useState({
+    labels: [],
+    datasets: []
+  });
+  const [carStatusData, setCarStatusData] = useState({
+    labels: [],
+    datasets: []
+  });
   const [topCars, setTopCars] = useState([]);
-  const [timeFrame, setTimeFrame] = useState('all');
+  const [recentBookings, setRecentBookings] = useState([]);
+  const [timeFrame, setTimeFrame] = useState('month');
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        
-        // Fetch statistics
-        const statsResponse = await dashboardAPI.getStatistics();
-        setStatistics(statsResponse.data);
-        
-        // Fetch recent bookings
-        const bookingsResponse = await dashboardAPI.getRecentBookings();
-        setRecentBookings(bookingsResponse.data);
-        
-        // Fetch top cars
-        const topCarsResponse = await dashboardAPI.getTopCars();
-        setTopCars(topCarsResponse.data);
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data. Please try again later.');
-        setLoading(false);
-      }
+    // Add event listener to automatically update chart when switching dark/light mode
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.attributeName === 'class' &&
+          mutation.target === document.documentElement &&
+          ChartJS.instances
+        ) {
+          // Update all charts
+          Object.values(ChartJS.instances).forEach(chart => {
+            chart.update();
+          });
+        }
+      });
+    });
+
+    // Start observing
+    if (typeof document !== 'undefined') {
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
     }
-    
-    fetchData();
+
+    // Clean up when component unmounts
+    return () => {
+      observer?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
   }, [timeFrame]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Call the statistics API
+      const response = await dashboardAPI.getStatistics({ timeFrame });
+      const statsData = response.data;
+      
+      // Update data from API
+      setStats(statsData.overview);
+      setRevenueData(statsData.revenueChart);
+      setBookingsData(statsData.bookingsChart);
+      setCarStatusData(statsData.carStatusChart);
+      setTopCars(statsData.topCars);
+      setRecentBookings(statsData.recentBookings);
+      
+    } catch (err) {
+      console.error('Failed to fetch dashboard data:', err);
+      setError('Unable to load data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('vi-VN', { 
+      style: 'currency', 
+      currency: 'VND',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  const formatCurrencyCompact = (value) => {
+    // Format in compact form, e.g.: 1.2 billion, 5.6 million
+    if (value >= 1000000000) {
+      return `${(value / 1000000000).toFixed(1)} billion`;
+    } else if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)} million`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}k`;
+    }
+    return value.toString();
+  };
+
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    return new Date(dateString).toLocaleDateString('vi-VN', options);
+  };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'confirmed':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'confirmed':
+        return 'Confirmed';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'completed':
+        return 'Completed';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="h-4 w-4" />;
+      case 'confirmed':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'cancelled':
+        return <XCircle className="h-4 w-4" />;
+      case 'completed':
+        return <CheckCircle className="h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
 
   // Show error if data loading failed
   if (error) {
@@ -72,319 +367,274 @@ export default function StatisticsPage() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="px-4 pt-6 flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-500 border-l-transparent border-r-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Thống kê và báo cáo</h1>
+    <div className="px-4 pt-6">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Statistics and Reports</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Overview of business activities and system performance
+          </p>
+        </div>
         
-        <div className="flex space-x-2">
-          <Button 
-            variant={timeFrame === 'week' ? 'primary' : 'outline'}
-            onClick={() => setTimeFrame('week')}
+        {/* Refresh button */}
+        <div className="mt-4 md:mt-0">
+          <button
+            type="button"
+            onClick={fetchDashboardData}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
           >
-            Tuần
-          </Button>
-          <Button 
-            variant={timeFrame === 'month' ? 'primary' : 'outline'}
-            onClick={() => setTimeFrame('month')}
-          >
-            Tháng
-          </Button>
-          <Button 
-            variant={timeFrame === 'year' ? 'primary' : 'outline'}
-            onClick={() => setTimeFrame('year')}
-          >
-            Năm
-          </Button>
-          <Button 
-            variant={timeFrame === 'all' ? 'primary' : 'outline'}
-            onClick={() => setTimeFrame('all')}
-          >
-            Tất cả
-          </Button>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh data
+          </button>
         </div>
       </div>
       
-      {/* Main statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard 
-          title="Tổng doanh thu" 
-          value={formatCurrency(statistics.overview.totalRevenue)} 
-          description="Tổng doanh thu từ các đơn đặt xe"
-          loading={loading}
-        />
-        <StatCard 
-          title="Đơn đặt xe" 
-          value={statistics.overview.totalBookings} 
-          description="Tổng số đơn đặt xe" 
-          loading={loading}
-        />
-        <StatCard 
-          title="Người dùng" 
-          value={statistics.overview.totalUsers} 
-          description="Tổng số người dùng đăng ký" 
-          loading={loading}
-        />
-        <StatCard 
-          title="Xe" 
-          value={statistics.overview.totalCars} 
-          description="Tổng số xe trong hệ thống" 
-          loading={loading}
-        />
-      </div>
+      {error && (
+        <div className="mb-4 p-4 text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300">
+          {error}
+        </div>
+      )}
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Revenue Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Doanh thu theo tháng</CardTitle>
-            <CardDescription>Biểu đồ doanh thu qua các tháng</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="w-full h-[300px] flex items-center justify-center">
-                <div className="w-full h-full bg-gray-200 animate-pulse rounded-lg"></div>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={statistics.monthlyRevenue}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value) => formatCurrency(value)}
-                    labelFormatter={(label) => `Tháng: ${label}`}
-                  />
-                  <Legend />
-                  <Bar dataKey="value" name="Doanh thu" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* Bookings Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Đơn đặt xe theo tháng</CardTitle>
-            <CardDescription>Biểu đồ số lượng đơn đặt xe qua các tháng</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="w-full h-[300px] flex items-center justify-center">
-                <div className="w-full h-full bg-gray-200 animate-pulse rounded-lg"></div>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={statistics.monthlyBookings}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value) => `${value} đơn`}
-                    labelFormatter={(label) => `Tháng: ${label}`}
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="value" name="Đơn đặt" stroke="#82ca9d" activeDot={{ r: 8 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Car Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Trạng thái xe</CardTitle>
-            <CardDescription>Phân bố trạng thái xe trong hệ thống</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="w-full h-[300px] flex items-center justify-center">
-                <div className="w-full h-full bg-gray-200 animate-pulse rounded-lg"></div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center">
-                <ResponsiveContainer width="100%" height={230}>
-                  <PieChart>
-                    <Pie
-                      data={statistics.carStatus}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="count"
-                      nameKey="label"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {statistics.carStatus.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value) => `${value} xe`}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {statistics.carStatus.map((status, index) => (
-                    <div key={index} className="flex items-center">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2" 
-                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                      ></div>
-                      <span>{status.label}: {status.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* Top Cars */}
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle>Xe được đặt nhiều nhất</CardTitle>
-            <CardDescription>Danh sách các xe được đặt nhiều nhất</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="w-full h-10 bg-gray-200 animate-pulse rounded-lg"></div>
-                ))}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="py-3 px-4 text-left">Tên xe</th>
-                      <th className="py-3 px-4 text-left">Số lượt đặt</th>
-                      <th className="py-3 px-4 text-left">Doanh thu</th>
-                      <th className="py-3 px-4 text-left">Tỷ lệ đặt</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topCars.map((car) => (
-                      <tr key={car._id} className="border-b hover:bg-gray-50">
-                        <td className="py-2 px-4 font-medium">
-                          <Link href={`/dashboard/cars/${car._id}`} className="text-blue-600 hover:underline">
-                            {car.name}
-                          </Link>
-                        </td>
-                        <td className="py-2 px-4">{car.bookingsCount}</td>
-                        <td className="py-2 px-4">{formatCurrency(car.revenue)}</td>
-                        <td className="py-2 px-4">{((car.bookingsCount / statistics.overview.totalBookings) * 100).toFixed(1)}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Recent Bookings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Đơn đặt xe gần đây</CardTitle>
-          <CardDescription>Các đơn đặt xe mới nhất trong hệ thống</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-full h-14 bg-gray-200 animate-pulse rounded-lg"></div>
-              ))}
+      {/* Overview section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-blue-100 mr-4 dark:bg-blue-900">
+              <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="py-3 px-4 text-left">Mã đơn</th>
-                    <th className="py-3 px-4 text-left">Khách hàng</th>
-                    <th className="py-3 px-4 text-left">Xe</th>
-                    <th className="py-3 px-4 text-left">Ngày đặt</th>
-                    <th className="py-3 px-4 text-left">Tổng tiền</th>
-                    <th className="py-3 px-4 text-left">Trạng thái</th>
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+              <p className="text-xl font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.totalRevenue)}</p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-green-500 font-medium dark:text-green-400">+{formatCurrency(stats.monthlyRevenue)}</span> this month
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-green-100 mr-4 dark:bg-green-900">
+              <Calendar className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Bookings</p>
+              <p className="text-xl font-semibold text-gray-900 dark:text-white">{stats.totalBookings}</p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-green-500 font-medium dark:text-green-400">+{stats.monthlyBookings}</span> this month
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-purple-100 mr-4 dark:bg-purple-900">
+              <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
+              <p className="text-xl font-semibold text-gray-900 dark:text-white">{stats.totalUsers}</p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-blue-500 font-medium dark:text-blue-400">{stats.pendingBookings}</span> pending requests
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-yellow-100 mr-4 dark:bg-yellow-900">
+              <Car className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Cars</p>
+              <p className="text-xl font-semibold text-gray-900 dark:text-white">{stats.totalCars}</p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-green-500 font-medium dark:text-green-400">{stats.availableCars}</span> available cars
+          </div>
+        </div>
+      </div>
+      
+      {/* Revenue and bookings chart */}
+      <div className="mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
+          <div className="flex flex-wrap items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Revenue over time</h2>
+            <div className="inline-flex rounded-md shadow-sm mt-2 sm:mt-0">
+              <button
+                type="button"
+                onClick={() => setTimeFrame('week')}
+                className={`px-4 py-2 text-sm font-medium rounded-l-md border ${timeFrame === 'week' ? 'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900 dark:text-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}`}
+              >
+                Week
+              </button>
+              <button
+                type="button"
+                onClick={() => setTimeFrame('month')}
+                className={`px-4 py-2 text-sm font-medium border-t border-b ${timeFrame === 'month' ? 'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900 dark:text-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}`}
+              >
+                Month
+              </button>
+              <button
+                type="button"
+                onClick={() => setTimeFrame('year')}
+                className={`px-4 py-2 text-sm font-medium rounded-r-md border ${timeFrame === 'year' ? 'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900 dark:text-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}`}
+              >
+                Year
+              </button>
+            </div>
+          </div>
+          <LineChart data={revenueData} />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Bookings chart */}
+        <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Bookings</h2>
+          <LineChart data={bookingsData} />
+        </div>
+        
+        {/* Car status chart */}
+        <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Car Status</h2>
+          <PieChartComponent data={carStatusData} />
+        </div>
+      </div>
+      
+      {/* Top cars booked most */}
+      <div className="mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Top cars booked most</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th scope="col" className="px-6 py-3">CAR NAME</th>
+                  <th scope="col" className="px-6 py-3">BOOKINGS</th>
+                  <th scope="col" className="px-6 py-3">REVENUE</th>
+                  <th scope="col" className="px-6 py-3">UTILIZATION</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topCars.map((car, index) => (
+                  <tr key={car._id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                      <Link href={`/dashboard/cars/${car._id}`} className="hover:text-blue-600 dark:hover:text-blue-400">
+                        {car.name}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {car.bookingsCount} bookings
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {formatCurrency(car.revenue)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                          <div className="bg-blue-600 h-2.5 rounded-full dark:bg-blue-500" style={{ width: `${car.utilization}%` }}></div>
+                        </div>
+                        <span className="ml-2">{car.utilization}%</span>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {recentBookings.map((booking) => (
-                    <tr key={booking._id} className="border-b hover:bg-gray-50">
-                      <td className="py-2 px-4">
-                        <Link href={`/dashboard/bookings/${booking._id}`} className="text-blue-600 hover:underline">
-                          {booking._id.substring(0, 8)}...
-                        </Link>
-                      </td>
-                      <td className="py-2 px-4">{booking.user?.name || 'N/A'}</td>
-                      <td className="py-2 px-4">{booking.car?.name || 'N/A'}</td>
-                      <td className="py-2 px-4">{new Date(booking.createdAt).toLocaleDateString()}</td>
-                      <td className="py-2 px-4">{formatCurrency(booking.totalAmount)}</td>
-                      <td className="py-2 px-4">
-                        <StatusBadge status={booking.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-4 text-right">
+            <Link
+              href="/dashboard/cars"
+              className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              View all cars
+            </Link>
+          </div>
+        </div>
+      </div>
+      
+      {/* Recent bookings */}
+      <div className="mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Recent bookings</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th scope="col" className="px-6 py-3">BOOKING CODE</th>
+                  <th scope="col" className="px-6 py-3">CUSTOMER</th>
+                  <th scope="col" className="px-6 py-3">CAR</th>
+                  <th scope="col" className="px-6 py-3">TOTAL AMOUNT</th>
+                  <th scope="col" className="px-6 py-3">CREATED AT</th>
+                  <th scope="col" className="px-6 py-3">STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentBookings.map((booking) => (
+                  <tr key={booking._id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                      <Link href={`/dashboard/bookings/${booking._id}`} className="hover:text-blue-600 dark:hover:text-blue-400">
+                        {booking.bookingCode}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {booking.user.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {booking.car.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(booking.totalAmount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(booking.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full items-center ${getStatusClass(booking.status)}`}>
+                        {getStatusIcon(booking.status)}
+                        <span className="ml-1">{getStatusText(booking.status)}</span>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-4 text-right">
+            <Link
+              href="/dashboard/bookings"
+              className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              View all bookings
+            </Link>
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer note */}
+      <div className="mt-8 mb-4 p-4 border border-yellow-300 bg-yellow-50 rounded-md dark:bg-yellow-900/30 dark:border-yellow-700">
+        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+          <strong>Note:</strong> This is a demo data dashboard. In a production environment, data will be fetched from the database and displayed using Chart.js or similar charting libraries.
+        </p>
+      </div>
     </div>
-  );
-}
-
-// Stat Card Component
-function StatCard({ title, value, description, loading }) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="h-8 w-full bg-gray-200 animate-pulse rounded"></div>
-        ) : (
-          <>
-            <div className="text-2xl font-bold">{value}</div>
-            <p className="text-xs text-gray-500">{description}</p>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-// Status Badge Component
-function StatusBadge({ status }) {
-  const statusStyles = {
-    pending: "bg-yellow-100 text-yellow-800",
-    confirmed: "bg-blue-100 text-blue-800",
-    completed: "bg-green-100 text-green-800",
-    canceled: "bg-red-100 text-red-800",
-    paid: "bg-purple-100 text-purple-800",
-  };
-  
-  const displayNames = {
-    pending: "Pending",
-    confirmed: "Confirmed",
-    completed: "Completed",
-    canceled: "Canceled",
-    paid: "Paid",
-  };
-  
-  return (
-    <span className={`px-2 py-1 rounded-full text-xs ${statusStyles[status] || "bg-gray-100 text-gray-800"}`}>
-      {displayNames[status] || status}
-    </span>
   );
 } 

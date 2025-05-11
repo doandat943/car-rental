@@ -10,6 +10,9 @@ router.use(authorize('admin', 'superadmin'));
 // Get dashboard overview stats
 router.get('/stats', dashboardController.getStats);
 
+// Get detailed statistics for statistics page
+router.get('/statistics', dashboardController.getStatistics);
+
 // Get booking statistics
 router.get('/bookings', dashboardController.getBookingsStats);
 

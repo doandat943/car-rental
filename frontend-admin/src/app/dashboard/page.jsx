@@ -120,30 +120,37 @@ export default function DashboardPage() {
         setStats(statsCards);
         
         // Format booking data
-        const formattedBookings = (bookingsResponse.data.data || []).map(booking => ({
-          id: booking._id,
-          customer: booking.user?.name || 'Customer',
-          car: booking.car?.name || 'Unknown car',
-          status: booking.status,
-          date: new Date(booking.startDate).toLocaleDateString(),
-          amount: `$${booking.totalAmount.toLocaleString()}`,
-        }));
+        const bookingsData = bookingsResponse.data.data || [];
+        const formattedBookings = Array.isArray(bookingsData) 
+          ? bookingsData.map(booking => ({
+              id: booking._id,
+              customer: booking.user?.name || 'Customer',
+              car: booking.car?.name || 'Unknown car',
+              status: booking.status,
+              date: new Date(booking.startDate).toLocaleDateString(),
+              amount: `$${booking.totalAmount.toLocaleString()}`,
+            }))
+          : [];
         
         setRecentBookings(formattedBookings);
         
         // Format top cars data
-        const formattedTopCars = (topCarsResponse.data.data || []).map(car => ({
-          id: car._id,
-          name: car.name,
-          bookings: car.bookingsCount,
-          revenue: `$${car.totalRevenue.toLocaleString()}`,
-          rating: car.averageRating || 0,
-        }));
+        const topCarsData = topCarsResponse.data.data || [];
+        const formattedTopCars = Array.isArray(topCarsData)
+          ? topCarsData.map(car => ({
+              id: car._id,
+              name: car.name,
+              bookings: car.bookingsCount,
+              revenue: `$${car.totalRevenue.toLocaleString()}`,
+              rating: car.averageRating || 0,
+            }))
+          : [];
         
         setTopCars(formattedTopCars);
         
         // Add chart data to state
-        setRevenueData(revenueChartResponse.data.data || []);
+        const chartData = revenueChartResponse.data.data || [];
+        setRevenueData(Array.isArray(chartData) ? chartData : []);
         
         setLoading(false);
         setError(null);
@@ -225,10 +232,10 @@ export default function DashboardPage() {
         ]);
       }
     };
-    
+
     fetchDashboardData();
   }, []);
-  
+
   // Handle period change for revenue chart
   const handlePeriodChange = async (period) => {
     // Rest of the function implementation

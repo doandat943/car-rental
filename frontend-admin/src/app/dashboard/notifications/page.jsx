@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 
-// Trang quản lý tất cả thông báo
+// Page for managing all notifications
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ export default function NotificationsPage() {
     type: 'all'  // 'all', 'booking_new', 'booking_canceled', etc.
   });
 
-  const LIMIT = 10; // Số thông báo mỗi trang
+  const LIMIT = 10; // Number of notifications per page
 
   // Lấy thông báo dựa theo bộ lọc và phân trang
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function NotificationsPage() {
       
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      setError('Không thể tải thông báo. Vui lòng thử lại sau.');
+      setError('Unable to load notifications. Please try again later.');
       setNotifications([]);
       setTotalPages(1);
     } finally {
@@ -261,7 +261,7 @@ export default function NotificationsPage() {
       case 'payment_received':
         return 'Payment';
       default:
-        return 'Thông báo';
+        return 'Notification';
     }
   };
 
@@ -269,9 +269,9 @@ export default function NotificationsPage() {
     <div className="px-4 pt-6">
       <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Thông báo</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Notifications</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Quản lý và xem các thông báo trong hệ thống
+            Manage and view notifications in the system
           </p>
         </div>
         
@@ -283,7 +283,7 @@ export default function NotificationsPage() {
             className="flex items-center gap-2"
           >
             <CheckSquare className="w-4 h-4" />
-            <span>Đánh dấu tất cả đã đọc</span>
+            <span>Mark all as read</span>
           </Button>
           
           <Button 
@@ -293,7 +293,7 @@ export default function NotificationsPage() {
             className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-950"
           >
             <Trash2 className="w-4 h-4" />
-            <span>Xóa tất cả đã đọc</span>
+            <span>Delete all read</span>
           </Button>
         </div>
       </div>
@@ -303,25 +303,25 @@ export default function NotificationsPage() {
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex items-center">
             <Filter className="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
-            <span className="text-sm font-medium">Lọc:</span>
+            <span className="text-sm font-medium">Filter:</span>
           </div>
           
           <div className="flex flex-wrap gap-4">
             <div>
-              <label className="text-sm mr-2 text-gray-500 dark:text-gray-400">Trạng thái:</label>
+              <label className="text-sm mr-2 text-gray-500 dark:text-gray-400">Status:</label>
               <select 
                 value={filter.read}
                 onChange={(e) => setFilter({...filter, read: e.target.value})}
                 className="text-sm bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
-                <option value="all">Tất cả</option>
-                <option value="unread">Chưa đọc</option>
-                <option value="read">Đã đọc</option>
+                <option value="all">All</option>
+                <option value="unread">Unread</option>
+                <option value="read">Read</option>
               </select>
             </div>
             
             <div>
-              <label className="text-sm mr-2 text-gray-500 dark:text-gray-400">Loại:</label>
+              <label className="text-sm mr-2 text-gray-500 dark:text-gray-400">Type:</label>
               <select 
                 value={filter.type}
                 onChange={(e) => setFilter({...filter, type: e.target.value})}
@@ -385,7 +385,7 @@ export default function NotificationsPage() {
                           </span>
                           {!notification.read && (
                             <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                              Mới
+                              New
                             </span>
                           )}
                           <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
@@ -417,7 +417,7 @@ export default function NotificationsPage() {
                           className="flex items-center gap-1 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                         >
                           <Check className="w-4 h-4" />
-                          <span>Đánh dấu đã đọc</span>
+                          <span>Mark as read</span>
                         </Button>
                       )}
                       
@@ -428,7 +428,7 @@ export default function NotificationsPage() {
                         className="flex items-center gap-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                       >
                         <Trash2 className="w-4 h-4" />
-                        <span>Xóa</span>
+                        <span>Delete</span>
                       </Button>
                     </div>
                   </div>
@@ -446,7 +446,7 @@ export default function NotificationsPage() {
                     onClick={() => handlePageChange(page - 1)}
                     disabled={page === 1}
                   >
-                    Trước
+                    Previous
                   </Button>
                   
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
@@ -466,7 +466,7 @@ export default function NotificationsPage() {
                     onClick={() => handlePageChange(page + 1)}
                     disabled={page === totalPages}
                   >
-                    Tiếp
+                    Next
                   </Button>
                 </div>
               </div>

@@ -22,8 +22,18 @@ async function fetchWithAuth(endpoint, options = {}) {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    // Handle query parameters if provided
+    let url = `${API_BASE_URL}${endpoint}`;
+    if (options.params) {
+      const queryParams = new URLSearchParams();
+      for (const key in options.params) {
+        queryParams.append(key, options.params[key]);
+      }
+      url += (url.includes('?') ? '&' : '?') + queryParams.toString();
+    }
+
     // Create request with configured headers
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(url, {
       ...options,
       headers,
     });
@@ -385,6 +395,24 @@ export const dashboardAPI = {
     });
   },
 
+  // Get statistics for statistics page
+  getStatistics: async (timeFrame = 'month') => {
+    // Use the existing stats endpoint since the statistics endpoint doesn't exist
+    return fetchWithAuth('/dashboard/statistics', {
+      method: 'GET',
+      // Pass the timeFrame as a query parameter
+      params: { timeFrame }
+    });
+  },
+
+  // Get recent bookings
+  getRecentBookings: async (limit = 5) => {
+    // Use the existing getAllBookings function from bookingsAPI
+    return fetchWithAuth(`/bookings?limit=${limit}&sort=-createdAt`, {
+      method: 'GET',
+    });
+  },
+
   // Get revenue chart data
   getRevenueChart: async (period = 'month') => {
     return fetchWithAuth(`/dashboard/revenue?period=${period}`, {
@@ -410,6 +438,55 @@ export const dashboardAPI = {
   getCarsByStatus: async () => {
     return fetchWithAuth('/dashboard/cars-by-status', {
       method: 'GET',
+    });
+  },
+};
+
+/**
+ * Notification management APIs
+ */
+export const notificationsAPI = {
+  // Get all notifications
+  getAllNotifications: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params.page) queryParams.append('page', params.page);
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.read !== undefined) queryParams.append('read', params.read);
+    if (params.type) queryParams.append('type', params.type);
+    
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    
+    return fetchWithAuth(`/notifications${queryString}`, {
+      method: 'GET',
+    });
+  },
+
+  // Get unread count
+  getUnreadCount: async () => {
+    return fetchWithAuth('/notifications/unread-count', {
+      method: 'GET',
+    });
+  },
+
+  // Mark notification as read
+  markAsRead: async (id) => {
+    return fetchWithAuth(`/notifications/${id}/mark-read`, {
+      method: 'PATCH',
+    });
+  },
+
+  // Mark all notifications as read
+  markAllAsRead: async () => {
+    return fetchWithAuth('/notifications/mark-all-read', {
+      method: 'PATCH',
+    });
+  },
+
+  // Delete notification
+  deleteNotification: async (id) => {
+    return fetchWithAuth(`/notifications/${id}`, {
+      method: 'DELETE',
     });
   },
 };

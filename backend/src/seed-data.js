@@ -711,7 +711,10 @@ async function createStatistics() {
   const totalCars = await Car.countDocuments();
   const totalBookings = await Booking.countDocuments();
   const pendingBookings = await Booking.countDocuments({ status: 'pending' });
-  const availableCars = await Car.countDocuments({ status: 'available' });
+  const activeBookings = await Booking.countDocuments({ status: 'active' });
+  const completedBookings = await Booking.countDocuments({ status: 'completed' });
+  const cancelledBookings = await Booking.countDocuments({ status: 'cancelled' });
+  const availableCars = await Car.countDocuments({ availability: true });
   
   // Calculate total revenue from bookings
   const bookings = await Booking.find();
@@ -719,36 +722,54 @@ async function createStatistics() {
     return total + (booking.totalAmount || 0);
   }, 0);
   
-  // Generate monthly data (mock for last 6 months)
+  // Generate monthly data (real data from bookings)
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
   
-  const monthlyRevenue = [];
-  const monthlyBookings = [];
+  const monthlyRevenue = Array(12).fill(0).map(() => ({ label: '', value: 0 }));
+  const monthlyBookings = Array(12).fill(0).map(() => ({ label: '', value: 0 }));
   
-  for (let i = 5; i >= 0; i--) {
-    const monthIndex = (currentMonth - i + 12) % 12;
-    
-    // Random values for demonstration
-    const randomRevenue = 5000 + Math.floor(Math.random() * 15000);
-    const randomBookings = 10 + Math.floor(Math.random() * 40);
-    
-    monthlyRevenue.push({
-      label: months[monthIndex],
-      value: randomRevenue
-    });
-    
-    monthlyBookings.push({
-      label: months[monthIndex],
-      value: randomBookings
-    });
+  // Initialize with month labels
+  for (let i = 0; i < 12; i++) {
+    monthlyRevenue[i].label = months[i];
+    monthlyBookings[i].label = months[i];
   }
   
-  // Car status distribution
+  // Populate with real booking data
+  bookings.forEach(booking => {
+    const bookingDate = new Date(booking.createdAt);
+    const bookingMonth = bookingDate.getMonth();
+    const bookingYear = bookingDate.getFullYear();
+    
+    // Only count current year bookings
+    if (bookingYear === currentYear) {
+      // Increment booking count for the month
+      monthlyBookings[bookingMonth].value++;
+      
+      // Add booking revenue to the month
+      if (['completed', 'active', 'confirmed'].includes(booking.status)) {
+        monthlyRevenue[bookingMonth].value += (booking.totalAmount || 0);
+      }
+    }
+  });
+  
+  // If no data for some months, add some random values for better visualization
+  for (let i = 0; i < 12; i++) {
+    if (monthlyRevenue[i].value === 0) {
+      monthlyRevenue[i].value = 5000000 + Math.floor(Math.random() * 10000000);
+    }
+    
+    if (monthlyBookings[i].value === 0) {
+      monthlyBookings[i].value = 5 + Math.floor(Math.random() * 15);
+    }
+  }
+  
+  // Car status distribution (use real data)
   const carStatus = [
     { status: 'available', count: availableCars, label: 'Available' },
-    { status: 'maintenance', count: Math.floor(Math.random() * 10), label: 'Maintenance' },
-    { status: 'rented', count: Math.floor(Math.random() * 15), label: 'Rented' }
+    { status: 'maintenance', count: totalCars - availableCars - activeBookings, label: 'Maintenance' },
+    { status: 'rented', count: activeBookings, label: 'Rented' }
   ];
   
   // Create statistics document
@@ -760,8 +781,10 @@ async function createStatistics() {
       totalCars,
       pendingBookings,
       availableCars,
-      monthlyRevenue: monthlyRevenue[5].value,
-      monthlyBookings: monthlyBookings[5].value
+      completedBookings,
+      cancelledBookings,
+      monthlyRevenue: monthlyRevenue[currentMonth].value,
+      monthlyBookings: monthlyBookings[currentMonth].value
     },
     monthlyRevenue,
     monthlyBookings,
@@ -817,40 +840,6 @@ async function createNotifications(users) {
   console.log(`${notifications.length} notifications created successfully!`);
 }
 
-/**
- * Dữ liệu mô phỏng (mock data) cho API responses
- * Giữ lại để tham khảo và dễ dàng cập nhật nếu cần
- */
-const MOCK_DATA = {
-  dashboard: {
-    stats: {
-      data: {
-        totalUsers: 2856,
-        totalCars: 48,
-        totalBookings: 142,
-        totalRevenue: 35800,
-        userGrowth: 12.5,
-        carGrowth: -3.2,
-        bookingGrowth: 8.7,
-        revenueGrowth: 14.2,
-        userTrend: [12, 15, 18, 14, 22, 25, 28, 26, 30],
-        carTrend: [24, 25, 20, 18, 15, 16, 15, 14, 13],
-        bookingTrend: [45, 50, 55, 60, 58, 65, 70, 68, 78],
-        revenueTrend: [15000, 16000, 18000, 17000, 19000, 22000, 25000, 28000, 30000],
-      }
-    },
-    topCars: {
-      data: [
-        { _id: 1, name: 'Tesla Model 3', bookingsCount: 28, totalRevenue: 3360, averageRating: 4.8 },
-        { _id: 2, name: 'BMW X5', bookingsCount: 22, totalRevenue: 7700, averageRating: 4.6 },
-        { _id: 3, name: 'Toyota Camry', bookingsCount: 19, totalRevenue: 1615, averageRating: 4.3 },
-        { _id: 4, name: 'Mercedes C-Class', bookingsCount: 17, totalRevenue: 3400, averageRating: 4.7 },
-        { _id: 5, name: 'Honda Civic', bookingsCount: 15, totalRevenue: 1275, averageRating: 4.5 },
-      ]
-    }
-  }
-};
-
 if (require.main === module) {
   // Chạy trực tiếp từ dòng lệnh node seed-data.js
   if (process.argv.includes('--copyAssets')) {
@@ -884,7 +873,6 @@ if (require.main === module) {
     categories,
     cars,
     users,
-    MOCK_DATA,
     hashPassword
   };
 } 

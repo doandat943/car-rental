@@ -307,6 +307,282 @@ exports.getTopCars = async (req, res) => {
 };
 
 /**
+ * Get detailed statistics for dashboard statistics page
+ * @route GET /api/dashboard/statistics
+ * @access Private (Admin)
+ */
+exports.getStatistics = async (req, res) => {
+  try {
+    // Get timeFrame from query (default: month)
+    const { timeFrame = 'month' } = req.query;
+    
+    // Get current date
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Get statistical data
+    const [
+      totalBookings, 
+      totalUsers, 
+      totalCars, 
+      bookings,
+      statistic,
+      recentBookings,
+      topCarsData
+    ] = await Promise.all([
+      Booking.countDocuments(),
+      User.countDocuments({ role: 'customer' }),
+      Car.countDocuments(),
+      Booking.find().select('totalAmount createdAt status startDate endDate').lean(),
+      Statistic.findOne().sort({ date: -1 }).lean(),
+      Booking.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate('user', 'name email')
+        .populate('car', 'name brand model price')
+        .lean(),
+      Booking.aggregate([
+        {
+          $match: {
+            status: { $in: ['completed', 'active', 'confirmed'] }
+          }
+        },
+        {
+          $group: {
+            _id: '$car',
+            bookingsCount: { $sum: 1 },
+            totalRevenue: { $sum: '$totalAmount' }
+          }
+        },
+        {
+          $sort: { bookingsCount: -1 }
+        },
+        {
+          $limit: 5
+        },
+        {
+          $lookup: {
+            from: 'cars',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'carDetails'
+          }
+        },
+        {
+          $unwind: '$carDetails'
+        },
+        {
+          $project: {
+            _id: 1,
+            name: '$carDetails.name',
+            bookingsCount: 1,
+            totalRevenue: 1,
+            averageRating: '$carDetails.rating'
+          }
+        }
+      ])
+    ]);
+
+    // Calculate total revenue
+    const totalRevenue = bookings.reduce((sum, booking) => {
+      if (['completed', 'active', 'confirmed'].includes(booking.status)) {
+        return sum + (booking.totalAmount || 0);
+      }
+      return sum;
+    }, 0);
+
+    // Calculate current status of cars
+    const availableCars = await Car.countDocuments({ availability: true });
+    const maintenanceCars = await Car.countDocuments({ availability: false });
+    const rentedCars = await Booking.countDocuments({ status: 'active' });
+
+    // Get data for revenue chart based on timeFrame
+    let revenueLabels = [];
+    let revenueData = [];
+    let bookingsLabels = [];
+    let bookingsData = [];
+
+    if (timeFrame === 'year') {
+      // Yearly data: show 12 months
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      revenueLabels = months;
+      bookingsLabels = months;
+      
+      // Use existing statistical data if available
+      if (statistic && statistic.monthlyRevenue && statistic.monthlyBookings) {
+        revenueData = statistic.monthlyRevenue.map(item => item.value);
+        bookingsData = statistic.monthlyBookings.map(item => item.value);
+      } else {
+        // Calculate monthly data
+        revenueData = Array(12).fill(0);
+        bookingsData = Array(12).fill(0);
+        
+        bookings.forEach(booking => {
+          const bookingDate = new Date(booking.createdAt);
+          const bookingYear = bookingDate.getFullYear();
+          
+          if (bookingYear === currentYear) {
+            const monthIndex = bookingDate.getMonth();
+            bookingsData[monthIndex]++;
+            
+            if (['completed', 'active', 'confirmed'].includes(booking.status)) {
+              revenueData[monthIndex] += (booking.totalAmount || 0);
+            }
+          }
+        });
+      }
+    } else if (timeFrame === 'month') {
+      // Monthly data: show 4 weeks
+      revenueLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+      bookingsLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+      
+      // Calculate weekly data for current month
+      revenueData = [0, 0, 0, 0];
+      bookingsData = [0, 0, 0, 0];
+      
+      bookings.forEach(booking => {
+        const bookingDate = new Date(booking.createdAt);
+        const bookingMonth = bookingDate.getMonth();
+        const bookingYear = bookingDate.getFullYear();
+        
+        if (bookingYear === currentYear && bookingMonth === currentMonth) {
+          const day = bookingDate.getDate();
+          const weekIndex = Math.min(3, Math.floor((day - 1) / 7));
+          
+          bookingsData[weekIndex]++;
+          
+          if (['completed', 'active', 'confirmed'].includes(booking.status)) {
+            revenueData[weekIndex] += (booking.totalAmount || 0);
+          }
+        }
+      });
+    } else {
+      // Weekly data: show 7 days
+      revenueLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      bookingsLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      
+      // Calculate daily data for current week
+      revenueData = [0, 0, 0, 0, 0, 0, 0];
+      bookingsData = [0, 0, 0, 0, 0, 0, 0];
+      
+      // Get start of current week (Sunday)
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      bookings.forEach(booking => {
+        const bookingDate = new Date(booking.createdAt);
+        
+        // Check if booking is from current week
+        if (bookingDate >= startOfWeek) {
+          const dayIndex = bookingDate.getDay();
+          
+          bookingsData[dayIndex]++;
+          
+          if (['completed', 'active', 'confirmed'].includes(booking.status)) {
+            revenueData[dayIndex] += (booking.totalAmount || 0);
+          }
+        }
+      });
+    }
+
+    // Format response data
+    const formattedRecentBookings = recentBookings.map(booking => ({
+      _id: booking._id,
+      user: {
+        name: booking.user?.name || 'Unknown User'
+      },
+      car: {
+        name: booking.car?.name || 'Unknown Car'
+      },
+      totalAmount: booking.totalAmount,
+      status: booking.status,
+      createdAt: booking.createdAt
+    }));
+
+    const carStatusData = [
+      { status: 'available', count: availableCars, label: 'Available' },
+      { status: 'rented', count: rentedCars, label: 'Rented' },
+      { status: 'maintenance', count: maintenanceCars, label: 'Maintenance' }
+    ];
+
+    // Prepare chart data
+    const revenueChart = {
+      labels: revenueLabels,
+      datasets: [
+        {
+          label: 'Revenue',
+          data: revenueData,
+          borderColor: 'rgb(53, 162, 235)',
+          backgroundColor: 'rgba(53, 162, 235, 0.5)',
+          tension: 0.3
+        }
+      ]
+    };
+
+    const bookingsChart = {
+      labels: bookingsLabels,
+      datasets: [
+        {
+          label: 'Bookings',
+          data: bookingsData,
+          borderColor: 'rgb(75, 192, 192)',
+          backgroundColor: 'rgba(75, 192, 192, 0.5)',
+          tension: 0.3
+        }
+      ]
+    };
+
+    const carStatusChart = {
+      labels: carStatusData.map(item => item.label),
+      datasets: [
+        {
+          label: 'Car Status',
+          data: carStatusData.map(item => item.count),
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.5)',
+            'rgba(53, 162, 235, 0.5)',
+            'rgba(255, 206, 86, 0.5)',
+          ],
+          borderColor: [
+            'rgb(75, 192, 192)',
+            'rgb(53, 162, 235)',
+            'rgb(255, 206, 86)',
+          ],
+          borderWidth: 1
+        }
+      ]
+    };
+
+    res.status(200).json({
+      success: true,
+      data: {
+        overview: {
+          totalRevenue,
+          totalBookings,
+          totalUsers,
+          totalCars,
+          pendingBookings: bookings.filter(b => b.status === 'pending').length,
+          availableCars
+        },
+        revenueChart,
+        bookingsChart,
+        carStatusChart,
+        topCars: topCarsData,
+        recentBookings: formattedRecentBookings
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching statistics',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Get cars by status
  * @route GET /api/dashboard/cars-by-status
  * @access Private (Admin)

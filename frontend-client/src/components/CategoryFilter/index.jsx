@@ -1,7 +1,7 @@
 import React from 'react';
 
 const CategoryFilter = ({ categories = [], selectedCategory, onSelectCategory }) => {
-  // Đảm bảo categories là một mảng
+  // Ensure categories is an array
   const categoriesList = Array.isArray(categories) ? categories : [];
   
   return (

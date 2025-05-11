@@ -21,7 +21,8 @@ import {
   AlertCircle,
   ShoppingCart,
   MessageSquare,
-  Star
+  Star,
+  Calendar
 } from 'lucide-react';
 import { authAPI, notificationsAPI } from '../../lib/api';
 import { Button } from '../../components/ui/Button';

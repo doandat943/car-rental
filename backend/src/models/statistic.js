@@ -8,6 +8,8 @@ const statisticSchema = new mongoose.Schema({
     totalCars: Number,
     pendingBookings: Number,
     availableCars: Number,
+    completedBookings: Number,
+    cancelledBookings: Number,
     monthlyRevenue: Number,
     monthlyBookings: Number
   },
