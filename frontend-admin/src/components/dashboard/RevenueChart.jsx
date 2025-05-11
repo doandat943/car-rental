@@ -4,34 +4,34 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { useMemo } from 'react';
 
 /**
- * Biểu đồ doanh thu
- * @param {Array} data - Dữ liệu biểu đồ
- * @param {string} period - Giai đoạn (week, month, year)
+ * Revenue Chart
+ * @param {Array} data - Chart data
+ * @param {string} period - Time period (week, month, year)
  */
 export default function RevenueChart({ data = [], period = 'month' }) {
-  // Format dữ liệu dựa trên giai đoạn
+  // Format data based on period
   const formattedData = useMemo(() => {
     if (!data || data.length === 0) {
       return [];
     }
 
-    // Xử lý định dạng data tùy theo giai đoạn
+    // Process data format depending on period
     return data.map(item => ({
       ...item,
-      // Format giá trị X-axis dựa trên giai đoạn
-      name: period === 'week' ? `Ngày ${item.day || item.date}` : 
-            period === 'month' ? `Tháng ${item.month}` : 
-            `Quý ${item.quarter || item.year}`,
-      // Đảm bảo giá trị doanh thu là số
+      // Format X-axis value based on period
+      name: period === 'week' ? `Day ${item.day || item.date}` : 
+            period === 'month' ? `Month ${item.month}` : 
+            `Quarter ${item.quarter || item.year}`,
+      // Ensure revenue value is a number
       value: Number(item.revenue || item.value || 0),
     }));
   }, [data, period]);
 
-  // Format tiền tệ
+  // Format currency
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'VND',
+      currency: 'USD',
       maximumFractionDigits: 0,
     }).format(value);
   };
@@ -85,13 +85,13 @@ export default function RevenueChart({ data = [], period = 'month' }) {
             <Legend 
               verticalAlign="top" 
               wrapperStyle={{ paddingBottom: 10 }}
-              formatter={() => period === 'week' ? 'Doanh thu theo ngày' : 
-                               period === 'month' ? 'Doanh thu theo tháng' : 
-                               'Doanh thu theo quý'}
+              formatter={() => period === 'week' ? 'Daily Revenue' : 
+                               period === 'month' ? 'Monthly Revenue' : 
+                               'Quarterly Revenue'}
             />
             <Bar 
               dataKey="value" 
-              name="Doanh thu" 
+              name="Revenue" 
               fill="#3B82F6" 
               radius={[4, 4, 0, 0]} 
               barSize={period === 'week' ? 16 : 30} 
@@ -100,7 +100,7 @@ export default function RevenueChart({ data = [], period = 'month' }) {
         </ResponsiveContainer>
       ) : (
         <div className="flex h-full items-center justify-center">
-          <p className="text-gray-500">Không có dữ liệu hiển thị</p>
+          <p className="text-gray-500">No data to display</p>
         </div>
       )}
     </div>

@@ -375,11 +375,11 @@ function StatusBadge({ status }) {
   };
   
   const displayNames = {
-    pending: "Đang chờ",
-    confirmed: "Đã xác nhận",
-    completed: "Hoàn thành",
-    canceled: "Đã hủy",
-    paid: "Đã thanh toán",
+    pending: "Pending",
+    confirmed: "Confirmed",
+    completed: "Completed",
+    canceled: "Canceled",
+    paid: "Paid",
   };
   
   return (

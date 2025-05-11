@@ -187,10 +187,10 @@ export default function AddCar() {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Thêm xe mới</h1>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Add new car</h1>
           </div>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Thêm thông tin chi tiết về xe
+            Add detailed information about the car
           </p>
         </div>
       </div>
@@ -208,7 +208,7 @@ export default function AddCar() {
         <div className="mb-4 flex p-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
           <Check className="flex-shrink-0 inline w-5 h-5 mr-3" />
           <span className="sr-only">Success</span>
-          <div>Xe đã được tạo thành công. Đang chuyển hướng...</div>
+          <div>Car has been created successfully. Redirecting...</div>
         </div>
       )}
 
@@ -218,7 +218,7 @@ export default function AddCar() {
           <div className="grid gap-6 mb-6 md:grid-cols-2">
             {/* Tên xe */}
             <div>
-              <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tên xe</label>
+              <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Car name</label>
               <input 
                 type="text" 
                 id="name" 
@@ -233,7 +233,7 @@ export default function AddCar() {
             
             {/* Thương hiệu */}
             <div>
-              <label htmlFor="brand" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Thương hiệu</label>
+              <label htmlFor="brand" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Brand</label>
               <input 
                 type="text" 
                 id="brand" 
@@ -248,7 +248,7 @@ export default function AddCar() {
             
             {/* Kiểu mẫu */}
             <div>
-              <label htmlFor="model" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Kiểu mẫu</label>
+              <label htmlFor="model" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Model</label>
               <input 
                 type="text" 
                 id="model" 
@@ -263,7 +263,7 @@ export default function AddCar() {
             
             {/* Năm sản xuất */}
             <div>
-              <label htmlFor="year" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Năm sản xuất</label>
+              <label htmlFor="year" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Year</label>
               <input 
                 type="number" 
                 id="year" 
@@ -280,7 +280,7 @@ export default function AddCar() {
             
             {/* Giá thuê / ngày */}
             <div>
-              <label htmlFor="price.daily" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Giá thuê / ngày ($)</label>
+              <label htmlFor="price.daily" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rent price / day ($)</label>
               <input 
                 type="number" 
                 id="price.daily" 
@@ -297,7 +297,7 @@ export default function AddCar() {
             
             {/* Danh mục */}
             <div>
-              <label htmlFor="category" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Danh mục</label>
+              <label htmlFor="category" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category</label>
               <select 
                 id="category" 
                 name="category"
@@ -306,9 +306,9 @@ export default function AddCar() {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="">Chọn danh mục</option>
+                <option value="">Select category</option>
                 {categoryLoading ? (
-                  <option disabled>Đang tải danh mục...</option>
+                  <option disabled>Loading categories...</option>
                 ) : (
                   categories.map(category => (
                     <option key={category._id} value={category._id}>
@@ -321,7 +321,7 @@ export default function AddCar() {
             
             {/* Số chỗ ngồi */}
             <div>
-              <label htmlFor="seats" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Số chỗ ngồi</label>
+              <label htmlFor="seats" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seats</label>
               <input 
                 type="number" 
                 id="seats" 
@@ -338,7 +338,7 @@ export default function AddCar() {
             
             {/* Hộp số */}
             <div>
-              <label htmlFor="transmission" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hộp số</label>
+              <label htmlFor="transmission" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Transmission</label>
               <select 
                 id="transmission" 
                 name="transmission"
@@ -347,15 +347,15 @@ export default function AddCar() {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="automatic">Tự động</option>
-                <option value="manual">Số sàn</option>
-                <option value="semi-automatic">Bán tự động</option>
+                <option value="automatic">Automatic</option>
+                <option value="manual">Manual</option>
+                <option value="semi-automatic">Semi-automatic</option>
               </select>
             </div>
             
             {/* Loại nhiên liệu */}
             <div>
-              <label htmlFor="fuelType" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Loại nhiên liệu</label>
+              <label htmlFor="fuelType" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fuel type</label>
               <select 
                 id="fuelType" 
                 name="fuelType"
@@ -364,16 +364,16 @@ export default function AddCar() {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="gasoline">Xăng</option>
-                <option value="diesel">Dầu diesel</option>
-                <option value="electric">Điện</option>
+                <option value="gasoline">Gasoline</option>
+                <option value="diesel">Diesel</option>
+                <option value="electric">Electric</option>
                 <option value="hybrid">Hybrid</option>
               </select>
             </div>
             
             {/* Trạng thái */}
             <div>
-              <label htmlFor="status" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trạng thái</label>
+              <label htmlFor="status" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
               <select 
                 id="status" 
                 name="status"
@@ -382,16 +382,16 @@ export default function AddCar() {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="available">Sẵn sàng</option>
-                <option value="maintenance">Bảo trì</option>
-                <option value="rented">Đang thuê</option>
+                <option value="available">Available</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="rented">Rented</option>
               </select>
             </div>
           </div>
           
           {/* Mô tả */}
           <div className="mb-6">
-            <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Mô tả</label>
+            <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
             <textarea 
               id="description" 
               name="description"
@@ -399,20 +399,20 @@ export default function AddCar() {
               onChange={handleChange}
               rows="4" 
               className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-              placeholder="Mô tả chi tiết về xe, tình trạng, đặc điểm..."
+              placeholder="Detailed description of the car, condition, features..."
             ></textarea>
           </div>
           
           {/* Tính năng */}
           <div className="mb-6">
-            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tính năng</label>
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Features</label>
             <div className="flex mb-2">
               <input 
                 type="text" 
                 value={featureInput}
                 onChange={(e) => setFeatureInput(e.target.value)}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg rounded-r-none focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                placeholder="Thêm tính năng mới" 
+                placeholder="Add new feature" 
               />
               <button
                 type="button"
@@ -436,20 +436,20 @@ export default function AddCar() {
                 </div>
               ))}
               {formData.features.length === 0 && (
-                <span className="text-sm text-gray-500 dark:text-gray-400">Chưa có tính năng nào</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">No features added</span>
               )}
             </div>
           </div>
           
           {/* Upload ảnh */}
           <div className="mb-6">
-            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hình ảnh xe (tối đa 5 ảnh)</label>
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Car images (max 5 images)</label>
             <div className="flex items-center justify-center w-full">
               <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Upload className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" />
-                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold">Click để tải lên</span> hoặc kéo thả</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG hoặc JPEG (tối đa 5MB mỗi ảnh)</p>
+                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or JPEG (max 5MB per image)</p>
                 </div>
                 <input 
                   id="dropzone-file" 
@@ -462,10 +462,10 @@ export default function AddCar() {
               </label>
             </div>
             
-            {/* Preview ảnh đã chọn */}
+            {/* Preview selected images */}
             {selectedFiles.length > 0 && (
               <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Ảnh đã chọn:</h3>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Selected images:</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {selectedFiles.map((file, index) => (
                     <div key={index} className="relative group">
@@ -497,7 +497,7 @@ export default function AddCar() {
               <div className="w-full bg-gray-200 rounded-full h-2.5 mt-3 dark:bg-gray-700">
                 <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Đang tải lên {uploadProgress}%
+                  Uploading {uploadProgress}%
                 </p>
               </div>
             )}
@@ -511,7 +511,7 @@ export default function AddCar() {
                 variant="outline"
                 disabled={loading}
               >
-                Hủy
+                Cancel
               </Button>
             </Link>
             <Button 
@@ -522,12 +522,12 @@ export default function AddCar() {
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Đang xử lý...</span>
+                  <span>Processing...</span>
                 </>
               ) : (
                 <>
                   <Car className="h-4 w-4" />
-                  <span>Thêm xe</span>
+                  <span>Add car</span>
                 </>
               )}
             </Button>

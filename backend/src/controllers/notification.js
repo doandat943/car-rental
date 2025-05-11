@@ -2,29 +2,29 @@ const Notification = require('../models/notification');
 const User = require('../models/user');
 const mongoose = require('mongoose');
 
-// Lấy tất cả thông báo của người dùng hiện tại
+// Get all notifications for the current user
 exports.getNotifications = async (req, res) => {
   try {
     const userId = req.user._id;
     const { page = 1, limit = 10, read, type } = req.query;
     
-    // Tạo options
+    // Create options
     const options = {
       page: parseInt(page),
       limit: parseInt(limit)
     };
     
-    // Thêm lọc theo trạng thái đã đọc nếu có
+    // Add filter for read status if provided
     if (read !== undefined) {
       options.read = read === 'true';
     }
     
-    // Thêm lọc theo loại thông báo nếu có
+    // Add filter for notification type if provided
     if (type && type !== 'all') {
       options.type = type;
     }
     
-    // Lấy thông báo
+    // Get notifications
     const result = await Notification.getNotificationsForUser(userId, options);
     
     res.status(200).json({
@@ -35,12 +35,12 @@ exports.getNotifications = async (req, res) => {
     console.error('Error getting notifications:', error);
     res.status(500).json({
       success: false,
-      message: 'Không thể lấy thông báo, vui lòng thử lại sau'
+      message: 'Unable to get notifications, please try again later'
     });
   }
 };
 
-// Đếm thông báo chưa đọc
+// Count unread notifications
 exports.getUnreadCount = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -58,58 +58,58 @@ exports.getUnreadCount = async (req, res) => {
     console.error('Error counting unread notifications:', error);
     res.status(500).json({
       success: false,
-      message: 'Không thể đếm thông báo chưa đọc, vui lòng thử lại sau'
+      message: 'Unable to count unread notifications, please try again later'
     });
   }
 };
 
-// Đánh dấu một thông báo đã đọc
+// Mark a notification as read
 exports.markAsRead = async (req, res) => {
   try {
     const userId = req.user._id;
     const { id } = req.params;
     
-    // Kiểm tra id hợp lệ
+    // Check if id is valid
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: 'ID thông báo không hợp lệ'
+        message: 'Notification ID is not valid'
       });
     }
     
-    // Tìm thông báo
+    // Find notification
     const notification = await Notification.findOne({
       _id: id,
       user: userId
     });
     
-    // Kiểm tra thông báo tồn tại
+    // Check if notification exists
     if (!notification) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông báo'
+        message: 'Notification not found'
       });
     }
     
-    // Đánh dấu đã đọc
+    // Mark as read
     notification.read = true;
     await notification.save();
     
     res.status(200).json({
       success: true,
-      message: 'Đã đánh dấu thông báo là đã đọc',
+      message: 'Notification marked as read',
       data: notification
     });
   } catch (error) {
     console.error('Error marking notification as read:', error);
     res.status(500).json({
       success: false,
-      message: 'Không thể đánh dấu thông báo đã đọc, vui lòng thử lại sau'
+      message: 'Unable to mark notification as read, please try again later'
     });
   }
 };
 
-// Đánh dấu tất cả thông báo đã đọc
+// Mark all notifications as read
 exports.markAllAsRead = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -118,67 +118,67 @@ exports.markAllAsRead = async (req, res) => {
     
     res.status(200).json({
       success: true,
-      message: 'Đã đánh dấu tất cả thông báo là đã đọc',
+      message: 'All notifications marked as read',
       modifiedCount: result.modifiedCount
     });
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
     res.status(500).json({
       success: false,
-      message: 'Không thể đánh dấu tất cả thông báo đã đọc, vui lòng thử lại sau'
+      message: 'Unable to mark all notifications as read, please try again later'
     });
   }
 };
 
-// Xóa một thông báo
+// Delete a notification
 exports.deleteNotification = async (req, res) => {
   try {
     const userId = req.user._id;
     const { id } = req.params;
     
-    // Kiểm tra id hợp lệ
+    // Check if id is valid
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: 'ID thông báo không hợp lệ'
+        message: 'Notification ID is not valid'
       });
     }
     
-    // Tìm và xóa thông báo
+    // Find and delete notification
     const notification = await Notification.findOneAndDelete({
       _id: id,
       user: userId
     });
     
-    // Kiểm tra thông báo tồn tại
+    // Check if notification exists
     if (!notification) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông báo'
+        message: 'Notification not found'
       });
     }
     
     res.status(200).json({
       success: true,
-      message: 'Đã xóa thông báo thành công',
+      message: 'Notification deleted successfully',
       data: notification
     });
   } catch (error) {
     console.error('Error deleting notification:', error);
     res.status(500).json({
       success: false,
-      message: 'Không thể xóa thông báo, vui lòng thử lại sau'
+      message: 'Unable to delete notification, please try again later'
     });
   }
 };
 
-// Tạo thông báo kiểm thử (chỉ dùng cho phát triển)
+// Create test notification (only for development)
 exports.createTestNotification = async (req, res) => {
-  // Chỉ cho phép trong môi trường phát triển
+  // Only allowed in development environment
   if (process.env.NODE_ENV !== 'development') {
     return res.status(403).json({
       success: false,
-      message: 'Tính năng này chỉ khả dụng trong môi trường phát triển'
+      message: 'This feature is only available in development environment'
     });
   }
   
@@ -186,15 +186,15 @@ exports.createTestNotification = async (req, res) => {
     const userId = req.user._id;
     const { title, message, type = 'system' } = req.body;
     
-    // Kiểm tra dữ liệu
+    // Check data
     if (!title || !message) {
       return res.status(400).json({
         success: false,
-        message: 'Tiêu đề và nội dung thông báo là bắt buộc'
+        message: 'Title and notification message are required'
       });
     }
     
-    // Tạo thông báo mới
+    // Create new notification
     const notification = await Notification.createNotification({
       title,
       message,
@@ -204,25 +204,25 @@ exports.createTestNotification = async (req, res) => {
     
     res.status(201).json({
       success: true,
-      message: 'Đã tạo thông báo kiểm thử thành công',
+      message: 'Test notification created successfully',
       data: notification
     });
   } catch (error) {
     console.error('Error creating test notification:', error);
     res.status(500).json({
       success: false,
-      message: 'Không thể tạo thông báo kiểm thử, vui lòng thử lại sau'
+      message: 'Unable to create test notification, please try again later'
     });
   }
 };
 
-// Tạo nhiều thông báo kiểm thử (chỉ dùng cho phát triển)
+// Create multiple test notifications (only for development)
 exports.createMultipleTestNotifications = async (req, res) => {
-  // Chỉ cho phép trong môi trường phát triển
+  // Only allowed in development environment
   if (process.env.NODE_ENV !== 'development') {
     return res.status(403).json({
       success: false,
-      message: 'Tính năng này chỉ khả dụng trong môi trường phát triển'
+      message: 'This feature is only available in development environment'
     });
   }
   
@@ -230,89 +230,89 @@ exports.createMultipleTestNotifications = async (req, res) => {
     const userId = req.user._id;
     const { count = 5 } = req.body;
     
-    // Giới hạn số lượng thông báo tạo
+    // Limit the number of notifications to create
     const notificationCount = Math.min(parseInt(count), 20);
     
     const types = ['booking_new', 'booking_canceled', 'booking_completed', 'review_new', 'message_new', 'payment_received', 'system'];
     const notificationPromises = [];
     
-    // Tạo nhiều thông báo
+    // Create multiple notifications
     for (let i = 0; i < notificationCount; i++) {
       const type = types[Math.floor(Math.random() * types.length)];
-      const read = Math.random() > 0.6; // 40% chưa đọc, 60% đã đọc
+      const read = Math.random() > 0.6; // 40% unread, 60% read
       
       let title, message;
       
       switch (type) {
         case 'booking_new':
-          title = 'Yêu cầu đặt xe mới';
-          message = 'Có một yêu cầu đặt xe mới từ khách hàng.';
+          title = 'New booking request';
+          message = 'A new booking request has been received from a customer.';
           break;
         case 'booking_canceled':
-          title = 'Đơn đặt xe đã bị hủy';
-          message = 'Một khách hàng đã hủy đơn đặt xe.';
+          title = 'Booking canceled';
+          message = 'A customer has canceled the booking.';
           break;
         case 'booking_completed':
-          title = 'Đơn đặt xe hoàn thành';
-          message = 'Một đơn đặt xe đã hoàn thành thành công.';
+          title = 'Booking completed';
+          message = 'The booking has been completed successfully.';
           break;
         case 'review_new':
-          title = 'Đánh giá mới';
-          message = 'Có một đánh giá mới đã được gửi cho xe.';
+          title = 'New review';
+          message = 'A new review has been sent for the vehicle.';
           break;
         case 'message_new':
-          title = 'Tin nhắn mới';
-          message = 'Bạn có tin nhắn mới từ khách hàng.';
+          title = 'New message';
+          message = 'You have a new message from a customer.';
           break;
         case 'payment_received':
-          title = 'Thanh toán thành công';
-          message = 'Đã nhận thanh toán từ khách hàng.';
+          title = 'Payment received';
+          message = 'Payment has been received from a customer.';
           break;
         default:
-          title = 'Thông báo hệ thống';
-          message = 'Đây là thông báo từ hệ thống.';
+          title = 'System notification';
+          message = 'This is a system notification.';
       }
       
-      // Tạo thông báo và thêm vào mảng promises
+      // Create notification and add to promises array
       const notification = new Notification({
         title,
         message,
         type,
         read,
         user: userId,
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)) // Tạo ngẫu nhiên trong 7 ngày qua
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)) // Randomize within 7 days ago
       });
       
       notificationPromises.push(notification.save());
     }
     
-    // Chờ tất cả thông báo được tạo
+    // Wait for all notifications to be created
     const notifications = await Promise.all(notificationPromises);
     
     res.status(201).json({
       success: true,
-      message: `Đã tạo ${notifications.length} thông báo kiểm thử thành công`,
+      message: `Created ${notifications.length} test notifications successfully`,
       count: notifications.length
     });
   } catch (error) {
     console.error('Error creating multiple test notifications:', error);
     res.status(500).json({
       success: false,
-      message: 'Không thể tạo nhiều thông báo kiểm thử, vui lòng thử lại sau'
+      message: 'Unable to create multiple test notifications, please try again later'
     });
   }
 };
 
-// Service helper để tạo thông báo từ code khác (không phải API endpoint)
+// Service helper to create notifications from other code (not API endpoint)
 exports.createNotificationService = async (userId, notificationData) => {
   try {
-    // Kiểm tra user tồn tại
+    // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
-      throw new Error('User không tồn tại');
+      throw new Error('User does not exist');
     }
     
-    // Tạo thông báo
+    // Create notification
     const notification = await Notification.createNotification({
       ...notificationData,
       user: userId

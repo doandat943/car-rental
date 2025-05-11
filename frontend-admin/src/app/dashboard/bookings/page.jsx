@@ -33,11 +33,11 @@ export default function BookingsManagement() {
   const ITEMS_PER_PAGE = 10;
   
   const statusOptions = [
-    { value: '', label: 'Tất cả trạng thái' },
-    { value: 'pending', label: 'Đang chờ xử lý' },
-    { value: 'confirmed', label: 'Đã xác nhận' },
-    { value: 'cancelled', label: 'Đã hủy' },
-    { value: 'completed', label: 'Hoàn thành' }
+    { value: '', label: 'All status' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'confirmed', label: 'Confirmed' },
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'completed', label: 'Completed' }
   ];
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export default function BookingsManagement() {
       
     } catch (err) {
       console.error('Failed to fetch bookings:', err);
-      setError('Không thể tải danh sách đặt xe. Vui lòng thử lại sau.');
+      setError('Unable to load booking list. Please try again later.');
       setBookings([]);
       setTotalPages(1);
       setTotalItems(0);
@@ -149,13 +149,13 @@ export default function BookingsManagement() {
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    return new Date(dateString).toLocaleDateString('vi-VN', options);
+    return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
   const formatAmount = (amount) => {
-    return new Intl.NumberFormat('vi-VN', { 
+    return new Intl.NumberFormat('en-US', { 
       style: 'currency', 
-      currency: 'VND',
+      currency: 'USD',
       minimumFractionDigits: 0 
     }).format(amount);
   };
@@ -178,13 +178,13 @@ export default function BookingsManagement() {
   const getStatusText = (status) => {
     switch (status) {
       case 'pending':
-        return 'Đang chờ xử lý';
+        return 'Pending';
       case 'confirmed':
-        return 'Đã xác nhận';
+        return 'Confirmed';
       case 'cancelled':
-        return 'Đã hủy';
+        return 'Cancelled';
       case 'completed':
-        return 'Hoàn thành';
+        return 'Completed';
       default:
         return status;
     }
@@ -203,11 +203,11 @@ export default function BookingsManagement() {
         booking._id === bookingId ? { ...booking, status: 'confirmed' } : booking
       ));
       
-      setSuccess('Đơn đặt xe đã được xác nhận thành công');
+      setSuccess('Booking has been confirmed successfully');
       
     } catch (err) {
       console.error('Failed to confirm booking:', err);
-      setError('Không thể xác nhận đơn đặt xe. Vui lòng thử lại sau.');
+      setError('Unable to confirm booking. Please try again later.');
       
       // Update UI for demo
       setBookings(prevBookings => prevBookings.map(booking => 
@@ -231,11 +231,11 @@ export default function BookingsManagement() {
         booking._id === bookingId ? { ...booking, status: 'cancelled' } : booking
       ));
       
-      setSuccess('Đơn đặt xe đã được hủy thành công');
+      setSuccess('Booking has been cancelled successfully');
       
     } catch (err) {
       console.error('Failed to cancel booking:', err);
-      setError('Không thể hủy đơn đặt xe. Vui lòng thử lại sau.');
+      setError('Unable to cancel booking. Please try again later.');
       
       // Update UI for demo
       setBookings(prevBookings => prevBookings.map(booking => 
@@ -259,11 +259,11 @@ export default function BookingsManagement() {
         booking._id === bookingId ? { ...booking, status: 'completed' } : booking
       ));
       
-      setSuccess('Đơn đặt xe đã được đánh dấu hoàn thành');
+      setSuccess('Booking has been marked as completed');
       
     } catch (err) {
       console.error('Failed to complete booking:', err);
-      setError('Không thể hoàn thành đơn đặt xe. Vui lòng thử lại sau.');
+      setError('Unable to complete booking. Please try again later.');
       
       // Update UI for demo
       setBookings(prevBookings => prevBookings.map(booking => 
@@ -278,9 +278,9 @@ export default function BookingsManagement() {
     <div className="px-4 pt-6">
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Quản lý đơn đặt xe</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Booking Management</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Danh sách các đơn đặt xe trong hệ thống
+            List of bookings in the system
           </p>
         </div>
         
@@ -290,7 +290,7 @@ export default function BookingsManagement() {
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Thêm đơn đặt mới
+            Add New Booking
           </Link>
         </div>
       </div>
@@ -307,7 +307,7 @@ export default function BookingsManagement() {
         </div>
       )}
       
-      {/* Thanh công cụ filter và tìm kiếm */}
+      {/* Search and filter toolbar */}
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -316,7 +316,7 @@ export default function BookingsManagement() {
           <input
             type="text"
             className="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="Tìm theo mã đặt xe, tên khách hàng..."
+            placeholder="Search by booking ID, customer name..."
             value={searchQuery}
             onChange={handleSearch}
           />
@@ -325,7 +325,7 @@ export default function BookingsManagement() {
             className="absolute inset-y-0 right-0 flex items-center pr-3"
             onClick={fetchBookings}
           >
-            <span className="px-3 py-1 text-xs text-white bg-blue-600 rounded-md">Tìm</span>
+            <span className="px-3 py-1 text-xs text-white bg-blue-600 rounded-md">Search</span>
           </button>
         </div>
       
@@ -352,24 +352,24 @@ export default function BookingsManagement() {
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Đặt lại bộ lọc
+            Reset filter
           </button>
         </div>
       </div>
       
-      {/* Bảng đơn đặt xe */}
+      {/* Booking list table */}
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr>
-                <th scope="col" className="px-6 py-3">MÃ ĐƠN</th>
-                <th scope="col" className="px-6 py-3">KHÁCH HÀNG</th>
-                <th scope="col" className="px-6 py-3">XE</th>
-                <th scope="col" className="px-6 py-3">NGÀY THUÊ</th>
-                <th scope="col" className="px-6 py-3">TỔNG TIỀN</th>
-                <th scope="col" className="px-6 py-3">TRẠNG THÁI</th>
-                <th scope="col" className="px-6 py-3 text-right">THAO TÁC</th>
+                <th scope="col" className="px-6 py-3">BOOKING ID</th>
+                <th scope="col" className="px-6 py-3">CUSTOMER</th>
+                <th scope="col" className="px-6 py-3">CAR</th>
+                <th scope="col" className="px-6 py-3">RENTAL DATE</th>
+                <th scope="col" className="px-6 py-3">TOTAL AMOUNT</th>
+                <th scope="col" className="px-6 py-3">STATUS</th>
+                <th scope="col" className="px-6 py-3 text-right">ACTION</th>
               </tr>
             </thead>
             <tbody>
@@ -379,13 +379,13 @@ export default function BookingsManagement() {
                     <div className="flex justify-center">
                       <div className="w-6 h-6 border-2 border-t-blue-500 border-b-blue-500 border-l-transparent border-r-transparent rounded-full animate-spin"></div>
                     </div>
-                    <p className="mt-2 text-sm text-gray-500">Đang tải dữ liệu...</p>
+                    <p className="mt-2 text-sm text-gray-500">Loading data...</p>
                   </td>
                 </tr>
               ) : bookings.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
-                    Không tìm thấy đơn đặt xe nào
+                    No bookings found
                   </td>
                 </tr>
               ) : (
@@ -403,8 +403,8 @@ export default function BookingsManagement() {
                       <div className="text-xs text-gray-400">{booking.car?.licensePlate}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div>Từ: {formatDate(booking.startDate)}</div>
-                      <div>Đến: {formatDate(booking.endDate)}</div>
+                      <div>From: {formatDate(booking.startDate)}</div>
+                      <div>To: {formatDate(booking.endDate)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">
                       {formatAmount(booking.totalAmount)}
@@ -419,7 +419,7 @@ export default function BookingsManagement() {
                         <Link
                           href={`/dashboard/bookings/${booking._id}`}
                           className="text-blue-600 hover:text-blue-900 flex items-center"
-                          title="Xem chi tiết"
+                          title="View details"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
@@ -430,7 +430,7 @@ export default function BookingsManagement() {
                               onClick={() => handleConfirmBooking(booking._id)}
                               disabled={processingBookingId === booking._id}
                               className="text-green-600 hover:text-green-900 flex items-center"
-                              title="Xác nhận đặt xe"
+                              title="Confirm booking"
                             >
                               <Check className="h-4 w-4" />
                             </button>
@@ -439,7 +439,7 @@ export default function BookingsManagement() {
                               onClick={() => handleCancelBooking(booking._id)}
                               disabled={processingBookingId === booking._id}
                               className="text-red-600 hover:text-red-900 flex items-center"
-                              title="Từ chối đặt xe"
+                              title="Reject booking"
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -452,7 +452,7 @@ export default function BookingsManagement() {
                               onClick={() => handleCompleteBooking(booking._id)}
                               disabled={processingBookingId === booking._id}
                               className="text-blue-600 hover:text-blue-900 flex items-center"
-                              title="Đánh dấu hoàn thành"
+                              title="Mark as completed"
                             >
                               <Check className="h-4 w-4" />
                             </button>
@@ -461,7 +461,7 @@ export default function BookingsManagement() {
                               onClick={() => handleCancelBooking(booking._id)}
                               disabled={processingBookingId === booking._id}
                               className="text-red-600 hover:text-red-900 flex items-center"
-                              title="Hủy đặt xe"
+                              title="Cancel booking"
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -476,12 +476,12 @@ export default function BookingsManagement() {
           </table>
         </div>
         
-        {/* Phân trang */}
+        {/* Pagination */}
         <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700 sm:px-6">
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-gray-700 dark:text-gray-400">
-                Hiển thị <span className="font-medium">{bookings.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span> đến <span className="font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, totalItems)}</span> trong tổng số <span className="font-medium">{totalItems}</span> đơn đặt xe
+                Showing <span className="font-medium">{bookings.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span> to <span className="font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, totalItems)}</span> of <span className="font-medium">{totalItems}</span> bookings
               </p>
             </div>
             <div>

@@ -76,16 +76,16 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-4">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Hệ thống quản lý thuê xe
+            Car Rental Management System
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Đăng nhập để truy cập vào hệ thống quản trị
+            Login to access the admin system
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Đăng nhập</CardTitle>
+            <CardTitle className="text-xl">Login</CardTitle>
           </CardHeader>
           <CardContent>
             {error && (
@@ -116,7 +116,7 @@ export default function LoginPage() {
 
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Mật khẩu
+                  Password
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -149,13 +149,13 @@ export default function LoginPage() {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+                {loading ? 'Processing...' : 'Login'}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center text-sm text-gray-500 dark:text-gray-400">
             <p>
-              Liên hệ quản trị viên nếu bạn gặp sự cố khi đăng nhập
+              Contact the administrator if you have trouble logging in
             </p>
           </CardFooter>
         </Card>

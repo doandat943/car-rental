@@ -129,37 +129,37 @@ export default function NotificationsPage() {
   // Xóa tất cả thông báo đã đọc
   const handleDeleteAllRead = async () => {
     try {
-      // Lọc ra ID của tất cả thông báo đã đọc
+      // Filter out IDs of all read notifications
       const readNotificationIds = notifications
         .filter(notification => notification.read)
         .map(notification => notification._id);
       
-      // Xóa từng thông báo đã đọc
+      // Delete each read notification
       for (const id of readNotificationIds) {
         await notificationsAPI.deleteNotification(id);
       }
       
-      // Cập nhật state
+      // Update state
       setNotifications(prevNotifications => 
         prevNotifications.filter(notification => !notification.read)
       );
     } catch (error) {
       console.error('Error deleting read notifications:', error);
-      // Cập nhật UI ngay cả khi API lỗi
+      // Update UI even if API fails
       setNotifications(prevNotifications => 
         prevNotifications.filter(notification => !notification.read)
       );
     }
   };
 
-  // Chuyển trang
+  // Change page
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
     }
   };
 
-  // Chuyển đổi kiểu thông báo sang icon
+  // Convert notification type to icon
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'booking_new':
@@ -179,7 +179,7 @@ export default function NotificationsPage() {
     }
   };
 
-  // Xác định màu nền cho icon thông báo
+  // Determine background color for notification icon
   const getNotificationColor = (type) => {
     switch (type) {
       case 'booking_new':
@@ -199,44 +199,44 @@ export default function NotificationsPage() {
     }
   };
 
-  // Định dạng thời gian dạng thân thiện
+  // Format time in a friendly way
   const formatTimeAgo = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const seconds = Math.floor((now - date) / 1000);
     
     if (seconds < 60) {
-      return 'Vừa xong';
+      return 'Just now';
     }
     
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) {
-      return `${minutes} phút trước`;
+      return `${minutes} minutes ago`;
     }
     
     const hours = Math.floor(minutes / 60);
     if (hours < 24) {
-      return `${hours} giờ trước`;
+      return `${hours} hours ago`;
     }
     
     const days = Math.floor(hours / 24);
     if (days < 30) {
-      return `${days} ngày trước`;
+      return `${days} days ago`;
     }
     
     const months = Math.floor(days / 30);
     if (months < 12) {
-      return `${months} tháng trước`;
+      return `${months} months ago`;
     }
     
     const years = Math.floor(months / 12);
-    return `${years} năm trước`;
+    return `${years} years ago`;
   };
 
-  // Định dạng thời gian dạng đầy đủ
+  // Format time in full date format
   const formatFullDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -245,21 +245,21 @@ export default function NotificationsPage() {
     });
   };
 
-  // Lấy tên cho hiển thị của loại thông báo
-  const getTypeName = (type) => {
+  // Get display name for notification type
+  const getNotificationTypeName = (type) => {
     switch (type) {
       case 'booking_new':
-        return 'Đặt xe mới';
+        return 'New Booking';
       case 'booking_canceled':
-        return 'Hủy đặt xe';
+        return 'Booking Canceled';
       case 'booking_completed':
-        return 'Hoàn thành đặt xe';
+        return 'Booking Completed';
       case 'review_new':
-        return 'Đánh giá mới';
+        return 'New Review';
       case 'message_new':
-        return 'Tin nhắn mới';
+        return 'New Message';
       case 'payment_received':
-        return 'Thanh toán';
+        return 'Payment';
       default:
         return 'Thông báo';
     }
@@ -327,20 +327,20 @@ export default function NotificationsPage() {
                 onChange={(e) => setFilter({...filter, type: e.target.value})}
                 className="text-sm bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
-                <option value="all">Tất cả</option>
-                <option value="booking_new">Đặt xe mới</option>
-                <option value="booking_canceled">Hủy đặt xe</option>
-                <option value="booking_completed">Hoàn thành đặt xe</option>
-                <option value="review_new">Đánh giá mới</option>
-                <option value="message_new">Tin nhắn mới</option>
-                <option value="payment_received">Thanh toán</option>
+                <option value="all">All</option>
+                <option value="booking_new">New Booking</option>
+                <option value="booking_canceled">Booking Canceled</option>
+                <option value="booking_completed">Booking Completed</option>
+                <option value="review_new">New Review</option>
+                <option value="message_new">New Message</option>
+                <option value="payment_received">Payment</option>
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Danh sách thông báo */}
+      {/* Notifications list */}
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
         {loading ? (
           <div className="p-4 text-center">
@@ -349,7 +349,7 @@ export default function NotificationsPage() {
                 Loading...
               </span>
             </div>
-            <p className="mt-2 text-gray-500 dark:text-gray-400">Đang tải thông báo...</p>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">Loading notifications...</p>
           </div>
         ) : error ? (
           <div className="p-4 text-center text-red-600 dark:text-red-400">
@@ -359,9 +359,9 @@ export default function NotificationsPage() {
         ) : notifications.length === 0 ? (
           <div className="p-8 text-center">
             <Bell className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="mb-2 text-xl font-medium text-gray-900 dark:text-white">Không có thông báo nào</h3>
+            <h3 className="mb-2 text-xl font-medium text-gray-900 dark:text-white">No notifications</h3>
             <p className="text-gray-500 dark:text-gray-400">
-              Thông báo mới sẽ xuất hiện ở đây khi khách hàng thực hiện các hành động trong hệ thống.
+              New notifications will appear here when customers perform actions in the system.
             </p>
           </div>
         ) : (
@@ -389,7 +389,7 @@ export default function NotificationsPage() {
                             </span>
                           )}
                           <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
-                            {getTypeName(notification.type)}
+                            {getNotificationTypeName(notification.type)}
                           </span>
                         </div>
                         

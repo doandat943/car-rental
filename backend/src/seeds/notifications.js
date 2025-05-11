@@ -114,7 +114,7 @@ function getRandomName() {
   return names[Math.floor(Math.random() * names.length)];
 }
 
-// Hàm random tên xe
+// Random car name function
 function getRandomCar() {
   const cars = [
     'Toyota Camry',

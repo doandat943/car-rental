@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middlewares/auth');
 
-// Tạm thời sử dụng controller giả để tránh lỗi
+// Temporary controller to avoid errors
 const tempController = (req, res) => {
   res.status(200).json({ message: 'This endpoint is under development' });
 };

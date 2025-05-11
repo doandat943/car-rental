@@ -1,46 +1,46 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 /**
- * Các hàm tiện ích cho việc gọi API
+ * Utility functions for API calls
  */
 async function fetchWithAuth(endpoint, options = {}) {
   try {
-    // Lấy token từ localStorage (nếu đã đăng nhập)
+    // Get token from localStorage (if logged in)
     let token = null;
     if (typeof window !== 'undefined') {
       token = localStorage.getItem('admin_token');
     }
 
-    // Thiết lập headers
+    // Setup headers
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
 
-    // Thêm token nếu có
+    // Add token if available
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    // Tạo request với headers đã cấu hình
+    // Create request with configured headers
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
     });
 
-    // Kiểm tra lỗi
+    // Check for errors
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       
-      // Kiểm tra nếu là lỗi xác thực (401), lỗi "Not authorized" hoặc lỗi "User not found" (404)
+      // Check if it's an authentication error (401), "Not authorized" error or "User not found" error (404)
       if (response.status === 401 || response.status === 404 || 
           (errorData.error && (errorData.error.includes('Not authorized') || errorData.error.includes('User not found')))) {
-        // Xóa token hiện tại
+        // Remove current token
         if (typeof window !== 'undefined') {
           localStorage.removeItem('admin_token');
           localStorage.removeItem('admin_user');
           
-          // Chuyển hướng đến trang unauthorized
+          // Redirect to unauthorized page
           window.location.href = '/auth/unauthorized';
         }
       }
@@ -58,14 +58,14 @@ async function fetchWithAuth(endpoint, options = {}) {
 }
 
 /**
- * APIs quản lý xe
+ * Car management APIs
  */
 export const carsAPI = {
-  // Lấy tất cả xe
+  // Get all cars
   getAllCars: async (params = {}) => {
     const queryParams = new URLSearchParams();
     
-    // Thêm các tham số lọc và phân trang
+    // Add filtering and pagination parameters
     if (params.page) queryParams.append('page', params.page);
     if (params.limit) queryParams.append('limit', params.limit);
     if (params.category) queryParams.append('category', params.category);
@@ -79,14 +79,14 @@ export const carsAPI = {
     });
   },
 
-  // Lấy xe theo ID
+  // Get car by ID
   getCarById: async (id) => {
     return fetchWithAuth(`/cars/${id}`, {
       method: 'GET',
     });
   },
 
-  // Tạo xe mới
+  // Create new car
   createCar: async (carData) => {
     return fetchWithAuth('/cars', {
       method: 'POST',
@@ -94,7 +94,7 @@ export const carsAPI = {
     });
   },
 
-  // Cập nhật xe
+  // Update car
   updateCar: async (id, carData) => {
     return fetchWithAuth(`/cars/${id}`, {
       method: 'PUT',
@@ -102,14 +102,14 @@ export const carsAPI = {
     });
   },
 
-  // Xóa xe
+  // Delete car
   deleteCar: async (id) => {
     return fetchWithAuth(`/cars/${id}`, {
       method: 'DELETE',
     });
   },
 
-  // Kiểm tra tình trạng xe có sẵn
+  // Check car availability
   checkAvailability: async (carId, startDate, endDate) => {
     const queryParams = new URLSearchParams({
       startDate,
@@ -121,9 +121,9 @@ export const carsAPI = {
     });
   },
 
-  // Tải lên hình ảnh
+  // Upload image
   uploadImage: async (carId, formData) => {
-    // Sử dụng fetch thay vì fetchWithAuth vì formData
+    // Use fetch instead of fetchWithAuth for formData
     let token = null;
     if (typeof window !== 'undefined') {
       token = localStorage.getItem('admin_token');
@@ -137,7 +137,7 @@ export const carsAPI = {
     const response = await fetch(`${API_BASE_URL}/cars/${carId}/images`, {
       method: 'POST',
       headers,
-      body: formData, // FormData không cần Content-Type, trình duyệt sẽ tự thiết lập
+      body: formData, // FormData doesn't need Content-Type, browser will set it automatically
     });
 
     if (!response.ok) {
@@ -149,7 +149,7 @@ export const carsAPI = {
     return { data, status: response.status };
   },
 
-  // Xóa hình ảnh
+  // Delete image
   deleteImage: async (carId, imageId) => {
     return fetchWithAuth(`/cars/${carId}/images/${imageId}`, {
       method: 'DELETE',
@@ -158,24 +158,24 @@ export const carsAPI = {
 };
 
 /**
- * APIs quản lý danh mục
+ * Category management APIs
  */
 export const categoriesAPI = {
-  // Lấy tất cả danh mục
+  // Get all categories
   getAllCategories: async () => {
     return fetchWithAuth('/categories', {
       method: 'GET',
     });
   },
 
-  // Lấy danh mục theo ID
+  // Get category by ID
   getCategoryById: async (id) => {
     return fetchWithAuth(`/categories/${id}`, {
       method: 'GET',
     });
   },
 
-  // Tạo danh mục mới
+  // Create new category
   createCategory: async (categoryData) => {
     return fetchWithAuth('/categories', {
       method: 'POST',
@@ -183,7 +183,7 @@ export const categoriesAPI = {
     });
   },
 
-  // Cập nhật danh mục
+  // Update category
   updateCategory: async (id, categoryData) => {
     return fetchWithAuth(`/categories/${id}`, {
       method: 'PUT',
@@ -191,7 +191,7 @@ export const categoriesAPI = {
     });
   },
 
-  // Xóa danh mục
+  // Delete category
   deleteCategory: async (id) => {
     return fetchWithAuth(`/categories/${id}`, {
       method: 'DELETE',
@@ -200,14 +200,14 @@ export const categoriesAPI = {
 };
 
 /**
- * APIs quản lý đặt xe
+ * Booking management APIs
  */
 export const bookingsAPI = {
-  // Lấy tất cả lịch đặt xe
+  // Get all bookings
   getAllBookings: async (params = {}) => {
     const queryParams = new URLSearchParams();
     
-    // Thêm các tham số lọc và phân trang
+    // Add filtering and pagination parameters
     if (params.page) queryParams.append('page', params.page);
     if (params.limit) queryParams.append('limit', params.limit);
     if (params.status) queryParams.append('status', params.status);
@@ -223,14 +223,14 @@ export const bookingsAPI = {
     });
   },
 
-  // Lấy thông tin đặt xe theo ID
+  // Get booking by ID
   getBookingById: async (id) => {
     return fetchWithAuth(`/bookings/${id}`, {
       method: 'GET',
     });
   },
 
-  // Tạo đặt xe mới
+  // Create new booking
   createBooking: async (bookingData) => {
     return fetchWithAuth('/bookings', {
       method: 'POST',
@@ -238,7 +238,7 @@ export const bookingsAPI = {
     });
   },
 
-  // Cập nhật trạng thái đặt xe
+  // Update booking status
   updateBookingStatus: async (id, status) => {
     return fetchWithAuth(`/bookings/${id}/status`, {
       method: 'PUT',
@@ -246,7 +246,7 @@ export const bookingsAPI = {
     });
   },
 
-  // Hủy đặt xe
+  // Cancel booking
   cancelBooking: async (id, reason) => {
     return fetchWithAuth(`/bookings/${id}/cancel`, {
       method: 'PUT',
@@ -256,14 +256,14 @@ export const bookingsAPI = {
 };
 
 /**
- * APIs quản lý người dùng
+ * User management APIs
  */
 export const usersAPI = {
-  // Lấy tất cả người dùng
+  // Get all users
   getAllUsers: async (params = {}) => {
     const queryParams = new URLSearchParams();
     
-    // Thêm các tham số lọc và phân trang
+    // Add filtering and pagination parameters
     if (params.page) queryParams.append('page', params.page);
     if (params.limit) queryParams.append('limit', params.limit);
     if (params.role) queryParams.append('role', params.role);
@@ -276,14 +276,14 @@ export const usersAPI = {
     });
   },
 
-  // Lấy thông tin người dùng theo ID
+  // Get user by ID
   getUserById: async (id) => {
     return fetchWithAuth(`/users/${id}`, {
       method: 'GET',
     });
   },
 
-  // Tạo người dùng mới (admin only)
+  // Create new user (admin only)
   createUser: async (userData) => {
     return fetchWithAuth('/users', {
       method: 'POST',
@@ -291,7 +291,7 @@ export const usersAPI = {
     });
   },
 
-  // Cập nhật thông tin người dùng
+  // Update user information
   updateUser: async (id, userData) => {
     return fetchWithAuth(`/users/${id}`, {
       method: 'PUT',
@@ -299,7 +299,7 @@ export const usersAPI = {
     });
   },
 
-  // Xóa người dùng
+  // Delete user
   deleteUser: async (id) => {
     return fetchWithAuth(`/users/${id}`, {
       method: 'DELETE',
@@ -308,10 +308,10 @@ export const usersAPI = {
 };
 
 /**
- * APIs xác thực
+ * Authentication APIs
  */
 export const authAPI = {
-  // Đăng nhập
+  // Login
   login: async (email, password) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -322,7 +322,7 @@ export const authAPI = {
         body: JSON.stringify({ email, password }),
       });
 
-      // Xử lý response từ API
+      // Process response from API
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Login Error: ${response.status}`);
@@ -330,11 +330,11 @@ export const authAPI = {
       
       const data = await response.json();
       
-      // Lưu token vào localStorage
+      // Save token to localStorage
       if (typeof window !== 'undefined' && data.token) {
         localStorage.setItem('admin_token', data.token);
         
-        // Lưu token vào cookie để middleware có thể đọc
+        // Save token to cookie for middleware access
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 7);
         document.cookie = `admin_token=${data.token}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
@@ -347,25 +347,25 @@ export const authAPI = {
     }
   },
 
-  // Đăng xuất
+  // Logout
   logout: () => {
     if (typeof window !== 'undefined') {
-      // Xóa token khỏi localStorage
+      // Remove token from localStorage
       localStorage.removeItem('admin_token');
       
-      // Xóa token khỏi cookie
+      // Remove token from cookie
       document.cookie = 'admin_token=; Max-Age=0; path=/; SameSite=Lax';
     }
   },
 
-  // Lấy thông tin người dùng hiện tại
+  // Get current user profile
   getProfile: async () => {
     return fetchWithAuth('/auth/admin/profile', {
       method: 'GET',
     });
   },
 
-  // Đổi mật khẩu
+  // Change password
   changePassword: async (currentPassword, newPassword) => {
     return fetchWithAuth('/auth/admin/change-password', {
       method: 'PUT',
@@ -375,38 +375,38 @@ export const authAPI = {
 };
 
 /**
- * APIs thống kê
+ * Dashboard statistics APIs
  */
 export const dashboardAPI = {
-  // Lấy thống kê tổng quan
+  // Get overview statistics
   getStats: async () => {
     return fetchWithAuth('/dashboard/stats', {
       method: 'GET',
     });
   },
 
-  // Lấy biểu đồ doanh thu
+  // Get revenue chart data
   getRevenueChart: async (period = 'month') => {
     return fetchWithAuth(`/dashboard/revenue?period=${period}`, {
       method: 'GET',
     });
   },
 
-  // Lấy biểu đồ đặt xe
+  // Get bookings chart data
   getBookingsChart: async (period = 'month') => {
     return fetchWithAuth(`/dashboard/bookings?period=${period}`, {
       method: 'GET',
     });
   },
 
-  // Lấy top xe được đặt nhiều nhất
+  // Get top cars
   getTopCars: async (limit = 5) => {
     return fetchWithAuth(`/dashboard/top-cars?limit=${limit}`, {
       method: 'GET',
     });
   },
 
-  // Lấy thông tin về xe theo trạng thái
+  // Get cars by status
   getCarsByStatus: async () => {
     return fetchWithAuth('/dashboard/cars-by-status', {
       method: 'GET',
@@ -415,17 +415,17 @@ export const dashboardAPI = {
 };
 
 /**
- * APIs quản lý hệ thống
+ * System settings APIs
  */
 export const settingsAPI = {
-  // Lấy cài đặt hệ thống
+  // Get system settings
   getSettings: async () => {
     return fetchWithAuth('/settings', {
       method: 'GET',
     });
   },
 
-  // Cập nhật cài đặt hệ thống
+  // Update system settings
   updateSettings: async (settingsData) => {
     return fetchWithAuth('/settings', {
       method: 'PUT',
@@ -435,10 +435,10 @@ export const settingsAPI = {
 };
 
 /**
- * APIs quản lý đánh giá
+ * Review management APIs
  */
 export const reviewsAPI = {
-  // Lấy đánh giá theo xe
+  // Get reviews by car ID
   getReviewsByCarId: async (carId, params = {}) => {
     const queryParams = new URLSearchParams();
     
@@ -452,7 +452,7 @@ export const reviewsAPI = {
     });
   },
 
-  // Lấy tất cả đánh giá
+  // Get all reviews
   getAllReviews: async (params = {}) => {
     const queryParams = new URLSearchParams();
     
@@ -467,7 +467,7 @@ export const reviewsAPI = {
     });
   },
 
-  // Xóa đánh giá
+  // Delete review
   deleteReview: async (id) => {
     return fetchWithAuth(`/reviews/${id}`, {
       method: 'DELETE',
@@ -476,7 +476,7 @@ export const reviewsAPI = {
 };
 
 /**
- * Axios API client (giữ lại từ src/lib/api.js để tham khảo trong tương lai)
+ * Axios API client (kept from src/lib/api.js for future reference)
  * 
  * Example usage:
  * import axios from 'axios';

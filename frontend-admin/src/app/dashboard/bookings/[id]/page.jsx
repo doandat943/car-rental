@@ -45,11 +45,11 @@ export default function BookingDetailsPage({ params }) {
       if (response && response.data) {
         setBooking(response.data);
       } else {
-        setError('Không tìm thấy thông tin đơn đặt xe.');
+        setError('Booking information not found');
       }
     } catch (err) {
       console.error('Failed to fetch booking details:', err);
-      setError('Không thể tải thông tin đơn đặt xe. Vui lòng thử lại sau.');
+      setError('Unable to load booking information. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -57,18 +57,18 @@ export default function BookingDetailsPage({ params }) {
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
-    return new Date(dateString).toLocaleDateString('vi-VN', options);
+    return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
   const formatDateOnly = (dateString) => {
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    return new Date(dateString).toLocaleDateString('vi-VN', options);
+    return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', { 
+    return new Intl.NumberFormat('en-US', { 
       style: 'currency', 
-      currency: 'VND',
+      currency: 'USD',
       minimumFractionDigits: 0 
     }).format(amount);
   };
@@ -91,13 +91,13 @@ export default function BookingDetailsPage({ params }) {
   const getStatusText = (status) => {
     switch (status) {
       case 'pending':
-        return 'Đang chờ xử lý';
+        return 'Pending';
       case 'confirmed':
-        return 'Đã xác nhận';
+        return 'Confirmed';
       case 'cancelled':
-        return 'Đã hủy';
+        return 'Cancelled';
       case 'completed':
-        return 'Hoàn thành';
+        return 'Completed';
       default:
         return status;
     }
@@ -133,11 +133,11 @@ export default function BookingDetailsPage({ params }) {
         updatedAt: new Date().toISOString()
       }));
       
-      setSuccess('Đơn đặt xe đã được xác nhận thành công');
+      setSuccess('Booking has been confirmed successfully');
       
     } catch (err) {
       console.error('Failed to confirm booking:', err);
-      setError('Không thể xác nhận đơn đặt xe. Vui lòng thử lại sau.');
+      setError('Unable to confirm booking. Please try again later.');
       
       // Update UI for demo
       setBooking(prevBooking => ({
@@ -165,11 +165,11 @@ export default function BookingDetailsPage({ params }) {
         updatedAt: new Date().toISOString()
       }));
       
-      setSuccess('Đơn đặt xe đã được đánh dấu hoàn thành');
+      setSuccess('Booking has been marked as completed');
       
     } catch (err) {
       console.error('Failed to complete booking:', err);
-      setError('Không thể hoàn thành đơn đặt xe. Vui lòng thử lại sau.');
+      setError('Unable to complete booking. Please try again later.');
       
       // Update UI for demo
       setBooking(prevBooking => ({
@@ -193,7 +193,7 @@ export default function BookingDetailsPage({ params }) {
 
   const handleCancelBooking = async () => {
     if (!cancelReason.trim()) {
-      setError('Vui lòng nhập lý do hủy đơn');
+      setError('Please enter a reason for cancellation');
       return;
     }
     
@@ -212,12 +212,12 @@ export default function BookingDetailsPage({ params }) {
         updatedAt: new Date().toISOString()
       }));
       
-      setSuccess('Đơn đặt xe đã được hủy thành công');
+      setSuccess('Booking has been cancelled successfully');
       closeCancelModal();
       
     } catch (err) {
       console.error('Failed to cancel booking:', err);
-      setError('Không thể hủy đơn đặt xe. Vui lòng thử lại sau.');
+      setError('Unable to cancel booking. Please try again later.');
       
       // Update UI for demo
       setBooking(prevBooking => ({
@@ -237,7 +237,7 @@ export default function BookingDetailsPage({ params }) {
       <div className="container mx-auto p-4 flex justify-center items-center min-h-screen">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-500 border-l-transparent border-r-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải thông tin đơn đặt xe...</p>
+          <p className="mt-4 text-gray-600">Loading booking information...</p>
         </div>
       </div>
     );
@@ -253,10 +253,10 @@ export default function BookingDetailsPage({ params }) {
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">
-                Không tìm thấy thông tin đơn đặt xe
+                Booking information not found
               </h3>
               <div className="mt-2 text-sm text-red-700">
-                <p>Đơn đặt xe không tồn tại hoặc đã bị xóa.</p>
+                <p>The booking does not exist or has been deleted.</p>
               </div>
               <div className="mt-4">
                 <Link

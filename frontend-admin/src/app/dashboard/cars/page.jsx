@@ -33,10 +33,10 @@ export default function CarsManagement() {
   const ITEMS_PER_PAGE = 10;
   
   const statusOptions = [
-    { value: '', label: 'Tất cả trạng thái' },
-    { value: 'available', label: 'Sẵn sàng' },
-    { value: 'maintenance', label: 'Bảo trì' },
-    { value: 'rented', label: 'Đang thuê' }
+    { value: '', label: 'All status' },
+    { value: 'available', label: 'Available' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'rented', label: 'Rented' }
   ];
 
   // Fetch data
@@ -69,12 +69,12 @@ export default function CarsManagement() {
         setTotalItems(response.meta?.totalItems || 0);
         setTotalPages(response.meta?.totalPages || 1);
       } else {
-        setError('Không thể tải dữ liệu xe, vui lòng thử lại sau.');
+        setError('Unable to load car data. Please try again later.');
         setCars([]);
       }
     } catch (err) {
       console.error('Error fetching cars:', err);
-      setError('Không thể tải dữ liệu xe, vui lòng thử lại sau.');
+      setError('Unable to load car data. Please try again later.');
       setCars([]);
     } finally {
       setLoading(false);
@@ -109,7 +109,7 @@ export default function CarsManagement() {
 
   // Delete car handler
   const handleDeleteCar = async (id) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa xe này?')) {
+    if (!window.confirm('Are you sure you want to delete this car?')) {
       return;
     }
     
@@ -123,13 +123,13 @@ export default function CarsManagement() {
       if (response.success) {
         setCars(cars.filter(car => car._id !== id));
         setTotalItems(prev => prev - 1);
-        setSuccess('Xóa xe thành công');
+        setSuccess('Car deleted successfully');
       } else {
-        setError('Không thể xóa xe: ' + (response.message || 'Lỗi không xác định'));
+        setError('Unable to delete car: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error deleting car:', error);
-      setError('Không thể xóa xe, vui lòng thử lại sau.');
+      setError('Unable to delete car. Please try again later.');
     } finally {
       setProcessingCarId(null);
     }
@@ -151,20 +151,20 @@ export default function CarsManagement() {
   const getStatusText = (status) => {
     switch (status) {
       case 'available':
-        return 'Sẵn sàng';
+        return 'Available';
       case 'maintenance':
-        return 'Bảo trì';
+        return 'Maintenance';
       case 'rented':
-        return 'Đang thuê';
+        return 'Rented';
       default:
-        return 'Không xác định';
+        return 'Unknown';
     }
   };
 
   const formatAmount = (amount) => {
-    return new Intl.NumberFormat('vi-VN', { 
+    return new Intl.NumberFormat('en-US', { 
       style: 'currency', 
-      currency: 'VND',
+      currency: 'USD',
       minimumFractionDigits: 0 
     }).format(amount);
   };
@@ -173,9 +173,9 @@ export default function CarsManagement() {
     <div className="px-4 pt-6">
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Quản lý xe</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Car Management</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Danh sách các xe trong hệ thống
+            List of cars in the system
           </p>
         </div>
         
@@ -185,7 +185,7 @@ export default function CarsManagement() {
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Thêm xe mới
+            Add New Car
           </Link>
         </div>
       </div>
@@ -202,7 +202,7 @@ export default function CarsManagement() {
         </div>
       )}
       
-      {/* Thanh công cụ filter và tìm kiếm */}
+      {/* Filter and search tools */}
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -211,7 +211,7 @@ export default function CarsManagement() {
           <input
             type="text"
             className="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="Tìm kiếm xe theo tên, thương hiệu, mẫu..."
+            placeholder="Search cars by name, brand, model..."
             value={searchQuery}
             onChange={handleSearch}
           />
@@ -220,7 +220,7 @@ export default function CarsManagement() {
             className="absolute inset-y-0 right-0 flex items-center pr-3"
             onClick={fetchCars}
           >
-            <span className="px-3 py-1 text-xs text-white bg-blue-600 rounded-md">Tìm</span>
+            <span className="px-3 py-1 text-xs text-white bg-blue-600 rounded-md">Search</span>
           </button>
         </div>
       
@@ -241,21 +241,21 @@ export default function CarsManagement() {
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Đặt lại bộ lọc
+            Reset filters
           </button>
         </div>
       </div>
       
-      {/* Bảng xe */}
+      {/* Cars table */}
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr>
-                <th scope="col" className="px-6 py-3">XE</th>
-                <th scope="col" className="px-6 py-3">GIÁ/NGÀY</th>
-                <th scope="col" className="px-6 py-3">TRẠNG THÁI</th>
-                <th scope="col" className="px-6 py-3 text-right">THAO TÁC</th>
+                <th scope="col" className="px-6 py-3">CAR</th>
+                <th scope="col" className="px-6 py-3">PRICE/DAY</th>
+                <th scope="col" className="px-6 py-3">STATUS</th>
+                <th scope="col" className="px-6 py-3 text-right">ACTION</th>
               </tr>
             </thead>
             <tbody>
@@ -265,13 +265,13 @@ export default function CarsManagement() {
                     <div className="flex justify-center">
                       <div className="w-6 h-6 border-2 border-t-blue-500 border-b-blue-500 border-l-transparent border-r-transparent rounded-full animate-spin"></div>
                     </div>
-                    <p className="mt-2 text-sm text-gray-500">Đang tải dữ liệu...</p>
+                    <p className="mt-2 text-sm text-gray-500">Loading data...</p>
                   </td>
                 </tr>
               ) : cars.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
-                    Không tìm thấy xe nào
+                    No cars found
                   </td>
                 </tr>
               ) : (
@@ -315,7 +315,7 @@ export default function CarsManagement() {
                         <Link
                           href={`/dashboard/cars/${car._id}`}
                           className="text-blue-600 hover:text-blue-900 flex items-center"
-                          title="Xem chi tiết"
+                          title="View details"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
@@ -323,7 +323,7 @@ export default function CarsManagement() {
                         <Link
                           href={`/dashboard/cars/${car._id}/edit`}
                           className="text-yellow-600 hover:text-yellow-900 flex items-center"
-                          title="Chỉnh sửa"
+                          title="Edit"
                         >
                           <Edit className="h-4 w-4" />
                         </Link>
@@ -332,7 +332,7 @@ export default function CarsManagement() {
                           onClick={() => handleDeleteCar(car._id)}
                           disabled={processingCarId === car._id}
                           className="text-red-600 hover:text-red-900 flex items-center"
-                          title="Xóa xe"
+                          title="Delete car"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -345,12 +345,12 @@ export default function CarsManagement() {
           </table>
         </div>
         
-        {/* Phân trang */}
+        {/* Pagination */}
         <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700 sm:px-6">
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-gray-700 dark:text-gray-400">
-                Hiển thị <span className="font-medium">{cars.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span> đến <span className="font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, totalItems)}</span> trong tổng số <span className="font-medium">{totalItems}</span> xe
+                Displaying <span className="font-medium">{cars.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span> to <span className="font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, totalItems)}</span> of <span className="font-medium">{totalItems}</span> cars
               </p>
             </div>
             <div>

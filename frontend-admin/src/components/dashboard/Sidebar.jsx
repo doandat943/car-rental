@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 
-// Các icon
+// Icons
 import { 
   Home, CheckSquare, Bell,
   Shield, AlertTriangle, Settings,
@@ -39,10 +39,10 @@ const Sidebar = () => {
 
   // Define management items
   const managementItems = [
-    { name: 'Quản lý xe', icon: <Car className="h-5 w-5" />, path: '/dashboard/cars' },
-    { name: 'Đơn đặt xe', icon: <CalendarCheck className="h-5 w-5" />, path: '/dashboard/bookings' },
-    { name: 'Người dùng', icon: <Users className="h-5 w-5" />, path: '/dashboard/users' },
-    { name: 'Thống kê & Báo cáo', icon: <BarChart3 className="h-5 w-5" />, path: '/dashboard/statistics' }
+    { name: 'Car Management', icon: <Car className="h-5 w-5" />, path: '/dashboard/cars' },
+    { name: 'Bookings', icon: <CalendarCheck className="h-5 w-5" />, path: '/dashboard/bookings' },
+    { name: 'Users', icon: <Users className="h-5 w-5" />, path: '/dashboard/users' },
+    { name: 'Statistics & Reports', icon: <BarChart3 className="h-5 w-5" />, path: '/dashboard/statistics' }
   ];
 
   const pagesItems = [
@@ -71,7 +71,7 @@ const Sidebar = () => {
             onClick={() => toggleSection('general')}
             className="flex w-full items-center justify-between rounded-md p-2 text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800"
           >
-            <span className="text-sm font-medium">Tổng quan</span>
+            <span className="text-sm font-medium">Overview</span>
             {openedSections.general ? (
               <ChevronDown className="h-4 w-4" />
             ) : (
@@ -111,7 +111,7 @@ const Sidebar = () => {
             onClick={() => toggleSection('management')}
             className="flex w-full items-center justify-between rounded-md p-2 text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800"
           >
-            <span className="text-sm font-medium">Quản lý</span>
+            <span className="text-sm font-medium">Management</span>
             {openedSections.management ? (
               <ChevronDown className="h-4 w-4" />
             ) : (
@@ -151,7 +151,7 @@ const Sidebar = () => {
             onClick={() => toggleSection('pages')}
             className="flex w-full items-center justify-between rounded-md p-2 text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800"
           >
-            <span className="text-sm font-medium">Khác</span>
+            <span className="text-sm font-medium">Other</span>
             {openedSections.pages ? (
               <ChevronDown className="h-4 w-4" />
             ) : (

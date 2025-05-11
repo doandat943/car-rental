@@ -44,7 +44,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
   useEffect(() => {
     setMounted(true);
     
-    // Thử lấy thông tin người dùng từ localStorage
+    // Try to get user info from localStorage
     const getUserInfo = () => {
       if (typeof window !== 'undefined') {
         try {
@@ -65,14 +65,14 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
     getUserInfo();
   }, []);
 
-  // Lấy thông báo khi component mount hoặc khi dropdown mở
+  // Get notifications when component mounts or when dropdown opens
   useEffect(() => {
     if (notificationsOpen) {
       fetchNotifications();
     }
   }, [notificationsOpen]);
 
-  // Hàm lấy thông báo từ API
+  // Function to fetch notifications from API
   const fetchNotifications = async () => {
     setNotificationsLoading(true);
     setNotificationsError(null);
@@ -82,32 +82,32 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
       setNotifications(response?.data?.data || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      setNotificationsError('Không thể tải thông báo');
-      // Sử dụng dữ liệu mẫu khi API lỗi
+      setNotificationsError('Unable to load notifications');
+      // Use sample data when API fails
       setNotifications([
         {
           _id: '1',
-          title: 'Yêu cầu đặt xe mới',
-          message: 'Khách hàng John Doe vừa yêu cầu đặt xe Tesla Model 3',
+          title: 'New car booking request',
+          message: 'Customer John Doe has requested to book Tesla Model 3',
           type: 'booking_new',
           read: false,
-          createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString() // 2 phút trước
+          createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString() // 2 minutes ago
         },
         {
           _id: '2',
-          title: 'Đơn đặt xe đã bị hủy',
-          message: 'Khách hàng Jane Smith đã hủy đơn đặt xe BMW X5',
+          title: 'Booking has been canceled',
+          message: 'Customer Jane Smith has canceled BMW X5 booking',
           type: 'booking_canceled',
           read: false,
-          createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString() // 1 giờ trước
+          createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString() // 1 hour ago
         },
         {
           _id: '3',
-          title: 'Đánh giá mới',
-          message: 'Có một đánh giá 5 sao mới đã được gửi cho xe Mercedes C-Class',
+          title: 'New review',
+          message: 'A new 5-star review has been submitted for Mercedes C-Class',
           type: 'review_new',
           read: true,
-          createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() // 3 giờ trước
+          createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() // 3 hours ago
         }
       ]);
     } finally {
@@ -115,13 +115,13 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
     }
   };
 
-  // Đánh dấu thông báo đã đọc
+  // Mark notification as read
   const handleMarkAsRead = async (id, e) => {
-    e.stopPropagation(); // Ngăn event bubble lên và mở link
+    e.stopPropagation(); // Prevent event from bubbling up and opening link
     
     try {
       await notificationsAPI.markAsRead(id);
-      // Cập nhật state local
+      // Update local state
       setNotifications(prevNotifications => 
         prevNotifications.map(notification => 
           notification._id === id ? { ...notification, read: true } : notification
@@ -132,11 +132,11 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
     }
   };
 
-  // Đánh dấu tất cả thông báo đã đọc
+  // Mark all notifications as read
   const handleMarkAllAsRead = async () => {
     try {
       await notificationsAPI.markAllAsRead();
-      // Cập nhật state local
+      // Update local state
       setNotifications(prevNotifications => 
         prevNotifications.map(notification => ({ ...notification, read: true }))
       );
@@ -145,13 +145,13 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
     }
   };
 
-  // Xóa thông báo
+  // Delete notification
   const handleDeleteNotification = async (id, e) => {
-    e.stopPropagation(); // Ngăn event bubble lên và mở link
+    e.stopPropagation(); // Prevent event from bubbling up and opening link
     
     try {
       await notificationsAPI.deleteNotification(id);
-      // Cập nhật state local
+      // Update local state
       setNotifications(prevNotifications => 
         prevNotifications.filter(notification => notification._id !== id)
       );
@@ -160,7 +160,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
     }
   };
 
-  // Chuyển đổi kiểu thông báo sang icon
+  // Convert notification type to icon
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'booking_new':
@@ -180,48 +180,48 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
     }
   };
 
-  // Định dạng thời gian dạng thân thiện
+  // Format time in a friendly way
   const formatTimeAgo = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const seconds = Math.floor((now - date) / 1000);
     
     if (seconds < 60) {
-      return 'Vừa xong';
+      return 'Just now';
     }
     
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) {
-      return `${minutes} phút trước`;
+      return `${minutes} minutes ago`;
     }
     
     const hours = Math.floor(minutes / 60);
     if (hours < 24) {
-      return `${hours} giờ trước`;
+      return `${hours} hours ago`;
     }
     
     const days = Math.floor(hours / 24);
     if (days < 30) {
-      return `${days} ngày trước`;
+      return `${days} days ago`;
     }
     
     const months = Math.floor(days / 30);
     if (months < 12) {
-      return `${months} tháng trước`;
+      return `${months} months ago`;
     }
     
     const years = Math.floor(months / 12);
-    return `${years} năm trước`;
+    return `${years} years ago`;
   };
 
-  // Xử lý đăng xuất
+  // Handle logout
   const handleLogout = () => {
     try {
       authAPI.logout();
       router.push('/auth/login');
     } catch (error) {
       console.error('Logout error:', error);
-      // Nếu có lỗi, vẫn cần đảm bảo xóa token và chuyển hướng
+      // If there's an error, still ensure token is removed and redirect
       if (typeof window !== 'undefined') {
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
@@ -231,7 +231,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
     }
   };
 
-  // Xác định màu nền cho icon thông báo
+  // Determine background color for notification icon
   const getNotificationColor = (type) => {
     switch (type) {
       case 'booking_new':
@@ -331,7 +331,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
               {notificationsOpen && (
                 <div className="absolute right-0 z-50 mt-2 overflow-hidden text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow-lg dark:bg-gray-800 dark:divide-gray-600" style={{ width: '320px' }}>
                   <div className="flex justify-between items-center px-4 py-2 text-base font-medium text-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
-                    <span>Thông báo</span>
+                    <span>Notifications</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -339,13 +339,13 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                       disabled={!notifications.some(n => !n.read)}
                       className="text-xs py-1"
                     >
-                      Đánh dấu tất cả đã đọc
+                      Mark all as read
                     </Button>
                   </div>
                   
                   {notificationsLoading ? (
                     <div className="py-4 px-4 text-center text-gray-500 dark:text-gray-400">
-                      Đang tải thông báo...
+                      Loading notifications...
                     </div>
                   ) : notificationsError ? (
                     <div className="py-4 px-4 text-center text-red-500 dark:text-red-400">
@@ -353,7 +353,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                     </div>
                   ) : notifications.length === 0 ? (
                     <div className="py-4 px-4 text-center text-gray-500 dark:text-gray-400">
-                      Không có thông báo nào
+                      No notifications
                     </div>
                   ) : (
                     <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-96 overflow-y-auto custom-scrollbar">
@@ -391,7 +391,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                                 <button 
                                   onClick={(e) => handleMarkAsRead(notification._id, e)}
                                   className="p-1 text-blue-600 hover:bg-blue-100 rounded-full dark:text-blue-400 dark:hover:bg-blue-900/30"
-                                  title="Đánh dấu đã đọc"
+                                  title="Mark as read"
                                 >
                                   <Check className="w-4 h-4" />
                                 </button>
@@ -399,7 +399,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                               <button 
                                 onClick={(e) => handleDeleteNotification(notification._id, e)}
                                 className="p-1 text-red-600 hover:bg-red-100 rounded-full dark:text-red-400 dark:hover:bg-red-900/30"
-                                title="Xóa thông báo"
+                                title="Delete notification"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -415,7 +415,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                     className="block py-2 text-sm font-medium text-center text-gray-900 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white"
                   >
                     <div className="inline-flex items-center">
-                      <span>Xem tất cả</span>
+                      <span>View all</span>
                     </div>
                   </Link>
                 </div>

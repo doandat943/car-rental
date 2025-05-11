@@ -9,7 +9,7 @@ router.use(protect);
 // Lấy tất cả thông báo của người dùng hiện tại
 router.get('/', notificationController.getNotifications);
 
-// Đếm số thông báo chưa đọc
+// Count unread notifications
 router.get('/unread-count', notificationController.getUnreadCount);
 
 // Đánh dấu một thông báo đã đọc
