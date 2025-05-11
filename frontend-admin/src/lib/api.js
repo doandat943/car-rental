@@ -31,6 +31,20 @@ async function fetchWithAuth(endpoint, options = {}) {
     // Kiểm tra lỗi
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      
+      // Kiểm tra nếu là lỗi xác thực (401), lỗi "Not authorized" hoặc lỗi "User not found" (404)
+      if (response.status === 401 || response.status === 404 || 
+          (errorData.error && (errorData.error.includes('Not authorized') || errorData.error.includes('User not found')))) {
+        // Xóa token hiện tại
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+          
+          // Chuyển hướng đến trang unauthorized
+          window.location.href = '/auth/unauthorized';
+        }
+      }
+      
       throw new Error(errorData.message || `API Error: ${response.status}`);
     }
 
