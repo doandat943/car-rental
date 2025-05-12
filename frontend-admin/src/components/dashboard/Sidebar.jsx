@@ -39,7 +39,7 @@ const Sidebar = () => {
 
   // Define management items
   const managementItems = [
-    { name: 'Car Management', icon: <Car className="h-5 w-5" />, path: '/dashboard/cars' },
+    { name: 'Cars', icon: <Car className="h-5 w-5" />, path: '/dashboard/cars' },
     { name: 'Bookings', icon: <CalendarCheck className="h-5 w-5" />, path: '/dashboard/bookings' },
     { name: 'Users', icon: <Users className="h-5 w-5" />, path: '/dashboard/users' },
     { name: 'Statistics & Reports', icon: <BarChart3 className="h-5 w-5" />, path: '/dashboard/statistics' }

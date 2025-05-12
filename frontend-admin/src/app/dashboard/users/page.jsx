@@ -19,13 +19,14 @@ import Link from 'next/link';
 export default function UsersManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const [searchTimeout, setSearchTimeout] = useState(null);
   const [roleFilter, setRoleFilter] = useState('');
   const [processingUserId, setProcessingUserId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -43,31 +44,49 @@ export default function UsersManagement() {
     { value: 'staff', label: 'Staff' }
   ];
 
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage, roleFilter]);
+  // Combine all search parameters into a single object for tracking changes
+  const searchParams = {
+    page: currentPage,
+    role: roleFilter,
+    query: searchQuery
+  };
 
+  // Fetch data whenever search parameters change
   useEffect(() => {
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout);
+    // If searching, use timeout for debounce
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
     }
-    
+
     const timeout = setTimeout(() => {
-      fetchUsers();
-    }, 500);
-    
-    setDebounceTimeout(timeout);
-    
+      if (!initialLoad || searchParams.query || searchParams.role) {
+        fetchUsers();
+      }
+    }, 300);
+
+    setSearchTimeout(timeout);
+
     return () => {
-      if (debounceTimeout) {
-        clearTimeout(debounceTimeout);
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
       }
     };
-  }, [searchQuery]);
+  }, [searchParams.page, searchParams.role, searchParams.query]);
+
+  // Initial fetch when component mounts
+  useEffect(() => {
+    if (initialLoad) {
+      fetchUsers();
+      setInitialLoad(false);
+    }
+  }, []);
 
   const fetchUsers = async () => {
     try {
-      setLoading(true);
+      // Only show loading state when not the first load
+      if (!initialLoad) {
+        setLoading(true);
+      }
       setError('');
       
       // Build query parameters
@@ -84,27 +103,24 @@ export default function UsersManagement() {
       // API call
       const response = await usersAPI.getAllUsers(params);
       
-      // Handle different response formats
-      let usersData = [];
-      let paginationData = { totalPages: 1, totalItems: 0 };
-      
-      if (response.data) {
-        // If response has nested data structure
-        if (response.data.users) {
-          usersData = response.data.users;
-          paginationData = response.data.pagination || paginationData;
-        } else if (Array.isArray(response.data)) {
-          // If response.data is directly the array of users
-          usersData = response.data;
+      if (response.data && response.data.success) {
+        // Access the correct API response structure
+        setUsers(response.data.data || []);
+        
+        // Update pagination information
+        if (response.data.meta) {
+          setTotalPages(response.data.meta.totalPages || 1);
+          setTotalItems(response.data.meta.totalItems || 0);
+        } else {
+          setTotalPages(1);
+          setTotalItems(response.data.data?.length || 0);
         }
-      } else if (Array.isArray(response)) {
-        // If response itself is the array of users
-        usersData = response;
+      } else {
+        setError('Unable to load user list. Please try again later.');
+        setUsers([]);
+        setTotalPages(1);
+        setTotalItems(0);
       }
-      
-      setUsers(usersData);
-      setTotalPages(paginationData.totalPages || 1);
-      setTotalItems(paginationData.totalItems || usersData.length);
       
     } catch (err) {
       console.error('Failed to fetch users:', err);
@@ -131,6 +147,13 @@ export default function UsersManagement() {
   const handleRoleFilterChange = (e) => {
     setRoleFilter(e.target.value);
     setCurrentPage(1); // Reset to first page on filter change
+  };
+  
+  const resetFilters = () => {
+    setSearchQuery('');
+    setRoleFilter('');
+    setCurrentPage(1);
+    fetchUsers();
   };
 
   const formatDate = (dateString) => {
@@ -283,7 +306,7 @@ export default function UsersManagement() {
         </div>
       )}
       
-      {/* Thanh công cụ filter và tìm kiếm */}
+      {/* Search and filter toolbar */}
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -299,7 +322,7 @@ export default function UsersManagement() {
           <button
             type="button"
             className="absolute inset-y-0 right-0 flex items-center pr-3"
-            onClick={fetchUsers}
+            onClick={resetFilters}
           >
             <span className="px-3 py-1 text-xs text-white bg-blue-600 rounded-md">Search</span>
           </button>
@@ -318,12 +341,7 @@ export default function UsersManagement() {
           
           <button
             type="button"
-            onClick={() => {
-              setSearchQuery('');
-              setRoleFilter('');
-              setCurrentPage(1);
-              fetchUsers();
-            }}
+            onClick={resetFilters}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -332,7 +350,7 @@ export default function UsersManagement() {
         </div>
       </div>
       
-      {/* Bảng người dùng */}
+      {/* Users table */}
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -436,7 +454,7 @@ export default function UsersManagement() {
           </table>
         </div>
         
-        {/* Phân trang */}
+        {/* Pagination */}
         <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700 sm:px-6">
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
@@ -479,7 +497,7 @@ export default function UsersManagement() {
         </div>
       </div>
       
-      {/* Modal xác nhận xóa người dùng */}
+      {/* User deletion confirmation modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={closeDeleteModal}></div>
@@ -516,7 +534,7 @@ export default function UsersManagement() {
         </div>
       )}
       
-      {/* Modal phân quyền người dùng */}
+      {/* User role assignment modal */}
       {showRoleModal && (
         <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={closeRoleModal}></div>

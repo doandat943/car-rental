@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -15,10 +15,11 @@ import {
 } from 'lucide-react';
 import { carsAPI, categoriesAPI } from '../../../../../lib/api';
 import { Button } from '../../../../../components/ui/Button';
+import React from 'react';
 
 export default function EditCar({ params }) {
   const router = useRouter();
-  const { id } = params;
+  const { id } = use(params);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -52,7 +53,7 @@ export default function EditCar({ params }) {
   const [currentImages, setCurrentImages] = useState([]);
   const [imagesToDelete, setImagesToDelete] = useState([]);
 
-  // Lấy thông tin xe cần chỉnh sửa
+  // Get information of the car to be edited
   useEffect(() => {
     const fetchCarDetails = async () => {
       setPageLoading(true);
@@ -83,13 +84,13 @@ export default function EditCar({ params }) {
             setCurrentImages(carData.images);
           }
         } else {
-          setError('Không thể tải thông tin xe');
+          setError('Unable to load car information');
         }
       } catch (error) {
         console.error('Error fetching car details:', error);
-        setError('Lỗi khi tải dữ liệu xe');
+        setError('Error loading car data');
         
-        // Dữ liệu mẫu cho trường hợp lỗi
+        // Sample data for error case
         setFormData({
           name: 'Toyota Camry XLE',
           brand: 'Toyota',
@@ -123,7 +124,7 @@ export default function EditCar({ params }) {
     }
   }, [id]);
 
-  // Lấy danh sách danh mục
+  // Get category list
   useEffect(() => {
     const fetchCategories = async () => {
       setCategoryLoading(true);
@@ -134,7 +135,7 @@ export default function EditCar({ params }) {
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
-        // Sử dụng danh mục mẫu nếu API bị lỗi
+        // Use sample categories if API fails
         setCategories([
           { _id: 'cat-1', name: 'Sedan' },
           { _id: 'cat-2', name: 'SUV' },
@@ -150,7 +151,7 @@ export default function EditCar({ params }) {
     fetchCategories();
   }, []);
 
-  // Xử lý thay đổi input
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -159,7 +160,7 @@ export default function EditCar({ params }) {
     });
   };
 
-  // Xử lý thêm tính năng (feature)
+  // Handle adding feature
   const handleAddFeature = () => {
     if (featureInput.trim() && !formData.features.includes(featureInput.trim())) {
       setFormData({
@@ -170,7 +171,7 @@ export default function EditCar({ params }) {
     }
   };
 
-  // Xử lý xóa tính năng
+  // Handle removing feature
   const handleRemoveFeature = (feature) => {
     setFormData({
       ...formData,
@@ -178,31 +179,31 @@ export default function EditCar({ params }) {
     });
   };
 
-  // Xử lý chọn file ảnh
+  // Handle image file selection
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     
-    // Giới hạn số lượng file (tối đa 5 ảnh tổng cộng)
+    // Limit the number of files (maximum 5 images in total)
     if (currentImages.length + selectedFiles.length + files.length > 5) {
-      alert('Bạn chỉ có thể tải lên tối đa 5 ảnh (bao gồm cả ảnh hiện tại).');
+      alert('You can only upload a maximum of 5 images (including existing images).');
       return;
     }
     
     setSelectedFiles([...selectedFiles, ...files]);
   };
 
-  // Xử lý xóa file ảnh đã chọn nhưng chưa upload
+  // Handle removing selected file before upload
   const handleRemoveFile = (index) => {
     setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
   };
 
-  // Xử lý đánh dấu xóa ảnh hiện tại
+  // Handle marking current image for deletion
   const handleRemoveCurrentImage = (imageId) => {
     setCurrentImages(currentImages.filter(img => img._id !== imageId));
     setImagesToDelete([...imagesToDelete, imageId]);
   };
 
-  // Xử lý submit form
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -210,16 +211,16 @@ export default function EditCar({ params }) {
     setUploadProgress(0);
     
     try {
-      // Cập nhật thông tin xe
+      // Update car information
       const carResponse = await carsAPI.updateCar(id, formData);
       
-      if (carResponse.data.success) {
-        // Xóa ảnh được đánh dấu
+      if (carResponse.data?.success) {
+        // Delete marked images
         for (const imageId of imagesToDelete) {
           await carsAPI.deleteImage(id, imageId);
         }
         
-        // Upload ảnh mới
+        // Upload new images
         if (selectedFiles.length > 0) {
           for (let i = 0; i < selectedFiles.length; i++) {
             const file = selectedFiles[i];
@@ -228,21 +229,23 @@ export default function EditCar({ params }) {
             
             await carsAPI.uploadImage(id, formData);
             
-            // Cập nhật tiến trình upload
+            // Update upload progress
             setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
           }
         }
         
         setSuccess(true);
         
-        // Chuyển hướng về trang chi tiết xe sau 1.5 giây
+        // Redirect to car details page after 1.5 seconds
         setTimeout(() => {
           router.push(`/dashboard/cars/${id}`);
         }, 1500);
+      } else {
+        setError(carResponse.data?.message || 'An error occurred while updating the car.');
       }
     } catch (error) {
       console.error('Error updating car:', error);
-      setError(error.message || 'Có lỗi xảy ra khi cập nhật xe.');
+      setError(error.message || 'An error occurred while updating the car.');
     } finally {
       setLoading(false);
     }
@@ -269,7 +272,7 @@ export default function EditCar({ params }) {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Chỉnh sửa xe</h1>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Edit Car</h1>
           </div>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {formData.name} ({formData.brand} {formData.model})
@@ -290,7 +293,7 @@ export default function EditCar({ params }) {
         <div className="mb-4 flex p-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
           <Check className="flex-shrink-0 inline w-5 h-5 mr-3" />
           <span className="sr-only">Success</span>
-          <div>Xe đã được cập nhật thành công. Đang chuyển hướng...</div>
+          <div>Car has been updated successfully. Redirecting...</div>
         </div>
       )}
 
@@ -298,9 +301,9 @@ export default function EditCar({ params }) {
       <div className="bg-white rounded-lg shadow dark:bg-gray-800 p-6">
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6 mb-6 md:grid-cols-2">
-            {/* Tên xe */}
+            {/* Car Name */}
             <div>
-              <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tên xe</label>
+              <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Car Name</label>
               <input 
                 type="text" 
                 id="name" 
@@ -313,9 +316,9 @@ export default function EditCar({ params }) {
               />
             </div>
             
-            {/* Thương hiệu */}
+            {/* Brand */}
             <div>
-              <label htmlFor="brand" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Thương hiệu</label>
+              <label htmlFor="brand" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Brand</label>
               <input 
                 type="text" 
                 id="brand" 
@@ -328,9 +331,9 @@ export default function EditCar({ params }) {
               />
             </div>
             
-            {/* Kiểu mẫu */}
+            {/* Model */}
             <div>
-              <label htmlFor="model" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Kiểu mẫu</label>
+              <label htmlFor="model" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Model</label>
               <input 
                 type="text" 
                 id="model" 
@@ -343,9 +346,9 @@ export default function EditCar({ params }) {
               />
             </div>
             
-            {/* Năm sản xuất */}
+            {/* Year */}
             <div>
-              <label htmlFor="year" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Năm sản xuất</label>
+              <label htmlFor="year" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Year</label>
               <input 
                 type="number" 
                 id="year" 
@@ -360,9 +363,9 @@ export default function EditCar({ params }) {
               />
             </div>
             
-            {/* Giá thuê / ngày */}
+            {/* Daily Price */}
             <div>
-              <label htmlFor="price.daily" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Giá thuê / ngày ($)</label>
+              <label htmlFor="price.daily" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Price Per Day ($)</label>
               <input 
                 type="number" 
                 id="price.daily" 
@@ -377,9 +380,9 @@ export default function EditCar({ params }) {
               />
             </div>
             
-            {/* Danh mục */}
+            {/* Category */}
             <div>
-              <label htmlFor="category" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Danh mục</label>
+              <label htmlFor="category" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category</label>
               <select 
                 id="category" 
                 name="category"
@@ -388,12 +391,12 @@ export default function EditCar({ params }) {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="">Chọn danh mục</option>
+                <option key="category-default" value="">Select category</option>
                 {categoryLoading ? (
-                  <option disabled>Đang tải danh mục...</option>
+                  <option key="loading-option" disabled>Loading categories...</option>
                 ) : (
                   categories.map(category => (
-                    <option key={category._id} value={category._id}>
+                    <option key={`category-${category._id}`} value={category._id}>
                       {category.name}
                     </option>
                   ))
@@ -401,9 +404,9 @@ export default function EditCar({ params }) {
               </select>
             </div>
             
-            {/* Số chỗ ngồi */}
+            {/* Seats */}
             <div>
-              <label htmlFor="seats" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Số chỗ ngồi</label>
+              <label htmlFor="seats" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seats</label>
               <input 
                 type="number" 
                 id="seats" 
@@ -418,9 +421,9 @@ export default function EditCar({ params }) {
               />
             </div>
             
-            {/* Hộp số */}
+            {/* Transmission */}
             <div>
-              <label htmlFor="transmission" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hộp số</label>
+              <label htmlFor="transmission" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Transmission</label>
               <select 
                 id="transmission" 
                 name="transmission"
@@ -429,15 +432,15 @@ export default function EditCar({ params }) {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="automatic">Tự động</option>
-                <option value="manual">Số sàn</option>
-                <option value="semi-automatic">Bán tự động</option>
+                <option key="transmission-automatic" value="automatic">Automatic</option>
+                <option key="transmission-manual" value="manual">Manual</option>
+                <option key="transmission-semi-automatic" value="semi-automatic">Semi-automatic</option>
               </select>
             </div>
             
-            {/* Loại nhiên liệu */}
+            {/* Fuel Type */}
             <div>
-              <label htmlFor="fuelType" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Loại nhiên liệu</label>
+              <label htmlFor="fuelType" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fuel Type</label>
               <select 
                 id="fuelType" 
                 name="fuelType"
@@ -446,16 +449,16 @@ export default function EditCar({ params }) {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="gasoline">Xăng</option>
-                <option value="diesel">Dầu diesel</option>
-                <option value="electric">Điện</option>
-                <option value="hybrid">Hybrid</option>
+                <option key="fuel-gasoline" value="gasoline">Gasoline</option>
+                <option key="fuel-diesel" value="diesel">Diesel</option>
+                <option key="fuel-electric" value="electric">Electric</option>
+                <option key="fuel-hybrid" value="hybrid">Hybrid</option>
               </select>
             </div>
             
-            {/* Trạng thái */}
+            {/* Status */}
             <div>
-              <label htmlFor="status" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trạng thái</label>
+              <label htmlFor="status" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
               <select 
                 id="status" 
                 name="status"
@@ -464,16 +467,16 @@ export default function EditCar({ params }) {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="available">Sẵn sàng</option>
-                <option value="maintenance">Bảo trì</option>
-                <option value="rented">Đang thuê</option>
+                <option key="status-available" value="available">Available</option>
+                <option key="status-maintenance" value="maintenance">Maintenance</option>
+                <option key="status-rented" value="rented">Rented</option>
               </select>
             </div>
           </div>
           
-          {/* Mô tả */}
+          {/* Description */}
           <div className="mb-6">
-            <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Mô tả</label>
+            <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
             <textarea 
               id="description" 
               name="description"
@@ -481,20 +484,20 @@ export default function EditCar({ params }) {
               onChange={handleChange}
               rows="4" 
               className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-              placeholder="Mô tả chi tiết về xe, tình trạng, đặc điểm..."
+              placeholder="Detailed description of the car, condition, features..."
             ></textarea>
           </div>
           
-          {/* Tính năng */}
+          {/* Features */}
           <div className="mb-6">
-            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tính năng</label>
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Features</label>
             <div className="flex mb-2">
               <input 
                 type="text" 
                 value={featureInput}
                 onChange={(e) => setFeatureInput(e.target.value)}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg rounded-r-none focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                placeholder="Thêm tính năng mới" 
+                placeholder="Add new feature" 
               />
               <button
                 type="button"
@@ -506,7 +509,7 @@ export default function EditCar({ params }) {
             </div>
             <div className="flex flex-wrap gap-2">
               {formData.features.map((feature, index) => (
-                <div key={index} className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1">
+                <div key={`feature-${index}-${feature}`} className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1">
                   <span className="text-sm text-gray-800 dark:text-gray-200">{feature}</span>
                   <button
                     type="button"
@@ -518,22 +521,22 @@ export default function EditCar({ params }) {
                 </div>
               ))}
               {formData.features.length === 0 && (
-                <span className="text-sm text-gray-500 dark:text-gray-400">Chưa có tính năng nào</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">No features added yet</span>
               )}
             </div>
           </div>
           
-          {/* Hình ảnh hiện tại */}
+          {/* Current Images */}
           {currentImages.length > 0 && (
             <div className="mb-6">
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hình ảnh hiện tại</label>
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Current Images</label>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {currentImages.map((image) => (
-                  <div key={image._id} className="relative group">
+                {currentImages.map((image, index) => (
+                  <div key={`current-image-${image._id || index}`} className="relative group">
                     <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative">
                       <img
                         src={image.url}
-                        alt="Car"
+                        alt={`Car image ${index + 1}`}
                         className="object-cover w-full h-20"
                       />
                       <button
@@ -550,17 +553,17 @@ export default function EditCar({ params }) {
             </div>
           )}
           
-          {/* Upload ảnh mới */}
+          {/* Upload New Images */}
           <div className="mb-6">
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Thêm hình ảnh mới {currentImages.length > 0 ? `(còn ${5 - currentImages.length} vị trí)` : '(tối đa 5 ảnh)'}
+              Add New Images {currentImages.length > 0 ? `(${5 - currentImages.length} slots remaining)` : '(maximum 5 images)'}
             </label>
             <div className="flex items-center justify-center w-full">
               <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Upload className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" />
-                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold">Click để tải lên</span> hoặc kéo thả</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG hoặc JPEG (tối đa 5MB mỗi ảnh)</p>
+                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or JPEG (max 5MB per image)</p>
                 </div>
                 <input 
                   id="dropzone-file" 
@@ -574,13 +577,13 @@ export default function EditCar({ params }) {
               </label>
             </div>
             
-            {/* Preview ảnh đã chọn */}
+            {/* Selected Images Preview */}
             {selectedFiles.length > 0 && (
               <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Ảnh mới đã chọn:</h3>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">New Selected Images:</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {selectedFiles.map((file, index) => (
-                    <div key={index} className="relative group">
+                    <div key={`file-${index}-${file.name}`} className="relative group">
                       <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative">
                         <img
                           src={URL.createObjectURL(file)}
@@ -609,7 +612,7 @@ export default function EditCar({ params }) {
               <div className="w-full bg-gray-200 rounded-full h-2.5 mt-3 dark:bg-gray-700">
                 <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Đang tải lên {uploadProgress}%
+                  Uploading {uploadProgress}%
                 </p>
               </div>
             )}
@@ -623,7 +626,7 @@ export default function EditCar({ params }) {
                 variant="outline"
                 disabled={loading}
               >
-                Hủy
+                Cancel
               </Button>
             </Link>
             <Button 
@@ -632,15 +635,15 @@ export default function EditCar({ params }) {
               className="flex items-center gap-2"
             >
               {loading ? (
-                <>
+                <React.Fragment key="loading">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Đang xử lý...</span>
-                </>
+                  <span>Processing...</span>
+                </React.Fragment>
               ) : (
-                <>
+                <React.Fragment key="submit">
                   <Car className="h-4 w-4" />
-                  <span>Cập nhật xe</span>
-                </>
+                  <span>Update Car</span>
+                </React.Fragment>
               )}
             </Button>
           </div>

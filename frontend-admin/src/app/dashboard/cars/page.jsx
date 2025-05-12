@@ -19,12 +19,14 @@ import { carsAPI } from '../../../lib/api';
 export default function CarsManagement() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
   const [filter, setFilter] = useState({
     status: ''
   });
@@ -39,14 +41,49 @@ export default function CarsManagement() {
     { value: 'rented', label: 'Rented' }
   ];
 
-  // Fetch data
+  // Combine all search parameters into a single object for tracking changes
+  const searchParams = {
+    page: currentPage,
+    status: filter.status,
+    query: searchQuery
+  };
+
+  // Fetch data whenever search parameters change
   useEffect(() => {
-    fetchCars();
-  }, [currentPage, filter.status]);
+    // If searching, use timeout for debounce
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      if (!initialLoad || searchParams.query || searchParams.status) {
+        fetchCars();
+      }
+    }, 300);
+
+    setSearchTimeout(timeout);
+
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchParams.page, searchParams.status, searchParams.query]);
+
+  // Initial fetch when component mounts
+  useEffect(() => {
+    if (initialLoad) {
+      fetchCars();
+      setInitialLoad(false);
+    }
+  }, []);
 
   const fetchCars = async () => {
     try {
-      setLoading(true);
+      // Only show loading state when not the first load
+      if (!initialLoad) {
+        setLoading(true);
+      }
       setError(null);
       
       const params = {
@@ -64,10 +101,10 @@ export default function CarsManagement() {
       
       const response = await carsAPI.getAllCars(params);
       
-      if (response.success) {
-        setCars(response.data || []);
-        setTotalItems(response.meta?.totalItems || 0);
-        setTotalPages(response.meta?.totalPages || 1);
+      if (response.data?.success) {
+        setCars(response.data.data || []);
+        setTotalItems(response.data.meta?.totalItems || 0);
+        setTotalPages(response.data.meta?.totalPages || 1);
       } else {
         setError('Unable to load car data. Please try again later.');
         setCars([]);
@@ -84,6 +121,7 @@ export default function CarsManagement() {
   // Search handler
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
   // Status filter handler
@@ -120,12 +158,12 @@ export default function CarsManagement() {
       
       const response = await carsAPI.deleteCar(id);
       
-      if (response.success) {
+      if (response.data?.success) {
         setCars(cars.filter(car => car._id !== id));
         setTotalItems(prev => prev - 1);
         setSuccess('Car deleted successfully');
       } else {
-        setError('Unable to delete car: ' + (response.message || 'Unknown error'));
+        setError('Unable to delete car: ' + (response.data?.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error deleting car:', error);

@@ -19,13 +19,14 @@ import Link from 'next/link';
 export default function BookingsManagement() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const [searchTimeout, setSearchTimeout] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [processingBookingId, setProcessingBookingId] = useState(null);
@@ -40,31 +41,51 @@ export default function BookingsManagement() {
     { value: 'completed', label: 'Completed' }
   ];
 
-  useEffect(() => {
-    fetchBookings();
-  }, [currentPage, statusFilter, dateFilter]);
+  // Combine all search parameters into a single object for tracking changes
+  const searchParams = {
+    page: currentPage,
+    status: statusFilter,
+    query: searchQuery,
+    startDate: dateFilter.startDate,
+    endDate: dateFilter.endDate
+  };
 
+  // Fetch data whenever search parameters change
   useEffect(() => {
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout);
+    // If searching, use timeout for debounce
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
     }
-    
+
     const timeout = setTimeout(() => {
-      fetchBookings();
-    }, 500);
-    
-    setDebounceTimeout(timeout);
-    
+      if (!initialLoad || searchParams.query || searchParams.status || searchParams.startDate || searchParams.endDate) {
+        fetchBookings();
+      }
+    }, 300);
+
+    setSearchTimeout(timeout);
+
     return () => {
-      if (debounceTimeout) {
-        clearTimeout(debounceTimeout);
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
       }
     };
-  }, [searchQuery]);
+  }, [searchParams.page, searchParams.status, searchParams.query, searchParams.startDate, searchParams.endDate]);
+
+  // Initial fetch when component mounts
+  useEffect(() => {
+    if (initialLoad) {
+      fetchBookings();
+      setInitialLoad(false);
+    }
+  }, []);
 
   const fetchBookings = async () => {
     try {
-      setLoading(true);
+      // Only show loading state when not the first load
+      if (!initialLoad) {
+        setLoading(true);
+      }
       setError('');
       
       // Build query parameters
@@ -89,28 +110,28 @@ export default function BookingsManagement() {
       // API call
       const response = await bookingsAPI.getAllBookings(params);
       
-      // Handle different response formats
-      let bookingsData = [];
-      let paginationData = { totalPages: 1, totalItems: 0 };
-      
-      if (response.data) {
-        // If response has nested data structure
-        if (response.data.bookings) {
-          bookingsData = response.data.bookings;
-          paginationData = response.data.pagination || paginationData;
-        } else if (Array.isArray(response.data)) {
-          // If response.data is directly the array of bookings
-          bookingsData = response.data;
+      if (response.data?.success) {
+        // API returns bookings array nested inside data object
+        if (response.data.data && response.data.data.bookings) {
+          const bookingsData = response.data.data.bookings;
+          
+          setBookings(bookingsData);
+          setTotalPages(response.data.data.totalPages || 1);
+          setTotalItems(response.data.data.totalBookings || 0);
+        } else {
+          // Fallback to previous structure if needed
+          const bookingsData = Array.isArray(response.data.data) ? response.data.data : [];
+          
+          setBookings(bookingsData);
+          setTotalPages(response.data.meta?.totalPages || 1);
+          setTotalItems(response.data.meta?.totalItems || 0);
         }
-      } else if (Array.isArray(response)) {
-        // If response itself is the array of bookings
-        bookingsData = response;
+      } else {
+        setError('Unable to load booking list. Please try again later.');
+        setBookings([]);
+        setTotalPages(1);
+        setTotalItems(0);
       }
-      
-      setBookings(bookingsData);
-      setTotalPages(paginationData.totalPages || 1);
-      setTotalItems(paginationData.totalItems || bookingsData.length);
-      
     } catch (err) {
       console.error('Failed to fetch bookings:', err);
       setError('Unable to load booking list. Please try again later.');
@@ -122,15 +143,15 @@ export default function BookingsManagement() {
     }
   };
 
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page on new search
+  };
+
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
-  };
-
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page on new search
   };
 
   const handleStatusFilterChange = (e) => {
@@ -196,15 +217,18 @@ export default function BookingsManagement() {
       setError('');
       setSuccess('');
       
-      await bookingsAPI.updateBookingStatus(bookingId, 'confirmed');
+      const response = await bookingsAPI.updateBookingStatus(bookingId, 'confirmed');
       
-      // Update the booking in the list
-      setBookings(prevBookings => prevBookings.map(booking => 
-        booking._id === bookingId ? { ...booking, status: 'confirmed' } : booking
-      ));
-      
-      setSuccess('Booking has been confirmed successfully');
-      
+      if (response.data?.success) {
+        // Update the booking in the list
+        setBookings(prevBookings => prevBookings.map(booking => 
+          booking._id === bookingId ? { ...booking, status: 'confirmed' } : booking
+        ));
+        
+        setSuccess('Booking has been confirmed successfully');
+      } else {
+        setError(response.data?.message || 'Unable to confirm booking. Please try again later.');
+      }
     } catch (err) {
       console.error('Failed to confirm booking:', err);
       setError('Unable to confirm booking. Please try again later.');
@@ -224,15 +248,18 @@ export default function BookingsManagement() {
       setError('');
       setSuccess('');
       
-      await bookingsAPI.cancelBooking(bookingId, 'Cancelled by admin');
+      const response = await bookingsAPI.cancelBooking(bookingId, 'Cancelled by admin');
       
-      // Update the booking in the list
-      setBookings(prevBookings => prevBookings.map(booking => 
-        booking._id === bookingId ? { ...booking, status: 'cancelled' } : booking
-      ));
-      
-      setSuccess('Booking has been cancelled successfully');
-      
+      if (response.data?.success) {
+        // Update the booking in the list
+        setBookings(prevBookings => prevBookings.map(booking => 
+          booking._id === bookingId ? { ...booking, status: 'cancelled' } : booking
+        ));
+        
+        setSuccess('Booking has been cancelled successfully');
+      } else {
+        setError(response.data?.message || 'Unable to cancel booking. Please try again later.');
+      }
     } catch (err) {
       console.error('Failed to cancel booking:', err);
       setError('Unable to cancel booking. Please try again later.');
@@ -252,15 +279,18 @@ export default function BookingsManagement() {
       setError('');
       setSuccess('');
       
-      await bookingsAPI.updateBookingStatus(bookingId, 'completed');
+      const response = await bookingsAPI.updateBookingStatus(bookingId, 'completed');
       
-      // Update the booking in the list
-      setBookings(prevBookings => prevBookings.map(booking => 
-        booking._id === bookingId ? { ...booking, status: 'completed' } : booking
-      ));
-      
-      setSuccess('Booking has been marked as completed');
-      
+      if (response.data?.success) {
+        // Update the booking in the list
+        setBookings(prevBookings => prevBookings.map(booking => 
+          booking._id === bookingId ? { ...booking, status: 'completed' } : booking
+        ));
+        
+        setSuccess('Booking has been marked as completed');
+      } else {
+        setError(response.data?.message || 'Unable to complete booking. Please try again later.');
+      }
     } catch (err) {
       console.error('Failed to complete booking:', err);
       setError('Unable to complete booking. Please try again later.');
@@ -272,6 +302,14 @@ export default function BookingsManagement() {
     } finally { 
       setProcessingBookingId(null);
     }
+  };
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('');
+    setDateFilter({ startDate: '', endDate: '' });
+    setCurrentPage(1);
+    fetchBookings();
   };
 
   return (
@@ -342,13 +380,7 @@ export default function BookingsManagement() {
           
           <button
             type="button"
-            onClick={() => {
-              setSearchQuery('');
-              setStatusFilter('');
-              setDateFilter({ startDate: '', endDate: '' });
-              setCurrentPage(1);
-              fetchBookings();
-            }}
+            onClick={resetFilters}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -395,12 +427,12 @@ export default function BookingsManagement() {
                       {booking.bookingCode || `B${booking._id.substr(-6)}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div>{booking.user?.name}</div>
-                      <div className="text-xs text-gray-400">{booking.user?.phone}</div>
+                      <div>{booking.user?.name || (booking.user && typeof booking.user === 'string' ? booking.user : 'Unknown')}</div>
+                      <div className="text-xs text-gray-400">{booking.user?.phone || 'No phone'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div>{booking.car?.name}</div>
-                      <div className="text-xs text-gray-400">{booking.car?.licensePlate}</div>
+                      <div>{booking.car?.name || (booking.car && typeof booking.car === 'string' ? booking.car : 'Unknown')}</div>
+                      <div className="text-xs text-gray-400">{booking.car?.licensePlate || 'No plate'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       <div>From: {formatDate(booking.startDate)}</div>

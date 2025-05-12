@@ -6,52 +6,38 @@ A full-stack car rental application with admin dashboard and client interface bu
 
 ```
 car-rental/
-├── backend/             # Express.js API backend
+├── backend/                     # Express.js API backend
 │   ├── src/
-│   │   ├── config/      # Configuration files
-│   │   ├── controllers/ # API controllers
-│   │   ├── middleware/  # Express middleware
-│   │   ├── models/      # Mongoose models
-│   │   ├── public/      # Static assets
-│   │   ├── routes/      # API routes
-│   │   ├── utils/       # Utility functions
-│   │   ├── app.js       # Express app setup
-│   │   └── server.js    # Server entry point
-│   ├── .env             # Environment variables
-│   └── package.json     # Backend dependencies
+│   │   ├── config/              # Configuration files
+│   │   ├── controllers/         # API controllers
+│   │   ├── middlewares/         # Express middleware
+│   │   ├── models/              # Mongoose models
+│   │   ├── public/              # Static assets
+│   │   ├── routes/              # API routes
+│   │   ├── services/            # Business logic services
+│   │   ├── utils/               # Utility functions
+│   │   ├── seed-data.js         # Sample data for database seeding
+│   │   ├── seed-data-runner.js  # Script to run database seeding
+│   │   ├── app.js               # Express app setup
+│   │   └── server.js            # Server entry point
+│   ├── .env                     # Environment variables
+│   └── package.json             # Backend dependencies
 │
-├── frontend-admin/      # Next.js admin dashboard
-│   ├── app/             # Next.js app router pages
-│   ├── components/      # React components
-│   ├── lib/             # Utility functions
-│   ├── public/          # Static assets
-│   └── package.json     # Frontend dependencies
+├── frontend-admin/              # Next.js admin dashboard
+│   ├── src/
+│   │   ├── app/                 # Next.js app router pages
+│   │   ├── components/          # React components
+│   │   ├── lib/                 # Utility functions and API
+│   │   └── public/              # Static assets
+│   └── package.json             # Frontend dependencies
 │
-└── frontend-client/     # Next.js client website
+└── frontend-client/             # Next.js client website
     ├── src/
-    │   ├── app/         # Next.js app router pages
-    │   ├── components/  # React components
-    │   └── lib/         # Utility functions
-    ├── public/          # Static assets
-    └── package.json     # Frontend dependencies
-```
-
-## Environment Setup
-
-### Backend (.env)
-
-Create a `.env` file in the `backend` directory with the following variables:
-
-```env
-NODE_ENV=development
-PORT=5000
-# Development database
-# MONGO_URI=mongodb://localhost:27017/car-rental
-# Production database
-MONGODB_URI=mongodb+srv://your-mongodb-connection-string
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRE=7d
-UPLOAD_PATH=./src/public/uploads
+    │   ├── app/                 # Next.js app router pages 
+    │   ├── components/          # React components
+    │   └── lib/                 # Utility functions and API
+    ├── public/                  # Static assets
+    └── package.json             # Frontend dependencies
 ```
 
 ## Getting Started
@@ -64,6 +50,12 @@ cd backend
 
 # Install dependencies
 npm install
+
+# Setup environment variables (copy from .env.example and modify as needed)
+cp .env.example .env
+
+# Seed the database with initial data
+npm run seed
 
 # Run in development mode
 npm run dev
@@ -104,25 +96,57 @@ npm run dev
 npm run build
 ```
 
+## Features
+
+### Admin Dashboard
+- User management (customers, staff, admins)
+- Car inventory management
+- Booking management and status updates
+- Analytics and reporting
+- Notifications system
+
+### Client Website
+- Car browsing and filtering
+- Booking system
+- User registration and profile management
+- Reviews and ratings
+- Responsive design for all devices
+
 ## API Routes
 
-- `/api/auth` - Authentication routes
-- `/api/users` - User management
-- `/api/cars` - Car management
+- `/api/auth` - Authentication (login, register, reset password)
+- `/api/users` - User management (CRUD operations)
+- `/api/cars` - Car management (CRUD operations)
 - `/api/bookings` - Booking management
-- `/api/categories` - Car categories
-- `/api/website` - Website content
+- `/api/categories` - Car categories management
+- `/api/website` - Website content management
 - `/api/dashboard` - Admin dashboard statistics
-- `/api/upload` - File upload
+- `/api/upload` - File upload functionality
+- `/api/notifications` - User notifications
+- `/api/statistics` - Detailed statistics for analytics
 
-## Important Notes
+## Database Seeding
 
-1. Make sure MongoDB is running before starting the backend server.
-2. Use a proper JWT secret in production.
-3. Set up appropriate CORS settings in production.
-4. Change default admin credentials after first run.
+The project includes a comprehensive data seeding system to populate the database with sample data for testing and development:
+
+```bash
+# Run the seeding script
+npm run seed
+```
+
+The seed data includes:
+- User accounts (admin, staff, regular users)
+- Car categories
+- Car listings with details and images
+- Sample bookings
+- Reviews and ratings
+- Website settings
+- Statistics for the dashboard
+- Notifications
 
 ## Default Admin User
+
+After running the seed script, you can log in with the following credentials:
 
 - Email: admin@carental.com
 - Password: Admin123!
