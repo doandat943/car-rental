@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
-const { connectDB } = require('./config/db');
+const { connectDB } = require('./db');
 const errorHandler = require('./middlewares/error');
 const cookieParser = require('cookie-parser');
 

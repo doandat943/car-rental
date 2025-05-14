@@ -9,7 +9,7 @@ const morgan = require('morgan');
 dotenv.config();
 
 // Import database utilities
-const { connectDatabase, initializeDatabase } = require('./utils/database');
+const { connectDB } = require('./db');
 
 // Create Express app
 const app = express();
@@ -39,10 +39,10 @@ const statistics = require('./routes/statistics');
 (async () => {
   try {
     // Connect to MongoDB
-    await connectDatabase();
+    await connectDB();
     
-    // Initialize database with seed data if needed
-    await initializeDatabase();
+    // Database initialization is now handled by the seed system
+    // To initialize the database, run: npm run seed
     
     // Set routes
     setRoutes(app);
