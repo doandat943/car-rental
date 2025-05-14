@@ -12,7 +12,9 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCheck,
-  Shield
+  Shield,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,12 +30,16 @@ export default function UsersManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [processingUserId, setProcessingUserId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [userToChangeRole, setUserToChangeRole] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [userToChangeStatus, setUserToChangeStatus] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState('');
   
   const ITEMS_PER_PAGE = 10;
   
@@ -44,10 +50,17 @@ export default function UsersManagement() {
     { value: 'staff', label: 'Staff' }
   ];
 
+  const statusOptions = [
+    { value: '', label: 'All status' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' }
+  ];
+
   // Combine all search parameters into a single object for tracking changes
   const searchParams = {
     page: currentPage,
     role: roleFilter,
+    status: statusFilter,
     query: searchQuery
   };
 
@@ -59,7 +72,7 @@ export default function UsersManagement() {
     }
 
     const timeout = setTimeout(() => {
-      if (!initialLoad || searchParams.query || searchParams.role) {
+      if (!initialLoad || searchParams.query || searchParams.role || searchParams.status) {
         fetchUsers();
       }
     }, 300);
@@ -71,7 +84,7 @@ export default function UsersManagement() {
         clearTimeout(searchTimeout);
       }
     };
-  }, [searchParams.page, searchParams.role, searchParams.query]);
+  }, [searchParams.page, searchParams.role, searchParams.status, searchParams.query]);
 
   // Initial fetch when component mounts
   useEffect(() => {
@@ -149,9 +162,15 @@ export default function UsersManagement() {
     setCurrentPage(1); // Reset to first page on filter change
   };
   
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+  
   const resetFilters = () => {
     setSearchQuery('');
     setRoleFilter('');
+    setStatusFilter('');
     setCurrentPage(1);
     fetchUsers();
   };
@@ -217,6 +236,18 @@ export default function UsersManagement() {
     setSelectedRole('');
   };
 
+  const openStatusModal = (user) => {
+    setUserToChangeStatus(user);
+    setSelectedStatus(user.status);
+    setShowStatusModal(true);
+  };
+
+  const closeStatusModal = () => {
+    setShowStatusModal(false);
+    setUserToChangeStatus(null);
+    setSelectedStatus('');
+  };
+
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
     
@@ -268,6 +299,36 @@ export default function UsersManagement() {
         user._id === userToChangeRole._id ? { ...user, role: selectedRole } : user
       ));
       closeRoleModal();
+    } finally {
+      setProcessingUserId(null);
+    }
+  };
+
+  const handleStatusChange = async () => {
+    if (!userToChangeStatus || !selectedStatus) return;
+    
+    try {
+      setProcessingUserId(userToChangeStatus._id);
+      
+      await usersAPI.updateUserStatus(userToChangeStatus._id, selectedStatus);
+      
+      // Update user in list
+      setUsers(prevUsers => prevUsers.map(user => 
+        user._id === userToChangeStatus._id ? { ...user, status: selectedStatus } : user
+      ));
+      
+      setSuccess(`User ${userToChangeStatus.name} status has been updated to ${getStatusText(selectedStatus)}`);
+      closeStatusModal();
+      
+    } catch (err) {
+      console.error('Failed to update user status:', err);
+      setError('Unable to update user status. Please try again later.');
+      
+      // For demo, update UI anyway
+      setUsers(prevUsers => prevUsers.map(user => 
+        user._id === userToChangeStatus._id ? { ...user, status: selectedStatus } : user
+      ));
+      closeStatusModal();
     } finally {
       setProcessingUserId(null);
     }
@@ -335,6 +396,16 @@ export default function UsersManagement() {
             onChange={handleRoleFilterChange}
           >
             {roleOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          
+          <select
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 min-w-[140px] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+          >
+            {statusOptions.map(option => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
@@ -438,6 +509,18 @@ export default function UsersManagement() {
                         </button>
                         
                         <button
+                          onClick={() => openStatusModal(user)}
+                          disabled={processingUserId === user._id}
+                          className="text-blue-600 hover:text-blue-900 flex items-center"
+                          title={`Toggle status (currently ${getStatusText(user.status)})`}
+                        >
+                          {user.status === 'active' ? 
+                            <ToggleRight className="h-4 w-4" /> : 
+                            <ToggleLeft className="h-4 w-4" />
+                          }
+                        </button>
+                        
+                        <button
                           onClick={() => openDeleteModal(user)}
                           disabled={processingUserId === user._id || user.role === 'admin'}
                           className={`${user.role === 'admin' ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'} flex items-center`}
@@ -534,53 +617,123 @@ export default function UsersManagement() {
         </div>
       )}
       
-      {/* User role assignment modal */}
+      {/* Role Change Modal */}
       {showRoleModal && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={closeRoleModal}></div>
-          
-          <div className="relative bg-white rounded-lg max-w-md w-full mx-auto p-6 shadow-xl dark:bg-gray-800">
-            <div className="mb-4">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900">
-                <UserCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white text-center">Assign User Role</h3>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
-                Change user <span className="font-semibold">{userToChangeRole?.name}</span> role
+        <div className="fixed inset-0 z-50 overflow-auto bg-gray-500 bg-opacity-75 flex items-center justify-center">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-auto p-6 dark:bg-gray-800">
+            <div className="text-center">
+              <Shield className="mx-auto h-12 w-12 text-yellow-500" />
+              <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">Change User Role</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Changing role for: <span className="font-medium">{userToChangeRole?.name}</span>
               </p>
             </div>
             
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Select new role
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Select Role
               </label>
               <select
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
               >
-                <option value="">-- Select role --</option>
                 <option value="user">User</option>
-                <option value="staff">Staff</option>
                 <option value="admin">Administrator</option>
+                <option value="staff">Staff</option>
               </select>
             </div>
             
-            <div className="mt-5 sm:mt-6 flex justify-end space-x-2">
+            <div className="mt-6 flex justify-end space-x-3">
               <button
                 type="button"
-                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
                 onClick={closeRoleModal}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-700 dark:hover:bg-blue-800"
                 onClick={handleRoleChange}
-                disabled={processingUserId !== null || !selectedRole}
               >
-                {processingUserId ? 'Processing...' : 'Update role'}
+                {processingUserId === userToChangeRole?._id ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  <span>Change Role</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Change Modal */}
+      {showStatusModal && (
+        <div className="fixed inset-0 z-50 overflow-auto bg-gray-500 bg-opacity-75 flex items-center justify-center">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-auto p-6 dark:bg-gray-800">
+            <div className="text-center">
+              {selectedStatus === 'active' ? (
+                <ToggleRight className="mx-auto h-12 w-12 text-green-500" />
+              ) : (
+                <ToggleLeft className="mx-auto h-12 w-12 text-gray-500" />
+              )}
+              <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">Change User Status</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Changing status for: <span className="font-medium">{userToChangeStatus?.name}</span>
+              </p>
+            </div>
+            
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Select Status
+              </label>
+              <select
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              
+              {userToChangeStatus?.role === 'admin' && selectedStatus === 'inactive' && (
+                <p className="mt-2 text-xs text-yellow-600 dark:text-yellow-500">
+                  Warning: Deactivating an admin account may limit administrative access.
+                </p>
+              )}
+            </div>
+            
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                type="button"
+                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                onClick={closeStatusModal}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-700 dark:hover:bg-blue-800"
+                onClick={handleStatusChange}
+              >
+                {processingUserId === userToChangeStatus?._id ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  <span>Update Status</span>
+                )}
               </button>
             </div>
           </div>

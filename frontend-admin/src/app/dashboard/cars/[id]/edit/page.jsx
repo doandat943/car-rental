@@ -38,7 +38,12 @@ export default function EditCar({ params }) {
     seats: 5,
     transmission: 'automatic',
     fuelType: 'gasoline',
-    images: []
+    images: [],
+    specifications: {
+      seats: 5,
+      transmission: 'automatic',
+      fuelType: 'gasoline'
+    }
   });
   
   const [categories, setCategories] = useState([]);
@@ -61,6 +66,8 @@ export default function EditCar({ params }) {
         const response = await carsAPI.getCarById(id);
         if (response.data.success) {
           const carData = response.data.data;
+          console.log('Car data from server:', carData);
+          console.log('Category data:', carData.category);
           setFormData({
             name: carData.name || '',
             brand: carData.brand || '',
@@ -71,13 +78,13 @@ export default function EditCar({ params }) {
               weekly: carData.price?.weekly || 0,
               monthly: carData.price?.monthly || 0
             },
-            category: carData.category || '',
+            category: carData.category?._id || carData.category || '',
             description: carData.description || '',
             features: carData.features || [],
             status: carData.status || 'available',
-            seats: carData.seats || 5,
-            transmission: carData.transmission || 'automatic',
-            fuelType: carData.fuelType || 'gasoline',
+            seats: carData.specifications?.seats || 5,
+            transmission: carData.specifications?.transmission || 'automatic',
+            fuelType: carData.specifications?.fuelType || 'gasoline',
           });
           
           if (carData.images && carData.images.length > 0) {
@@ -154,6 +161,34 @@ export default function EditCar({ params }) {
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Handle nested price object
+    if (name.startsWith('price.')) {
+      const priceField = name.split('.')[1];
+      setFormData({
+        ...formData,
+        price: {
+          ...formData.price,
+          [priceField]: value
+        }
+      });
+      return;
+    }
+    
+    // Handle fields that are part of specifications
+    if (['seats', 'transmission', 'fuelType'].includes(name)) {
+      setFormData({
+        ...formData,
+        [name]: value, // Update for UI display
+        specifications: {
+          ...formData.specifications,
+          [name]: value // Update for API submission
+        }
+      });
+      return;
+    }
+    
+    // Handle regular fields
     setFormData({
       ...formData,
       [name]: value
@@ -211,8 +246,23 @@ export default function EditCar({ params }) {
     setUploadProgress(0);
     
     try {
+      // Prepare data with correct structure for backend
+      const carDataToSend = {
+        ...formData,
+        specifications: {
+          seats: formData.seats,
+          transmission: formData.transmission,
+          fuelType: formData.fuelType
+        }
+      };
+      
+      // Remove individual fields that are now part of specifications
+      delete carDataToSend.seats;
+      delete carDataToSend.transmission;
+      delete carDataToSend.fuelType;
+      
       // Update car information
-      const carResponse = await carsAPI.updateCar(id, formData);
+      const carResponse = await carsAPI.updateCar(id, carDataToSend);
       
       if (carResponse.data?.success) {
         // Delete marked images

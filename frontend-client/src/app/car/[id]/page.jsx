@@ -296,9 +296,9 @@ export default function CarDetailPage({ params }) {
                 <button 
                   type="submit"
                   className="bg-blue-600 text-white w-full py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition"
-                  disabled={!car.availability}
+                  disabled={car.status !== 'available'}
                 >
-                  {car.availability ? 'Book Now' : 'Currently Unavailable'}
+                  {car.status === 'available' ? 'Book Now' : 'Currently Unavailable'}
                 </button>
               </form>
             </div>

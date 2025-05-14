@@ -16,7 +16,7 @@ const seedReviews = async () => {
 
     // Get completed bookings to create reviews for
     const completedBookings = await Booking.find({ status: 'completed' })
-      .populate('user')
+      .populate('customer')
       .populate('car');
 
     if (completedBookings.length === 0) {
@@ -25,11 +25,20 @@ const seedReviews = async () => {
     }
 
     const reviewsData = [];
+    // Track user-car combinations to prevent duplicates
+    const userCarCombinations = new Set();
 
     // Create reviews for 80% of completed bookings
     for (const booking of completedBookings) {
       // Skip some bookings to simulate not all customers leave reviews
       if (Math.random() > 0.8) continue;
+
+      // Skip if this user-car combination already exists
+      const userCarKey = `${booking.customer._id}-${booking.car._id}`;
+      if (userCarCombinations.has(userCarKey)) continue;
+      
+      // Add this combination to our tracking set
+      userCarCombinations.add(userCarKey);
 
       // Generate random rating between 1 and 5, weighted towards positive reviews
       const ratingDistribution = [1, 2, 3, 4, 4, 5, 5, 5, 5, 5];
@@ -41,9 +50,8 @@ const seedReviews = async () => {
       
       // Create review object
       const review = {
-        user: booking.user._id,
+        user: booking.customer._id, // Changed from booking.user to booking.customer
         car: booking.car._id,
-        booking: booking._id,
         rating,
         comment: generateReviewComment(rating, booking.car.name),
         createdAt: reviewDate
@@ -63,6 +71,17 @@ const seedReviews = async () => {
         // Select random user and car
         const user = users[Math.floor(Math.random() * users.length)];
         const car = cars[Math.floor(Math.random() * cars.length)];
+        
+        // Skip if this user-car combination already exists
+        const userCarKey = `${user._id}-${car._id}`;
+        if (userCarCombinations.has(userCarKey)) {
+          // Try again with a different combination
+          i--;
+          continue;
+        }
+        
+        // Add this combination to our tracking set
+        userCarCombinations.add(userCarKey);
         
         // Generate random rating (weighted towards positive)
         const ratingDistribution = [1, 2, 3, 4, 4, 5, 5, 5, 5, 5];

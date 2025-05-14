@@ -393,9 +393,9 @@ exports.getStatistics = async (req, res) => {
     }, 0);
 
     // Calculate current status of cars
-    const availableCars = await Car.countDocuments({ availability: true });
-    const maintenanceCars = await Car.countDocuments({ availability: false });
-    const rentedCars = await Booking.countDocuments({ status: 'active' });
+    const availableCars = await Car.countDocuments({ status: 'available' });
+    const maintenanceCars = await Car.countDocuments({ status: 'maintenance' });
+    const rentedCars = await Car.countDocuments({ status: 'rented' });
 
     // Get data for revenue chart based on timeFrame
     let revenueLabels = [];
@@ -593,7 +593,7 @@ exports.getCarsByStatus = async (req, res) => {
     const carStatusCounts = await Car.aggregate([
       {
         $group: {
-          _id: '$availability',
+          _id: '$status',
           count: { $sum: 1 }
         }
       }
@@ -603,21 +603,17 @@ exports.getCarsByStatus = async (req, res) => {
     const statusData = [
       { status: 'available', count: 0 },
       { status: 'maintenance', count: 0 },
-      { status: 'rented', count: 0 }
+      { status: 'rented', count: 0 },
+      { status: 'reserved', count: 0 }
     ];
     
-    // Map availability boolean to status
+    // Map status values directly
     carStatusCounts.forEach(item => {
-      if (item._id === true) {
-        statusData[0].count = item.count; // Available
-      } else if (item._id === false) {
-        statusData[1].count = item.count; // Maintenance
+      const matchedStatus = statusData.find(status => status.status === item._id);
+      if (matchedStatus) {
+        matchedStatus.count = item.count;
       }
     });
-    
-    // Find currently rented cars from active bookings
-    const activeBookingsCount = await Booking.countDocuments({ status: 'active' });
-    statusData[2].count = activeBookingsCount;
     
     res.status(200).json({
       success: true,

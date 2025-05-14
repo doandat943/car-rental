@@ -38,7 +38,8 @@ export default function CarsManagement() {
     { value: '', label: 'All status' },
     { value: 'available', label: 'Available' },
     { value: 'maintenance', label: 'Maintenance' },
-    { value: 'rented', label: 'Rented' }
+    { value: 'rented', label: 'Rented' },
+    { value: 'reserved', label: 'Reserved' }
   ];
 
   // Combine all search parameters into a single object for tracking changes
@@ -176,13 +177,15 @@ export default function CarsManagement() {
   const getStatusClass = (status) => {
     switch (status) {
       case 'available':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 border-green-300';
       case 'maintenance':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'rented':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'reserved':
+        return 'bg-purple-100 text-purple-800 border-purple-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
 
@@ -194,6 +197,8 @@ export default function CarsManagement() {
         return 'Maintenance';
       case 'rented':
         return 'Rented';
+      case 'reserved':
+        return 'Reserved';
       default:
         return 'Unknown';
     }
@@ -344,7 +349,7 @@ export default function CarsManagement() {
                       {car.price?.daily ? formatAmount(car.price.daily) : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(car.status)}`}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusClass(car.status)}`}>
                         {getStatusText(car.status)}
                       </span>
                     </td>

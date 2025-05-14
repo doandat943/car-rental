@@ -19,15 +19,12 @@ const seedNotifications = async () => {
       return;
     }
 
-    // List of notification types
+    // List of notification types (matching enum values in the model)
     const types = [
-      'booking_new',
-      'booking_canceled',
-      'booking_completed',
-      'review_new',
-      'message_new',
-      'payment_received',
-      'system'
+      'booking',
+      'system', 
+      'user',
+      'payment'
     ];
 
     // Create notifications for each admin
@@ -43,41 +40,40 @@ const seedNotifications = async () => {
         // Create random dates within the last 7 days
         const createdAt = new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000));
         
-        let title, message;
+        let title, content;
         
         switch (type) {
-          case 'booking_new':
-            title = 'New booking request';
-            message = `Customer ${getRandomName()} has requested to book ${getRandomCar()}.`;
+          case 'booking':
+            // Randomly choose a booking-related scenario
+            const bookingScenario = Math.floor(Math.random() * 3);
+            if (bookingScenario === 0) {
+              title = 'New booking request';
+              content = `Customer ${getRandomName()} has requested to book ${getRandomCar()}.`;
+            } else if (bookingScenario === 1) {
+              title = 'Booking canceled';
+              content = `Customer ${getRandomName()} has canceled the booking for ${getRandomCar()}.`;
+            } else {
+              title = 'Booking completed';
+              content = `The booking for ${getRandomCar()} by customer ${getRandomName()} has been completed.`;
+            }
             break;
-          case 'booking_canceled':
-            title = 'Booking canceled';
-            message = `Customer ${getRandomName()} has canceled the booking for ${getRandomCar()}.`;
-            break;
-          case 'booking_completed':
-            title = 'Booking completed';
-            message = `The booking for ${getRandomCar()} by customer ${getRandomName()} has been completed.`;
-            break;
-          case 'review_new':
+          case 'user':
+            // User related notifications
             title = 'New review';
-            message = `A new ${Math.floor(Math.random() * 3) + 3} star review has been submitted for ${getRandomCar()}.`;
+            content = `A new ${Math.floor(Math.random() * 3) + 3} star review has been submitted for ${getRandomCar()}.`;
             break;
-          case 'message_new':
-            title = 'New message';
-            message = `You have a new message from customer ${getRandomName()}.`;
-            break;
-          case 'payment_received':
+          case 'payment':
             title = 'Payment successful';
-            message = `Payment of ${Math.floor(Math.random() * 300) + 100}$ received from customer ${getRandomName()}.`;
+            content = `Payment of ${Math.floor(Math.random() * 300) + 100}$ received from customer ${getRandomName()}.`;
             break;
-          default:
+          default: // system
             title = 'System notification';
-            message = 'Welcome to the car rental management system.';
+            content = 'Welcome to the car rental management system.';
         }
         
         notificationsToCreate.push({
           title,
-          message,
+          content, // Using content instead of message
           type,
           read,
           user: user._id,
@@ -92,6 +88,7 @@ const seedNotifications = async () => {
     console.log(`${notificationsToCreate.length} notifications seeded successfully`);
   } catch (error) {
     console.error('Error seeding notifications:', error);
+    throw error;
   }
 };
 

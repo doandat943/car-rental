@@ -61,7 +61,7 @@ const seedCars = async () => {
           'Keyless Entry'
         ],
         images: ['/uploads/cars/toyota-camry-1.jpg', '/uploads/cars/toyota-camry-2.jpg'],
-        availability: true,
+        status: 'available',
         rating: 4.3,
         reviewCount: 19,
         category: categoryMap['Sedan']
@@ -92,7 +92,7 @@ const seedCars = async () => {
           'Lane Keeping Assist'
         ],
         images: ['/uploads/cars/honda-civic-1.jpg', '/uploads/cars/honda-civic-2.jpg'],
-        availability: true,
+        status: 'available',
         rating: 4.5,
         reviewCount: 15,
         category: categoryMap['Compact']
@@ -124,7 +124,7 @@ const seedCars = async () => {
           'Heated Seats'
         ],
         images: ['/uploads/cars/tesla-model3-1.jpg', '/uploads/cars/tesla-model3-2.jpg'],
-        availability: true,
+        status: 'available',
         rating: 4.8,
         reviewCount: 28,
         category: categoryMap['Electric']
@@ -156,7 +156,7 @@ const seedCars = async () => {
           'Navigation',
         ],
         images: ['/uploads/cars/bmw-x5-1.jpg', '/uploads/cars/bmw-x5-2.jpg'],
-        availability: true,
+        status: 'available',
         rating: 4.6,
         reviewCount: 22,
         category: categoryMap['SUV']
@@ -187,7 +187,7 @@ const seedCars = async () => {
           'Launch Control'
         ],
         images: ['/uploads/cars/ford-mustang-1.jpg', '/uploads/cars/ford-mustang-2.jpg'],
-        availability: true,
+        status: 'available',
         rating: 4.5,
         reviewCount: 12,
         category: categoryMap['Sports Car']
@@ -219,7 +219,7 @@ const seedCars = async () => {
           'Driver Assistance Package'
         ],
         images: ['/uploads/cars/mercedes-c-class-1.jpg', '/uploads/cars/mercedes-c-class-2.jpg'],
-        availability: true,
+        status: 'available',
         rating: 4.7,
         reviewCount: 18,
         category: categoryMap['Luxury']
@@ -250,7 +250,7 @@ const seedCars = async () => {
           'Wireless Charging'
         ],
         images: ['/uploads/cars/toyota-prius-1.jpg', '/uploads/cars/toyota-prius-2.jpg'],
-        availability: true,
+        status: 'available',
         rating: 4.2,
         reviewCount: 16,
         category: categoryMap['Electric']

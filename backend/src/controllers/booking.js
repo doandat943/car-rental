@@ -40,7 +40,7 @@ exports.getBookings = async (req, res) => {
     
     // Execute query with pagination
     const bookings = await Booking.find(filter)
-      .populate('customer', 'firstName lastName email')
+      .populate('customer', 'name firstName lastName email phone phoneNumber')
       .populate('car', 'name brand model year images')
       .sort(sort)
       .limit(Number(limit))
@@ -75,7 +75,7 @@ exports.getBookings = async (req, res) => {
 exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('customer', 'firstName lastName email phoneNumber')
+      .populate('customer', 'name firstName lastName email phone phoneNumber')
       .populate('car', 'name brand model year images price');
     
     if (!booking) {
@@ -125,7 +125,7 @@ exports.createBooking = async (req, res) => {
     }
     
     // Check if car is available
-    if (!car.availability) {
+    if (car.status !== 'available') {
       return res.status(400).json({
         success: false,
         message: 'Car is not available for booking'
@@ -174,6 +174,9 @@ exports.createBooking = async (req, res) => {
     });
     
     await booking.save();
+    
+    // Update car status to 'reserved'
+    await Car.findByIdAndUpdate(carId, { status: 'reserved' });
     
     res.status(201).json({
       success: true,
@@ -226,6 +229,32 @@ exports.updateBookingStatus = async (req, res) => {
     
     await booking.save();
     
+    // Update car status based on booking status
+    if (status) {
+      const car = await Car.findById(booking.car);
+      if (car) {
+        let carStatus = 'available';
+        
+        switch (status) {
+          case 'pending':
+            carStatus = 'available';
+            break;
+          case 'confirmed':
+            carStatus = 'reserved';
+            break;
+          case 'ongoing':
+            carStatus = 'rented';
+            break;
+          case 'completed':
+          case 'cancelled':
+            carStatus = 'available';
+            break;
+        }
+        
+        await Car.findByIdAndUpdate(booking.car, { status: carStatus });
+      }
+    }
+    
     res.status(200).json({
       success: true,
       message: 'Booking status updated successfully',
@@ -265,6 +294,9 @@ exports.deleteBooking = async (req, res) => {
     }
     
     await Booking.findByIdAndDelete(req.params.id);
+    
+    // Set car status back to available
+    await Car.findByIdAndUpdate(booking.car, { status: 'available' });
     
     res.status(200).json({
       success: true,

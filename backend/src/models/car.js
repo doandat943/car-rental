@@ -23,7 +23,11 @@ const Car = mongoose.models.Car || mongoose.model('Car', new mongoose.Schema({
     fuelType: String,
     engineCapacity: String
   },
-  availability: { type: Boolean, default: true },
+  status: { 
+    type: String, 
+    enum: ['available', 'maintenance', 'rented', 'reserved'],
+    default: 'available'
+  },
   rating: { type: Number, default: 0 },
   reviewCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }

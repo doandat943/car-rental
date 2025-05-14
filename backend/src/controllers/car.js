@@ -15,6 +15,7 @@ exports.getCars = async (req, res) => {
       minPrice,
       maxPrice,
       seats,
+      status,
       sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
@@ -27,6 +28,11 @@ exports.getCars = async (req, res) => {
     if (brand) filter.brand = brand;
     if (category) filter.category = category;
     if (seats) filter['specifications.seats'] = seats;
+    
+    // Use status field directly
+    if (status) {
+      filter.status = status;
+    }
     
     // Price filter
     if (minPrice || maxPrice) {
@@ -66,7 +72,7 @@ exports.getCars = async (req, res) => {
     // Return data in the format expected by the frontend
     const responseObj = {
       success: true,
-      data: cars,  // Return the cars array directly instead of embedding in an object
+      data: cars,
       meta: {
         currentPage: Number(page),
         totalPages: Math.ceil(totalCars / Number(limit)),

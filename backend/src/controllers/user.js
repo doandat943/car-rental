@@ -207,4 +207,63 @@ exports.deleteUser = async (req, res) => {
       error: error.message
     });
   }
+};
+
+/**
+ * Update user status
+ * @route PATCH /api/users/:id/status
+ * @access Private (Admin)
+ */
+exports.updateUserStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    
+    // Validate status
+    if (!status || !['active', 'inactive'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value. Must be either "active" or "inactive"'
+      });
+    }
+    
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Don't allow deactivating the last admin
+    if (user.role === 'admin' && status === 'inactive') {
+      const adminCount = await User.countDocuments({ role: 'admin', status: 'active' });
+      
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot deactivate the last active admin account'
+        });
+      }
+    }
+    
+    // Update user status
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).select('-password');
+    
+    res.status(200).json({
+      success: true,
+      message: `User status updated to ${status}`,
+      data: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating user status',
+      error: error.message
+    });
+  }
 }; 

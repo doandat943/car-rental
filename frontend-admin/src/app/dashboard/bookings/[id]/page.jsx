@@ -296,7 +296,7 @@ export default function BookingDetailsPage({ params }) {
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Quay lại danh sách đơn đặt xe
+                  Back to list
                 </Link>
               </div>
             </div>
@@ -311,7 +311,7 @@ export default function BookingDetailsPage({ params }) {
       <div className="mb-6 flex flex-wrap items-center justify-between">
         <Link href="/dashboard/bookings" className="inline-flex items-center text-blue-600 hover:text-blue-800">
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Quay lại danh sách
+          Back to list
         </Link>
         
         <div className="ml-auto flex space-x-2 mt-2 sm:mt-0">
@@ -324,7 +324,7 @@ export default function BookingDetailsPage({ params }) {
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Xác nhận đơn
+                Confirm Booking
               </button>
               
               <button
@@ -334,7 +334,7 @@ export default function BookingDetailsPage({ params }) {
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 <XCircle className="h-4 w-4 mr-2" />
-                Từ chối đơn
+                Reject Booking
               </button>
             </>
           )}
@@ -348,7 +348,7 @@ export default function BookingDetailsPage({ params }) {
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Hoàn thành
+                Complete
               </button>
               
               <button
@@ -358,7 +358,7 @@ export default function BookingDetailsPage({ params }) {
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 <XCircle className="h-4 w-4 mr-2" />
-                Hủy đơn
+                Cancel Booking
               </button>
             </>
           )}
@@ -377,15 +377,15 @@ export default function BookingDetailsPage({ params }) {
         </div>
       )}
       
-      {/* Thông tin đơn đặt xe */}
+      {/* Booking Information */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          {/* Thông tin chính */}
+          {/* Main Information */}
           <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
             <div className="flex justify-between items-start border-b pb-4 mb-4">
               <div>
-                <h1 className="text-xl font-bold">Chi tiết đơn đặt xe #{booking.bookingCode}</h1>
-                <p className="text-gray-600 mt-1">Ngày tạo: {formatDate(booking.createdAt)}</p>
+                <h1 className="text-xl font-bold">Booking Details #{booking.bookingCode}</h1>
+                <p className="text-gray-600 mt-1">Created: {formatDate(booking.createdAt)}</p>
               </div>
               <div className={`px-4 py-2 rounded-md border flex items-center space-x-2 ${getStatusClass(booking.status)}`}>
                 {getStatusIcon(booking.status)}
@@ -393,16 +393,16 @@ export default function BookingDetailsPage({ params }) {
               </div>
             </div>
             
-            {/* Thông tin thời gian */}
+            {/* Rental Period */}
             <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-3">Thời gian thuê xe</h2>
+              <h2 className="text-lg font-semibold mb-3">Rental Period</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex">
                   <div className="mr-3 bg-blue-100 text-blue-600 p-2 rounded-md">
                     <Calendar className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Ngày nhận xe</p>
+                    <p className="text-sm text-gray-600">Pickup Date</p>
                     <p className="font-medium">{formatDateOnly(booking.startDate)}</p>
                   </div>
                 </div>
@@ -412,7 +412,7 @@ export default function BookingDetailsPage({ params }) {
                     <Calendar className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Ngày trả xe</p>
+                    <p className="text-sm text-gray-600">Return Date</p>
                     <p className="font-medium">{formatDateOnly(booking.endDate)}</p>
                   </div>
                 </div>
@@ -420,71 +420,71 @@ export default function BookingDetailsPage({ params }) {
               
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <div className="flex justify-between">
-                  <p className="text-gray-600">Tổng thời gian thuê:</p>
-                  <p className="font-medium">{booking.totalDays || 3} ngày</p>
+                  <p className="text-gray-600">Total rental duration:</p>
+                  <p className="font-medium">{booking.totalDays || 3} days</p>
                 </div>
               </div>
             </div>
             
-            {/* Thông tin địa điểm */}
+            {/* Locations */}
             <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-3">Địa điểm</h2>
+              <h2 className="text-lg font-semibold mb-3">Locations</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Địa điểm nhận xe</p>
-                  <p className="font-medium">{booking.pickupLocation || 'Sân bay Tân Sơn Nhất, TP.HCM'}</p>
+                  <p className="text-sm text-gray-600">Pickup Location</p>
+                  <p className="font-medium">{booking.pickupLocation || 'Tan Son Nhat Airport, Ho Chi Minh City'}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-600">Địa điểm trả xe</p>
-                  <p className="font-medium">{booking.dropoffLocation || 'Sân bay Tân Sơn Nhất, TP.HCM'}</p>
+                  <p className="text-sm text-gray-600">Return Location</p>
+                  <p className="font-medium">{booking.dropoffLocation || 'Tan Son Nhat Airport, Ho Chi Minh City'}</p>
                 </div>
               </div>
             </div>
             
-            {/* Thông tin thanh toán */}
+            {/* Payment Information */}
             <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-3">Thông tin thanh toán</h2>
+              <h2 className="text-lg font-semibold mb-3">Payment Information</h2>
               <div className="flex mb-2">
                 <div className="mr-3 bg-green-100 text-green-600 p-2 rounded-md">
                   <CreditCard className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Phương thức thanh toán</p>
-                  <p className="font-medium">{booking.paymentMethod || 'Tiền mặt khi nhận xe'}</p>
+                  <p className="text-sm text-gray-600">Payment Method</p>
+                  <p className="font-medium">{booking.paymentMethod || 'Cash on pickup'}</p>
                 </div>
               </div>
               
               <div className="bg-gray-50 p-4 rounded-md mt-3">
                 <div className="flex justify-between mb-2">
-                  <p className="text-gray-600">Giá thuê xe / ngày:</p>
+                  <p className="text-gray-600">Daily Rate:</p>
                   <p>{formatCurrency(booking.car?.price?.daily || 1200000)}</p>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <p className="text-gray-600">Số ngày thuê:</p>
-                  <p>{booking.totalDays || 3} ngày</p>
+                  <p className="text-gray-600">Rental Days:</p>
+                  <p>{booking.totalDays || 3} days</p>
                 </div>
                 <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                  <p className="font-semibold">Tổng cộng:</p>
+                  <p className="font-semibold">Total:</p>
                   <p className="font-bold text-lg">{formatCurrency(booking.totalAmount)}</p>
                 </div>
               </div>
             </div>
             
-            {/* Ghi chú */}
+            {/* Notes */}
             {booking.notes && (
               <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-3">Ghi chú</h2>
+                <h2 className="text-lg font-semibold mb-3">Notes</h2>
                 <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-md">
                   <p className="text-gray-700">{booking.notes}</p>
                 </div>
               </div>
             )}
             
-            {/* Lý do hủy */}
+            {/* Cancellation Reason */}
             {booking.status === 'cancelled' && booking.cancellationReason && (
               <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-3">Lý do hủy</h2>
+                <h2 className="text-lg font-semibold mb-3">Cancellation Reason</h2>
                 <div className="p-4 bg-red-50 border border-red-100 rounded-md">
                   <p className="text-gray-700">{booking.cancellationReason}</p>
                 </div>
@@ -494,17 +494,17 @@ export default function BookingDetailsPage({ params }) {
         </div>
         
         <div className="lg:col-span-1">
-          {/* Thông tin khách hàng */}
+          {/* Customer Information */}
           <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-            <h2 className="text-lg font-semibold mb-4">Thông tin khách hàng</h2>
+            <h2 className="text-lg font-semibold mb-4">Customer Information</h2>
             
             <div className="flex mb-4">
               <div className="mr-3 bg-blue-100 text-blue-600 p-2 rounded-md">
                 <User className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Khách hàng</p>
-                <p className="font-medium">{booking.user.name}</p>
+                <p className="text-sm text-gray-600">Customer</p>
+                <p className="font-medium">{booking.customer?.name || booking.customer?.firstName || 'N/A'}</p>
               </div>
             </div>
             
@@ -513,8 +513,8 @@ export default function BookingDetailsPage({ params }) {
                 <Phone className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Số điện thoại</p>
-                <p className="font-medium">{booking.user.phone}</p>
+                <p className="text-sm text-gray-600">Phone Number</p>
+                <p className="font-medium">{booking.customer?.phone || booking.customer?.phoneNumber || 'N/A'}</p>
               </div>
             </div>
             
@@ -524,20 +524,20 @@ export default function BookingDetailsPage({ params }) {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Email</p>
-                <p className="font-medium">{booking.user.email}</p>
+                <p className="font-medium">{booking.customer?.email || 'N/A'}</p>
               </div>
             </div>
           </div>
           
-          {/* Thông tin xe */}
+          {/* Car Information */}
           <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-            <h2 className="text-lg font-semibold mb-4">Thông tin xe</h2>
+            <h2 className="text-lg font-semibold mb-4">Vehicle Information</h2>
             
-            {booking.car.images && booking.car.images.length > 0 && (
+            {booking.car?.images && booking.car.images.length > 0 && (
               <div className="mb-4">
                 <img 
                   src={booking.car.images[0].url} 
-                  alt={booking.car.name} 
+                  alt={booking.car.name || booking.car.brand} 
                   className="w-full h-40 object-cover rounded-md"
                 />
               </div>
@@ -548,8 +548,8 @@ export default function BookingDetailsPage({ params }) {
                 <Car className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Tên xe</p>
-                <p className="font-medium">{booking.car.name}</p>
+                <p className="text-sm text-gray-600">Vehicle Name</p>
+                <p className="font-medium">{booking.car?.name || (booking.car?.brand && booking.car?.model ? `${booking.car.brand} ${booking.car.model}` : 'N/A')}</p>
               </div>
             </div>
             
@@ -558,8 +558,8 @@ export default function BookingDetailsPage({ params }) {
                 <ClipboardList className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Biển số xe</p>
-                <p className="font-medium">{booking.car.licensePlate}</p>
+                <p className="text-sm text-gray-600">License Plate</p>
+                <p className="font-medium">{booking.car?.licensePlate || 'N/A'}</p>
               </div>
             </div>
             
@@ -568,46 +568,46 @@ export default function BookingDetailsPage({ params }) {
                 <DollarSign className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Giá thuê / ngày</p>
+                <p className="text-sm text-gray-600">Daily Rate</p>
                 <p className="font-medium">{formatCurrency(booking.car?.price?.daily || 1200000)}</p>
               </div>
             </div>
             
             <div className="mt-4">
               <Link
-                href={`/dashboard/cars/${booking.car._id}`}
+                href={`/dashboard/cars/${booking.car?._id}`}
                 className="inline-flex items-center text-blue-600 hover:text-blue-800"
               >
-                Xem chi tiết xe
+                View car details
               </Link>
             </div>
           </div>
         </div>
       </div>
       
-      {/* Modal xác nhận hủy đơn */}
+      {/* Cancellation Confirmation Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={closeCancelModal}></div>
           
           <div className="relative bg-white rounded-lg max-w-md w-full mx-auto p-6 shadow-xl">
             <div className="mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Xác nhận hủy đơn đặt xe</h3>
+              <h3 className="text-lg font-medium text-gray-900">Confirm Booking Cancellation</h3>
               <p className="mt-2 text-sm text-gray-500">
-                Vui lòng nhập lý do hủy đơn đặt xe này.
+                Please enter a reason for cancelling this booking.
               </p>
             </div>
             
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lý do hủy đơn <span className="text-red-500">*</span>
+                Cancellation Reason <span className="text-red-500">*</span>
               </label>
               <textarea
                 rows="3"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Nhập lý do hủy đơn đặt xe"
+                placeholder="Enter reason for cancellation"
               ></textarea>
             </div>
             
@@ -617,7 +617,7 @@ export default function BookingDetailsPage({ params }) {
                 className="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 onClick={closeCancelModal}
               >
-                Đóng
+                Close
               </button>
               <button
                 type="button"
@@ -625,7 +625,7 @@ export default function BookingDetailsPage({ params }) {
                 onClick={handleCancelBooking}
                 disabled={processing || !cancelReason.trim()}
               >
-                {processing ? 'Đang xử lý...' : 'Hủy đơn'}
+                {processing ? 'Processing...' : 'Cancel Booking'}
               </button>
             </div>
           </div>

@@ -115,6 +115,11 @@ export default function BookingsManagement() {
         if (response.data.data && response.data.data.bookings) {
           const bookingsData = response.data.data.bookings;
           
+          // Log the first booking to debug structure
+          if (bookingsData.length > 0) {
+            console.log('Sample booking data:', bookingsData[0]);
+          }
+          
           setBookings(bookingsData);
           setTotalPages(response.data.data.totalPages || 1);
           setTotalItems(response.data.data.totalBookings || 0);
@@ -427,11 +432,20 @@ export default function BookingsManagement() {
                       {booking.bookingCode || `B${booking._id.substr(-6)}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div>{booking.user?.name || (booking.user && typeof booking.user === 'string' ? booking.user : 'Unknown')}</div>
-                      <div className="text-xs text-gray-400">{booking.user?.phone || 'No phone'}</div>
+                      <div>
+                        {booking.customer ? (
+                          booking.customer.name || 
+                          (booking.customer.firstName && booking.customer.lastName 
+                            ? `${booking.customer.firstName} ${booking.customer.lastName}`
+                            : booking.customer.firstName || booking.customer.lastName || 'Unknown')
+                        ) : 'Unknown'}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {booking.customer?.phone || booking.customer?.phoneNumber || 'No phone'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div>{booking.car?.name || (booking.car && typeof booking.car === 'string' ? booking.car : 'Unknown')}</div>
+                      <div>{booking.car?.name || booking.car?.brand ? `${booking.car.brand} ${booking.car.model}` : (booking.car && typeof booking.car === 'string' ? booking.car : 'Unknown')}</div>
                       <div className="text-xs text-gray-400">{booking.car?.licensePlate || 'No plate'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">

@@ -29,7 +29,14 @@ const Sidebar = () => {
   };
 
   // Check if a link is active
-  const isActive = (path) => pathname === path || pathname.startsWith(path + '/');
+  const isActive = (path) => {
+    // Special case for dashboard which might be at /dashboard or /
+    if (path === '/dashboard' && (pathname === '/' || pathname === '/dashboard')) {
+      return true;
+    }
+    // For all other paths, check if the pathname starts with the path
+    return pathname === path || (path !== '/dashboard' && pathname.startsWith(path + '/'));
+  };
 
   // Define main navigation items
   const generalItems = [

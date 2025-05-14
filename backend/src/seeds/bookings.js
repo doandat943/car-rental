@@ -23,8 +23,8 @@ const seedBookings = async () => {
       return;
     }
 
-    // Possible booking statuses
-    const statuses = ['pending', 'confirmed', 'active', 'completed', 'canceled'];
+    // Possible booking statuses (from the Booking model)
+    const statuses = ['pending', 'confirmed', 'ongoing', 'completed', 'cancelled'];
     
     // Create sample bookings
     const bookingsData = [];
@@ -55,33 +55,40 @@ const seedBookings = async () => {
         status = Math.random() > 0.3 ? 'confirmed' : 'pending';
       } else if (endDate < now) {
         // Past booking
-        status = Math.random() > 0.2 ? 'completed' : 'canceled';
+        status = Math.random() > 0.2 ? 'completed' : 'cancelled'; // Note: cancelled with double 'l'
       } else {
         // Current booking
-        status = 'active';
+        status = 'ongoing'; // Changed from 'active' to 'ongoing'
       }
       
-      // Calculate total price based on duration and car daily price
-      const totalPrice = car.price.daily * duration;
+      // Calculate total amount based on duration and car daily price
+      const totalAmount = car.price.daily * duration;
       
       // Random payment status
-      const isPaid = status === 'completed' || Math.random() > 0.5;
+      const paymentStatus = status === 'completed' ? 'paid' : (Math.random() > 0.5 ? 'paid' : 'pending');
       
       // Create booking object
       const booking = {
-        user: user._id,
+        customer: user._id, // Changed from user to customer
         car: car._id,
         startDate,
         endDate,
         status,
-        totalPrice,
-        isPaid,
-        paymentMethod: isPaid ? getRandomPaymentMethod() : null,
-        createdAt: new Date(startDate.getTime() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)), // 1-7 days before start date
-        notes: getRandomNote(status)
+        totalAmount, // Changed from totalPrice to totalAmount
+        paymentStatus, // Changed from isPaid to paymentStatus
+        pickupLocation: 'Main Office, San Francisco',
+        dropoffLocation: 'Main Office, San Francisco',
+        createdAt: new Date(startDate.getTime() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)) // 1-7 days before start date
       };
       
       bookingsData.push(booking);
+
+      // Update car status if booking is ongoing
+      if (status === 'ongoing') {
+        await Car.findByIdAndUpdate(car._id, { status: 'rented' });
+      } else if (status === 'confirmed') {
+        await Car.findByIdAndUpdate(car._id, { status: 'reserved' });
+      }
     }
 
     // Insert bookings into the database

@@ -80,15 +80,16 @@ export const carsAPI = {
       throw error;
     }
   },
-  checkAvailability: async (carId, dates) => {
+  
+  checkStatus: async (carId, dates) => {
     try {
-      console.log('Checking availability for car ID:', carId, 'with dates:', dates);
-      const response = await api.post(`/cars/${carId}/check-availability`, dates);
-      console.log('Raw availability API response:', response);
-      return response;
+      console.log('Checking car status for ID:', carId, 'with dates:', dates);
+      const response = await api.post(`/cars/${carId}/check-status`, dates);
+      console.log('Raw status check API response:', response);
+      return response.data;
     } catch (error) {
-      console.error('Error checking car availability:', error);
-      throw error;
+      console.error('Error checking car status:', error);
+      return { success: false, message: error.message };
     }
   },
 };

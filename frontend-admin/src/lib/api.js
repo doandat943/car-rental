@@ -140,18 +140,6 @@ export const carsAPI = {
     }
   },
 
-  // Check car availability
-  checkAvailability: async (carId, startDate, endDate) => {
-    const queryParams = new URLSearchParams({
-      startDate,
-      endDate,
-    });
-    
-    return fetchWithAuth(`/cars/${carId}/availability?${queryParams.toString()}`, {
-      method: 'GET',
-    });
-  },
-
   // Upload image
   uploadImage: async (carId, formData) => {
     try {
@@ -190,6 +178,22 @@ export const carsAPI = {
     return fetchWithAuth(`/cars/${carId}/images/${imageId}`, {
       method: 'DELETE',
     });
+  },
+
+  // Check car status
+  checkStatus: async (carId, startDate, endDate) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (startDate) queryParams.append('startDate', startDate);
+      if (endDate) queryParams.append('endDate', endDate);
+      
+      return fetchWithAuth(`/cars/${carId}/status?${queryParams.toString()}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      console.error('Error checking car status:', error);
+      throw error;
+    }
   },
 };
 
@@ -359,6 +363,14 @@ export const usersAPI = {
   deleteUser: async (id) => {
     return fetchWithAuth(`/users/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  // Update user status
+  updateUserStatus: async (id, status) => {
+    return fetchWithAuth(`/users/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
     });
   },
 };
