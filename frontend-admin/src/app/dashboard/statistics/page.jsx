@@ -628,13 +628,6 @@ export default function StatisticsPage() {
           </div>
         </div>
       </div>
-      
-      {/* Footer note */}
-      <div className="mt-8 mb-4 p-4 border border-yellow-300 bg-yellow-50 rounded-md dark:bg-yellow-900/30 dark:border-yellow-700">
-        <p className="text-sm text-yellow-800 dark:text-yellow-200">
-          <strong>Note:</strong> This is a demo data dashboard. In a production environment, data will be fetched from the database and displayed using Chart.js or similar charting libraries.
-        </p>
-      </div>
     </div>
   );
 } 

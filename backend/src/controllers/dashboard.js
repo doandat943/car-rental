@@ -339,7 +339,7 @@ exports.getStatistics = async (req, res) => {
       Booking.find()
         .sort({ createdAt: -1 })
         .limit(5)
-        .populate('user', 'name email')
+        .populate('customer', 'name email')
         .populate('car', 'name brand model price')
         .lean(),
       Booking.aggregate([
@@ -491,7 +491,7 @@ exports.getStatistics = async (req, res) => {
     const formattedRecentBookings = recentBookings.map(booking => ({
       _id: booking._id,
       user: {
-        name: booking.user?.name || 'Unknown User'
+        name: booking.customer?.name || 'Unknown User'
       },
       car: {
         name: booking.car?.name || 'Unknown Car'

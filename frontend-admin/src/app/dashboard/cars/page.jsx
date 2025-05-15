@@ -102,10 +102,10 @@ export default function CarsManagement() {
       
       const response = await carsAPI.getAllCars(params);
       
-      if (response.data?.success) {
-        setCars(response.data.data || []);
-        setTotalItems(response.data.meta?.totalItems || 0);
-        setTotalPages(response.data.meta?.totalPages || 1);
+      if (response.success) {
+        setCars(response.data || []);
+        setTotalItems(response.meta?.totalItems || 0);
+        setTotalPages(response.meta?.totalPages || 1);
       } else {
         setError('Unable to load car data. Please try again later.');
         setCars([]);
@@ -159,12 +159,12 @@ export default function CarsManagement() {
       
       const response = await carsAPI.deleteCar(id);
       
-      if (response.data?.success) {
+      if (response.success) {
         setCars(cars.filter(car => car._id !== id));
         setTotalItems(prev => prev - 1);
         setSuccess('Car deleted successfully');
       } else {
-        setError('Unable to delete car: ' + (response.data?.message || 'Unknown error'));
+        setError('Unable to delete car: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error deleting car:', error);

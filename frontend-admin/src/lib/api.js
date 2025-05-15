@@ -78,7 +78,7 @@ async function fetchWithAuth(endpoint, options = {}) {
 
     // Parse JSON response
     const data = await response.json();
-    return { data };
+    return data;
   } catch (error) {
     console.error(`API Error: ${error.message}`);
     throw error;

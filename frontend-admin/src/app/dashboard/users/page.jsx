@@ -116,17 +116,17 @@ export default function UsersManagement() {
       // API call
       const response = await usersAPI.getAllUsers(params);
       
-      if (response.data && response.data.success) {
+      if (response && response.success) {
         // Access the correct API response structure
-        setUsers(response.data.data || []);
+        setUsers(response.data || []);
         
         // Update pagination information
-        if (response.data.meta) {
-          setTotalPages(response.data.meta.totalPages || 1);
-          setTotalItems(response.data.meta.totalItems || 0);
+        if (response.meta) {
+          setTotalPages(response.meta.totalPages || 1);
+          setTotalItems(response.meta.totalItems || 0);
         } else {
           setTotalPages(1);
-          setTotalItems(response.data.data?.length || 0);
+          setTotalItems(response.data?.length || 0);
         }
       } else {
         setError('Unable to load user list. Please try again later.');

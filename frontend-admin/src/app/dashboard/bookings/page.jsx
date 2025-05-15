@@ -110,10 +110,10 @@ export default function BookingsManagement() {
       // API call
       const response = await bookingsAPI.getAllBookings(params);
       
-      if (response.data?.success) {
+      if (response.success) {
         // API returns bookings array nested inside data object
-        if (response.data.data && response.data.data.bookings) {
-          const bookingsData = response.data.data.bookings;
+        if (response.data && response.data.bookings) {
+          const bookingsData = response.data.bookings;
           
           // Log the first booking to debug structure
           if (bookingsData.length > 0) {
@@ -121,15 +121,15 @@ export default function BookingsManagement() {
           }
           
           setBookings(bookingsData);
-          setTotalPages(response.data.data.totalPages || 1);
-          setTotalItems(response.data.data.totalBookings || 0);
+          setTotalPages(response.data.totalPages || 1);
+          setTotalItems(response.data.totalBookings || 0);
         } else {
           // Fallback to previous structure if needed
-          const bookingsData = Array.isArray(response.data.data) ? response.data.data : [];
+          const bookingsData = Array.isArray(response.data) ? response.data : [];
           
           setBookings(bookingsData);
-          setTotalPages(response.data.meta?.totalPages || 1);
-          setTotalItems(response.data.meta?.totalItems || 0);
+          setTotalPages(response.meta?.totalPages || 1);
+          setTotalItems(response.meta?.totalItems || 0);
         }
       } else {
         setError('Unable to load booking list. Please try again later.');
@@ -224,7 +224,7 @@ export default function BookingsManagement() {
       
       const response = await bookingsAPI.updateBookingStatus(bookingId, 'confirmed');
       
-      if (response.data?.success) {
+      if (response.success) {
         // Update the booking in the list
         setBookings(prevBookings => prevBookings.map(booking => 
           booking._id === bookingId ? { ...booking, status: 'confirmed' } : booking
@@ -232,7 +232,7 @@ export default function BookingsManagement() {
         
         setSuccess('Booking has been confirmed successfully');
       } else {
-        setError(response.data?.message || 'Unable to confirm booking. Please try again later.');
+        setError(response.message || 'Unable to confirm booking. Please try again later.');
       }
     } catch (err) {
       console.error('Failed to confirm booking:', err);
