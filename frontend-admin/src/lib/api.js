@@ -42,20 +42,38 @@ async function fetchWithAuth(endpoint, options = {}) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       
-      // Check if it's an authentication error (401), "Not authorized" error or "User not found" error (404)
-      if (response.status === 401 || response.status === 404 || 
-          (errorData.error && (errorData.error.includes('Not authorized') || errorData.error.includes('User not found')))) {
-        // Remove current token
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('admin_token');
-          localStorage.removeItem('admin_user');
-          
-          // Redirect to unauthorized page
-          window.location.href = '/auth/unauthorized';
-        }
+      // Enhanced error handling - different responses based on status code
+      switch (response.status) {
+        case 401: // Unauthorized
+          // Remove current token and redirect
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = '/auth/unauthorized';
+          }
+          throw new Error(errorData.message || 'Authentication failed. Please log in again.');
+        
+        case 403: // Forbidden
+          throw new Error(errorData.message || 'You do not have permission to perform this action.');
+        
+        case 404: // Not Found
+          // Only redirect on user not found errors
+          if (errorData.message && errorData.message.includes('User not found') && typeof window !== 'undefined') {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = '/auth/unauthorized';
+          }
+          throw new Error(errorData.message || 'The requested resource was not found.');
+        
+        case 422: // Validation Error
+          throw new Error(errorData.message || 'Validation failed. Please check your input.');
+        
+        case 500: // Server Error
+          throw new Error(errorData.message || 'Internal server error. Please try again later.');
+        
+        default:
+          throw new Error(errorData.message || `API Error: ${response.status}`);
       }
-      
-      throw new Error(errorData.message || `API Error: ${response.status}`);
     }
 
     // Parse JSON response
@@ -373,6 +391,62 @@ export const usersAPI = {
       body: JSON.stringify({ status }),
     });
   },
+  
+  // Update user role
+  updateUserRole: async (id, role) => {
+    return fetchWithAuth(`/users/${id}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    });
+  },
+  
+  // Request password reset
+  requestPasswordReset: async (email) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      console.error('Error requesting password reset:', error);
+      throw error;
+    }
+  },
+  
+  // Reset password with token
+  resetPassword: async (token, password) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/reset-password/${token}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error;
+    }
+  }
 };
 
 /**

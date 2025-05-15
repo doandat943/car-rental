@@ -1,4 +1,5 @@
 const { User } = require('../models');
+const crypto = require('crypto');
 
 /**
  * Get all users with pagination and filtering
@@ -263,6 +264,159 @@ exports.updateUserStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error updating user status',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Update user role
+ * @route PATCH /api/users/:id/role
+ * @access Private (Admin)
+ */
+exports.updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+    
+    // Validate role
+    if (!role || !['user', 'admin', 'staff'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role value. Must be "user", "admin", or "staff"'
+      });
+    }
+    
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Don't allow downgrading the last admin
+    if (user.role === 'admin' && role !== 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot downgrade the last admin account'
+        });
+      }
+    }
+    
+    // Update user role
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true }
+    ).select('-password');
+    
+    res.status(200).json({
+      success: true,
+      message: `User role updated to ${role}`,
+      data: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating user role',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Request password reset
+ * @route POST /api/users/reset-password
+ * @access Public
+ */
+exports.requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Find user by email
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User with that email not found'
+      });
+    }
+    
+    // Generate random token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+      
+    // Set expire (10 minutes)
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+    
+    await user.save();
+    
+    // Return success message (in a real application, you would send email with reset link)
+    res.status(200).json({
+      success: true,
+      message: 'Password reset email sent',
+      resetToken // Only for development, remove in production
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error requesting password reset',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Reset password
+ * @route PUT /api/users/reset-password/:token
+ * @access Public
+ */
+exports.resetPassword = async (req, res) => {
+  try {
+    // Get hashed token
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
+    
+    // Find user by token and check if token is still valid
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+    
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired password reset token'
+      });
+    }
+    
+    // Set new password
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    
+    await user.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successful'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error resetting password',
       error: error.message
     });
   }

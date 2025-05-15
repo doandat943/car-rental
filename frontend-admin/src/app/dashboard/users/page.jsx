@@ -280,7 +280,8 @@ export default function UsersManagement() {
     try {
       setProcessingUserId(userToChangeRole._id);
       
-      await usersAPI.updateUser(userToChangeRole._id, { role: selectedRole });
+      // Use the dedicated role update API endpoint
+      await usersAPI.updateUserRole(userToChangeRole._id, selectedRole);
       
       // Update user in list
       setUsers(prevUsers => prevUsers.map(user => 
@@ -292,12 +293,7 @@ export default function UsersManagement() {
       
     } catch (err) {
       console.error('Failed to update user role:', err);
-      setError('Unable to update user role. Please try again later.');
-      
-      // For demo, update UI anyway
-      setUsers(prevUsers => prevUsers.map(user => 
-        user._id === userToChangeRole._id ? { ...user, role: selectedRole } : user
-      ));
+      setError(`Unable to update user role: ${err.message}`);
       closeRoleModal();
     } finally {
       setProcessingUserId(null);
