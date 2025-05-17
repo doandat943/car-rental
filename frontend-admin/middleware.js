@@ -1,21 +1,21 @@
 import { NextResponse } from 'next/server';
 
-// Đường dẫn trang đăng nhập
+// Login page path
 const LOGIN_PATH = '/auth/login';
 
-// Các đường dẫn công khai không cần đăng nhập
+// Public paths that don't require authentication
 const PUBLIC_PATHS = [
   '/auth/login',
   '/auth/unauthorized',
   '/auth/forgot-password',
   '/auth/reset-password',
-  '/_next',   // Cho phép tài nguyên Next.js
-  '/api',     // Cho phép API routes
+  '/_next',   // Allow Next.js resources
+  '/api',     // Allow API routes
   '/favicon.ico',
-  '/images',  // Cho phép tài nguyên hình ảnh
+  '/images',  // Allow image resources
 ];
 
-// Kiểm tra xem đường dẫn có thuộc danh sách công khai không
+// Check if a path belongs to the public paths list
 const isPublicPath = (path) => {
   return PUBLIC_PATHS.some(publicPath => path.startsWith(publicPath));
 };
@@ -23,30 +23,30 @@ const isPublicPath = (path) => {
 export function middleware(request) {
   const { pathname } = request.nextUrl;
   
-  // Cho phép truy cập vào đường dẫn công khai
+  // Allow access to public paths
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
   
-  // Kiểm tra token trong cookie
+  // Check token in cookie
   const token = request.cookies.get('admin_token')?.value;
   
-  // Nếu không có token, chuyển hướng đến trang đăng nhập
+  // If no token, redirect to login page
   if (!token) {
     const url = new URL(LOGIN_PATH, request.url);
-    // Lưu đường dẫn hiện tại vào tham số redirect để sau khi đăng nhập quay lại
+    // Store current path in redirect parameter to return after login
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
   
-  // Nếu có token, cho phép tiếp tục
+  // If token exists, allow the request to proceed
   return NextResponse.next();
 }
 
-// Cấu hình middleware chỉ hoạt động trên các đường dẫn cụ thể
+// Configure middleware to only run on specific paths
 export const config = {
   matcher: [
-    // Tất cả các đường dẫn trừ các đường dẫn công khai
+    // All paths except public paths
     '/((?!auth/login|auth/unauthorized|auth/forgot-password|auth/reset-password|_next/static|_next/image|favicon.ico|images).*)',
   ],
 }; 

@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
       use: ["@svgr/webpack"],
     });
     
-    // Thêm alias
+    // Add aliases
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname, 'src')

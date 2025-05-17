@@ -3,13 +3,13 @@ const router = express.Router();
 const statisticsController = require('../controllers/statistics');
 const { protect, authorize } = require('../middleware/auth');
 
-// Lấy dữ liệu thống kê tổng quan
+// Get overview statistics
 router.get('/', protect, authorize('admin'), statisticsController.getStatistics);
 
-// Lấy danh sách đơn đặt xe gần đây
+// Get recent bookings
 router.get('/recent-bookings', protect, authorize('admin'), statisticsController.getRecentBookings);
 
-// Lấy danh sách xe được đặt nhiều nhất
+// Get most booked cars
 router.get('/top-cars', protect, authorize('admin'), statisticsController.getTopCars);
 
 module.exports = router; 

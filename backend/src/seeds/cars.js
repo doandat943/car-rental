@@ -40,7 +40,7 @@ const seedCars = async () => {
         brand: 'Toyota',
         model: 'Camry',
         year: 2023,
-        description: 'Sedan hạng D sang trọng và tiết kiệm nhiên liệu',
+        description: 'Luxury D-segment sedan with excellent fuel efficiency',
         price: {
           daily: 85,
           weekly: 500,
@@ -71,7 +71,7 @@ const seedCars = async () => {
         brand: 'Honda',
         model: 'Civic',
         year: 2023,
-        description: 'Sedan hạng C thể thao và tiết kiệm',
+        description: 'Sporty and efficient C-segment sedan',
         price: {
           daily: 75,
           weekly: 450,
@@ -102,7 +102,7 @@ const seedCars = async () => {
         brand: 'Tesla',
         model: 'Model 3',
         year: 2023,
-        description: 'Xe điện hiệu suất cao với công nghệ tự lái',
+        description: 'High-performance electric car with self-driving technology',
         price: {
           daily: 120,
           weekly: 720,
@@ -134,7 +134,7 @@ const seedCars = async () => {
         brand: 'BMW',
         model: 'X5',
         year: 2023,
-        description: 'SUV hạng sang với hiệu suất vượt trội',
+        description: 'Luxury SUV with outstanding performance',
         price: {
           daily: 175,
           weekly: 1050,
@@ -166,7 +166,7 @@ const seedCars = async () => {
         brand: 'Ford',
         model: 'Mustang GT',
         year: 2023,
-        description: 'Xe thể thao biểu tượng của Mỹ',
+        description: 'Iconic American sports car',
         price: {
           daily: 150,
           weekly: 900,
@@ -197,7 +197,7 @@ const seedCars = async () => {
         brand: 'Mercedes-Benz',
         model: 'C300',
         year: 2022,
-        description: 'Sedan hạng sang với công nghệ tiên tiến',
+        description: 'Luxury sedan with advanced technology',
         price: {
           daily: 160,
           weekly: 960,
@@ -229,7 +229,7 @@ const seedCars = async () => {
         brand: 'Toyota',
         model: 'Prius',
         year: 2023,
-        description: 'Xe hybrid tiết kiệm nhiên liệu vượt trội',
+        description: 'Fuel-efficient hybrid vehicle',
         price: {
           daily: 70,
           weekly: 420,
@@ -276,32 +276,32 @@ async function seedCategories() {
     const categoriesData = [
       {
         name: 'Sedan',
-        description: 'Xe sedan 4 cửa tiện nghi cho gia đình',
+        description: '4-door sedan comfortable for families',
         image: '/uploads/categories/sedan.jpg'
       },
       {
         name: 'SUV',
-        description: 'Xe gầm cao đa dụng cho mọi địa hình',
+        description: 'Versatile high-clearance vehicle for all terrains',
         image: '/uploads/categories/suv.jpg'
       },
       {
         name: 'Sports Car',
-        description: 'Xe thể thao tốc độ cao',
+        description: 'High-speed sports vehicles',
         image: '/uploads/categories/sports.jpg'
       },
       {
         name: 'Electric',
-        description: 'Xe điện thân thiện với môi trường',
+        description: 'Environmentally friendly electric vehicles',
         image: '/uploads/categories/electric.jpg'
       },
       {
         name: 'Luxury',
-        description: 'Xe sang trọng đẳng cấp',
+        description: 'Premium luxury vehicles',
         image: '/uploads/categories/luxury.jpg'
       },
       {
         name: 'Compact',
-        description: 'Xe nhỏ gọn, tiết kiệm nhiên liệu',
+        description: 'Small, fuel-efficient vehicles',
         image: '/uploads/categories/compact.jpg'
       }
     ];

@@ -15,7 +15,7 @@ export default function DataTable({
   totalItems = 0,
   onPageChange,
   actions,
-  emptyMessage = "Không có dữ liệu",
+  emptyMessage = "No data available",
   loading = false,
 }) {
   const [filteredData, setFilteredData] = useState(data);
@@ -23,7 +23,7 @@ export default function DataTable({
   const [page, setPage] = useState(currentPage);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'none' });
 
-  // Cập nhật khi data thay đổi
+  // Update when data changes
   useEffect(() => {
     if (searchable && searchTerm) {
       filterData(searchTerm);
@@ -32,12 +32,12 @@ export default function DataTable({
     }
   }, [data, searchable, searchTerm]);
 
-  // Cập nhật khi currentPage thay đổi từ props
+  // Update when currentPage changes from props
   useEffect(() => {
     setPage(currentPage);
   }, [currentPage]);
 
-  // Lọc dữ liệu khi tìm kiếm
+  // Filter data when searching
   const filterData = (term) => {
     if (!term.trim()) {
       setFilteredData(data);
@@ -47,7 +47,7 @@ export default function DataTable({
     const lowercasedTerm = term.toLowerCase();
     const filtered = data.filter(item => {
       return columns.some(column => {
-        // Bỏ qua những cột có cell là function
+        // Skip columns with function cells
         if (typeof column.cell === 'function') {
           return false;
         }
@@ -64,25 +64,25 @@ export default function DataTable({
     setFilteredData(filtered);
   };
 
-  // Xử lý khi thay đổi tìm kiếm
+  // Handle search changes
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
     filterData(term);
   };
 
-  // Xử lý khi thay đổi trang
+  // Handle page changes
   const handlePageChange = (newPage) => {
     if (onPageChange) {
-      // Sử dụng onPageChange từ props nếu được cung cấp
+      // Use onPageChange from props if provided
       onPageChange(newPage);
     } else {
-      // Xử lý phân trang nội bộ nếu không có onPageChange
+      // Handle internal pagination if no onPageChange
       setPage(newPage);
     }
   };
 
-  // Xử lý sắp xếp
+  // Handle sorting
   const handleSort = (key) => {
     let direction = 'asc';
     
@@ -94,7 +94,7 @@ export default function DataTable({
     setSortConfig({ key, direction });
   };
 
-  // Sắp xếp dữ liệu
+  // Sort data
   const sortedData = () => {
     if (sortConfig.direction === 'none' || !sortConfig.key) {
       return filteredData;
@@ -111,17 +111,17 @@ export default function DataTable({
     });
   };
 
-  // Tính toán số trang
+  // Calculate total pages
   const totalPages = onPageChange 
     ? Math.ceil(totalItems / itemsPerPage) 
     : Math.ceil(filteredData.length / itemsPerPage);
 
-  // Trang hiện tại không thể lớn hơn tổng số trang
+  // Current page cannot be greater than total pages
   const currentPageSafe = Math.min(page, Math.max(1, totalPages)) || 1;
 
-  // Lấy dữ liệu cho trang hiện tại
+  // Get data for current page
   const paginatedData = onPageChange
-    ? sortedData() // Khi sử dụng onPageChange, dữ liệu đã được phân trang từ server
+    ? sortedData() // When using onPageChange, data is already paginated from server
     : pagination
       ? sortedData().slice(
           (currentPageSafe - 1) * itemsPerPage,
@@ -131,7 +131,7 @@ export default function DataTable({
 
   return (
     <div className="w-full">
-      {/* Header với tìm kiếm và actions */}
+      {/* Header with search and actions */}
       {(searchable || actions) && (
         <div className="p-4 flex flex-col sm:flex-row justify-between gap-4 border-b border-gray-200 dark:border-gray-700">
           {searchable && (
@@ -139,7 +139,7 @@ export default function DataTable({
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
               <Input
                 type="text"
-                placeholder="Tìm kiếm..."
+                placeholder="Search..."
                 className="pl-8 max-w-xs"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -150,7 +150,7 @@ export default function DataTable({
         </div>
       )}
 
-      {/* Bảng dữ liệu */}
+      {/* Table data */}
       <div className="w-full overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -181,7 +181,7 @@ export default function DataTable({
                 <td colSpan={columns.length} className="px-6 py-20 text-center">
                   <div className="flex flex-col items-center justify-center">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent mb-4"></div>
-                    <p>Đang tải dữ liệu...</p>
+                    <p>Loading data...</p>
                   </div>
                 </td>
               </tr>
@@ -211,16 +211,16 @@ export default function DataTable({
         </table>
       </div>
 
-      {/* Phân trang */}
+      {/* Pagination */}
       {pagination && totalPages > 1 && (
         <div className="p-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {onPageChange ? (
-              // Hiển thị thông tin phân trang từ server
-              `Hiển thị ${((currentPageSafe - 1) * itemsPerPage) + 1} đến ${Math.min(currentPageSafe * itemsPerPage, totalItems)} trong tổng số ${totalItems} bản ghi`
+              // Display server-side pagination info
+              `Showing ${((currentPageSafe - 1) * itemsPerPage) + 1} to ${Math.min(currentPageSafe * itemsPerPage, totalItems)} of ${totalItems} records`
             ) : (
-              // Hiển thị thông tin phân trang local
-              `Hiển thị ${((currentPageSafe - 1) * itemsPerPage) + 1} đến ${Math.min(currentPageSafe * itemsPerPage, filteredData.length)} trong tổng số ${filteredData.length} bản ghi`
+              // Display client-side pagination info
+              `Showing ${((currentPageSafe - 1) * itemsPerPage) + 1} to ${Math.min(currentPageSafe * itemsPerPage, filteredData.length)} of ${filteredData.length} records`
             )}
           </div>
           
@@ -234,9 +234,9 @@ export default function DataTable({
               <ChevronLeft className="h-4 w-4" />
             </Button>
             
-            {/* Hiển thị 5 nút trang gần trang hiện tại */}
+            {/* Display 5 page buttons around current page */}
             {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-              // Tính toán số trang để hiển thị cân đối xung quanh trang hiện tại
+              // Calculate page to show to balance around current page
               let pageToShow;
               if (totalPages <= 5) {
                 pageToShow = i + 1;
@@ -248,7 +248,7 @@ export default function DataTable({
                 pageToShow = currentPageSafe - 2 + i;
               }
               
-              // Chỉ hiển thị nút nếu pageToShow nằm trong phạm vi hợp lệ
+              // Only display button if pageToShow is within valid range
               if (pageToShow > 0 && pageToShow <= totalPages) {
                 return (
                   <Button

@@ -17,13 +17,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Kiểm tra xem người dùng đã đăng nhập chưa
+  // Check if user is already logged in
   useEffect(() => {
-    // Chỉ thực hiện ở phía client
+    // Only execute on client side
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('admin_token');
       if (token) {
-        // Kiểm tra nếu có redirect trong URL thì chuyển hướng đến đó
+        // Check for redirect in URL and navigate there
         const redirect = searchParams.get('redirect');
         router.push(redirect || '/dashboard');
       }
@@ -34,25 +34,26 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    // Kiểm tra trường bắt buộc
+    
+    // Validate inputs
     if (!email || !password) {
-      setError('Vui lòng nhập email và mật khẩu');
+      setError('Please enter both email and password');
       setLoading(false);
       return;
     }
-
+    
+    
     try {
-      // Gọi API đăng nhập
+      // Call login API
       const response = await authAPI.login(email, password);
       
-      // Lưu token vào localStorage đã được xử lý trong API
+      // Token is handled in API
       
-      // Lưu thông tin người dùng vào localStorage nếu có
+      // Store user info in localStorage if available
       if (response.data && response.data.user) {
         localStorage.setItem('admin_user', JSON.stringify(response.data.user));
       } else {
-        // Nếu không có thông tin người dùng từ API, lưu thông tin mặc định
+        // Store default user info if not available from API
         localStorage.setItem('admin_user', JSON.stringify({
           name: 'Admin User',
           email: email,
@@ -60,12 +61,12 @@ export default function LoginPage() {
         }));
       }
       
-      // Kiểm tra nếu có redirect trong URL thì chuyển hướng đến đó
+      // Check for redirect in URL
       const redirect = searchParams.get('redirect');
       router.push(redirect || '/dashboard');
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.message || 'Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập.');
+      setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }

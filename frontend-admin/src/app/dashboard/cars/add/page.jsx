@@ -47,7 +47,7 @@ export default function AddCar() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [featureInput, setFeatureInput] = useState('');
 
-  // Lấy danh sách danh mục khi component mount
+  // Get categories list when component mounts
   useEffect(() => {
     const fetchCategories = async () => {
       setCategoryLoading(true);
@@ -58,7 +58,7 @@ export default function AddCar() {
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
-        // Sử dụng danh mục mẫu nếu API bị lỗi
+        // Use sample categories if API fails
         setCategories([
           { _id: 'cat-1', name: 'Sedan' },
           { _id: 'cat-2', name: 'SUV' },
@@ -74,7 +74,7 @@ export default function AddCar() {
     fetchCategories();
   }, []);
 
-  // Xử lý thay đổi input
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.startsWith('price.')) {
@@ -94,7 +94,7 @@ export default function AddCar() {
     }
   };
 
-  // Xử lý thêm tính năng (feature)
+  // Handle adding features
   const handleAddFeature = () => {
     if (featureInput.trim() && !formData.features.includes(featureInput.trim())) {
       setFormData({
@@ -105,7 +105,7 @@ export default function AddCar() {
     }
   };
 
-  // Xử lý xóa tính năng
+  // Handle removing features
   const handleRemoveFeature = (feature) => {
     setFormData({
       ...formData,
@@ -113,25 +113,25 @@ export default function AddCar() {
     });
   };
 
-  // Xử lý chọn file ảnh
+  // Handle file selection for images
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     
-    // Giới hạn số lượng file (tối đa 5 ảnh)
+    // Limit number of files (maximum 5 images)
     if (selectedFiles.length + files.length > 5) {
-      alert('Bạn chỉ có thể tải lên tối đa 5 ảnh.');
+      alert('You can upload a maximum of 5 images.');
       return;
     }
     
     setSelectedFiles([...selectedFiles, ...files]);
   };
 
-  // Xử lý xóa file ảnh đã chọn
+  // Handle removing selected image files
   const handleRemoveFile = (index) => {
     setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
   };
 
-  // Xử lý submit form
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -139,13 +139,13 @@ export default function AddCar() {
     setUploadProgress(0);
     
     try {
-      // Tạo xe mới
+      // Create new car
       const carResponse = await carsAPI.createCar(formData);
       
       if (carResponse.data.success) {
         const carId = carResponse.data.data._id;
         
-        // Nếu có file ảnh, upload từng ảnh
+        // If there are image files, upload each one
         if (selectedFiles.length > 0) {
           for (let i = 0; i < selectedFiles.length; i++) {
             const file = selectedFiles[i];
@@ -154,21 +154,21 @@ export default function AddCar() {
             
             await carsAPI.uploadImage(carId, formData);
             
-            // Cập nhật tiến trình upload
+            // Update upload progress
             setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
           }
         }
         
         setSuccess(true);
         
-        // Chuyển hướng về trang danh sách xe sau 1.5 giây
+        // Redirect to car list after 1.5 seconds
         setTimeout(() => {
           router.push('/dashboard/cars');
         }, 1500);
       }
     } catch (error) {
       console.error('Error creating car:', error);
-      setError(error.message || 'Có lỗi xảy ra khi tạo xe mới.');
+      setError(error.message || 'An error occurred while creating the new car.');
     } finally {
       setLoading(false);
     }
@@ -216,7 +216,7 @@ export default function AddCar() {
       <div className="bg-white rounded-lg shadow dark:bg-gray-800 p-6">
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6 mb-6 md:grid-cols-2">
-            {/* Tên xe */}
+            {/* Car name */}
             <div>
               <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Car name</label>
               <input 
@@ -231,7 +231,7 @@ export default function AddCar() {
               />
             </div>
             
-            {/* Thương hiệu */}
+            {/* Brand */}
             <div>
               <label htmlFor="brand" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Brand</label>
               <input 
@@ -246,7 +246,7 @@ export default function AddCar() {
               />
             </div>
             
-            {/* Kiểu mẫu */}
+            {/* Model */}
             <div>
               <label htmlFor="model" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Model</label>
               <input 
@@ -261,7 +261,7 @@ export default function AddCar() {
               />
             </div>
             
-            {/* Năm sản xuất */}
+            {/* Year */}
             <div>
               <label htmlFor="year" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Year</label>
               <input 
@@ -278,7 +278,7 @@ export default function AddCar() {
               />
             </div>
             
-            {/* Giá thuê / ngày */}
+            {/* Daily rental price */}
             <div>
               <label htmlFor="price.daily" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rent price / day ($)</label>
               <input 
@@ -295,7 +295,7 @@ export default function AddCar() {
               />
             </div>
             
-            {/* Danh mục */}
+            {/* Category */}
             <div>
               <label htmlFor="category" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category</label>
               <select 
@@ -319,7 +319,7 @@ export default function AddCar() {
               </select>
             </div>
             
-            {/* Số chỗ ngồi */}
+            {/* Number of seats */}
             <div>
               <label htmlFor="seats" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seats</label>
               <input 
@@ -336,7 +336,7 @@ export default function AddCar() {
               />
             </div>
             
-            {/* Hộp số */}
+            {/* Transmission */}
             <div>
               <label htmlFor="transmission" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Transmission</label>
               <select 
@@ -353,7 +353,7 @@ export default function AddCar() {
               </select>
             </div>
             
-            {/* Loại nhiên liệu */}
+            {/* Fuel type */}
             <div>
               <label htmlFor="fuelType" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fuel type</label>
               <select 
@@ -371,7 +371,7 @@ export default function AddCar() {
               </select>
             </div>
             
-            {/* Trạng thái */}
+            {/* Status */}
             <div>
               <label htmlFor="status" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
               <select 
@@ -389,7 +389,7 @@ export default function AddCar() {
             </div>
           </div>
           
-          {/* Mô tả */}
+          {/* Description */}
           <div className="mb-6">
             <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
             <textarea 
@@ -403,7 +403,7 @@ export default function AddCar() {
             ></textarea>
           </div>
           
-          {/* Tính năng */}
+          {/* Features */}
           <div className="mb-6">
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Features</label>
             <div className="flex mb-2">
@@ -441,7 +441,7 @@ export default function AddCar() {
             </div>
           </div>
           
-          {/* Upload ảnh */}
+          {/* Image upload */}
           <div className="mb-6">
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Car images (max 5 images)</label>
             <div className="flex items-center justify-center w-full">

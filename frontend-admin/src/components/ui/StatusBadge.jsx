@@ -1,23 +1,23 @@
 /**
- * Component hiển thị badge trạng thái với màu sắc phù hợp
- * @param {string} status - Trạng thái hiện tại
- * @param {object} statusMap - Mapping trạng thái với nhãn và màu
- * @param {string} className - CSS class tùy chỉnh
+ * Component to display status badges with appropriate colors
+ * @param {string} status - Current status
+ * @param {object} statusMap - Mapping of status to label and color
+ * @param {string} className - Custom CSS class
  * 
- * statusMap nên có định dạng: {
+ * statusMap should have the format: {
  *   'status_key': { label: 'Status Label', color: 'color_name' },
  * }
  * 
- * Các màu hỗ trợ: green, blue, yellow, red, gray
+ * Supported colors: green, blue, yellow, red, gray
  */
 export default function StatusBadge({ status, statusMap = {}, className = '' }) {
-  // Tùy chọn mặc định nếu không tìm thấy status trong statusMap
+  // Default option if status is not found in statusMap
   const defaultStatus = { label: status, color: 'gray' };
   
-  // Lấy thông tin trạng thái từ statusMap hoặc dùng giá trị mặc định
+  // Get status info from statusMap or use default value
   const statusInfo = statusMap[status] || defaultStatus;
   
-  // Tạo classes dựa trên màu
+  // Create classes based on color
   const colorClasses = {
     green: 'bg-green-100 text-green-800',
     blue: 'bg-blue-100 text-blue-800',
@@ -26,7 +26,7 @@ export default function StatusBadge({ status, statusMap = {}, className = '' }) 
     gray: 'bg-gray-100 text-gray-800',
   };
   
-  // Chọn class màu dựa trên color được cung cấp
+  // Choose color class based on provided color
   const colorClass = colorClasses[statusInfo.color] || colorClasses.gray;
   
   return (

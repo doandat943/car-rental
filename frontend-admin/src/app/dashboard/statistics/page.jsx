@@ -285,9 +285,9 @@ export default function StatisticsPage() {
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', { 
+    return new Intl.NumberFormat('en-US', { 
       style: 'currency', 
-      currency: 'VND',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value);
@@ -307,7 +307,7 @@ export default function StatisticsPage() {
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    return new Date(dateString).toLocaleDateString('vi-VN', options);
+    return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
   const getStatusClass = (status) => {

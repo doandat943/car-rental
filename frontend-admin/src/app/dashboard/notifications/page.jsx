@@ -298,7 +298,7 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {/* Bộ lọc */}
+      {/* Filters */}
       <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex items-center">
@@ -436,7 +436,7 @@ export default function NotificationsPage() {
               ))}
             </ul>
             
-            {/* Phân trang */}
+            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center p-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex space-x-2">

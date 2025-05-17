@@ -29,7 +29,7 @@ export default function Home() {
           isDataArray: Array.isArray(categoriesResponse?.data)
         });
         
-        // Kiểm tra cấu trúc dữ liệu trả về và đảm bảo là mảng
+        // Check data structure and ensure it's an array
         const categoriesData = categoriesResponse?.data?.data || 
                               categoriesResponse?.data || 
                               [];
@@ -48,7 +48,7 @@ export default function Home() {
           isDataArray: Array.isArray(carsResponse?.data)
         });
         
-        // Kiểm tra cấu trúc dữ liệu trả về và đảm bảo là mảng
+        // Check data structure and ensure it's an array
         const carsData = carsResponse?.data?.data || 
                         carsResponse?.data || 
                         [];
@@ -131,7 +131,7 @@ export default function Home() {
     fetchData();
   }, []);
   
-  // Hàm xử lý khi chọn danh mục
+  // Function to handle category selection
   const handleSelectCategory = async (categoryId) => {
     setSelectedCategory(categoryId);
     setLoading(true);
@@ -147,7 +147,7 @@ export default function Home() {
         isDataArray: Array.isArray(response?.data?.data)
       });
       
-      // Kiểm tra cấu trúc dữ liệu trả về
+      // Check return data structure
       const carsData = response?.data?.data || 
                       response?.data || 
                       [];

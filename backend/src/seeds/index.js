@@ -67,16 +67,16 @@ try {
   };
 }
 
-// Seed tất cả dữ liệu
+// Seed all data
 const seedAll = async () => {
   try {
-    // Kết nối đến database
+    // Connect to database
     await connectDB();
     
     console.log('Connected to database. Starting seed process...');
     
-    // Thực thi các hàm seed theo thứ tự
-    // 1. Seed users trước để có ID user dùng cho các model khác
+    // Execute seed functions in order
+    // 1. Seed users first to have user IDs for other models
     await seedUsers();
     
     // 2. Seed cars
@@ -99,14 +99,14 @@ const seedAll = async () => {
     
     console.log('Seed process completed successfully');
     
-    // Đóng kết nối database
+    // Close database connection
     await mongoose.connection.close();
     console.log('Database connection closed');
     
     process.exit(0);
   } catch (error) {
     console.error('Error seeding data:', error);
-    // Đóng kết nối database ngay cả khi có lỗi
+    // Close database connection even if there's an error
     await mongoose.connection.close();
     console.log('Database connection closed');
     
@@ -114,5 +114,5 @@ const seedAll = async () => {
   }
 };
 
-// Thực thi hàm seed
+// Execute seed function
 seedAll(); 

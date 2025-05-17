@@ -8,7 +8,7 @@ import { Button } from '../../../components/ui/Button';
 export default function UnauthorizedPage() {
   const router = useRouter();
 
-  // Xóa token và user info khi hiển thị trang này
+  // Remove token and user info when this page is displayed
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('admin_token');
@@ -25,16 +25,16 @@ export default function UnauthorizedPage() {
             <Shield className="h-10 w-10" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Phiên đăng nhập hết hạn
+            Session Expired
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Phiên làm việc của bạn đã hết hạn hoặc bạn không có quyền truy cập vào trang này.
+            Your session has expired or you don't have permission to access this page.
           </p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
           <p className="text-gray-700 dark:text-gray-300 mb-6">
-            Vui lòng đăng nhập lại để tiếp tục sử dụng hệ thống.
+            Please log in again to continue using the system.
           </p>
           
           <Button
@@ -42,7 +42,7 @@ export default function UnauthorizedPage() {
             className="w-full flex items-center justify-center gap-2"
           >
             <LogIn className="h-5 w-5" />
-            Đăng nhập lại
+            Log in again
           </Button>
         </div>
       </div>
