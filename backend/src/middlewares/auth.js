@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const ErrorResponse = require('../utils/ErrorResponse');
-const User = require('../models/User');
+const User = require('../models/user');
 
 /**
  * Protect routes - verify JWT token

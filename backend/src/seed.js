@@ -36,6 +36,11 @@ async function main() {
     
     console.log('\x1b[32m%s\x1b[0m', '✓ Connected to MongoDB');
     
+    // Drop the database first
+    console.log('\x1b[33m%s\x1b[0m', '🗑️  Dropping existing database...');
+    await mongoose.connection.dropDatabase();
+    console.log('\x1b[32m%s\x1b[0m', '✓ Database dropped successfully');
+    
     // Run the modular seed system
     console.log('\n📦 Running modular seed system...');
     require('./seeds');
