@@ -8,7 +8,7 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
-const { execSync } = require('child_process');
+const { connectDB, closeDB } = require('./db');
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -20,19 +20,13 @@ console.log('\x1b[32m%s\x1b[0m', `
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 
-// MongoDB connection string
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/car-rental';
-
 // Function to seed the database
 async function main() {
   try {
     console.log('\x1b[36m%s\x1b[0m', '🚀 Starting database seed process...');
     
     console.log('   Checking database connection...');
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    await connectDB();
     
     console.log('\x1b[32m%s\x1b[0m', '✓ Connected to MongoDB');
     
