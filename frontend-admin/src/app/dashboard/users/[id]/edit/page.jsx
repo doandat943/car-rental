@@ -39,8 +39,8 @@ export default function EditUser({ params }) {
       setPageLoading(true);
       try {
         const response = await usersAPI.getUserById(id);
-        if (response.data.success) {
-          const userData = response.data.data;
+        if (response.success) {
+          const userData = response.data;
           setFormData({
             name: userData.name || '',
             email: userData.email || '',
@@ -94,7 +94,7 @@ export default function EditUser({ params }) {
       // Update user information
       const response = await usersAPI.updateUser(id, formData);
       
-      if (response.data?.success) {
+      if (response.success) {
         setSuccess(true);
         
         // Redirect to user details page after 1.5 seconds
@@ -102,7 +102,7 @@ export default function EditUser({ params }) {
           router.push(`/dashboard/users/${id}`);
         }, 1500);
       } else {
-        setError(response.data?.message || 'An error occurred while updating the user.');
+        setError(response.message || 'An error occurred while updating the user.');
       }
     } catch (error) {
       console.error('Error updating user:', error);

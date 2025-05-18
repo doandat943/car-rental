@@ -80,37 +80,11 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
     
     try {
       const response = await notificationsAPI.getAllNotifications({ limit: 5 });
-      setNotifications(response?.data?.data || []);
+      setNotifications(response?.data || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       setNotificationsError('Unable to load notifications');
-      // Use sample data when API fails
-      setNotifications([
-        {
-          _id: '1',
-          title: 'New car booking request',
-          message: 'Customer John Doe has requested to book Tesla Model 3',
-          type: 'booking_new',
-          read: false,
-          createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString() // 2 minutes ago
-        },
-        {
-          _id: '2',
-          title: 'Booking has been canceled',
-          message: 'Customer Jane Smith has canceled BMW X5 booking',
-          type: 'booking_canceled',
-          read: false,
-          createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString() // 1 hour ago
-        },
-        {
-          _id: '3',
-          title: 'New review',
-          message: 'A new 5-star review has been submitted for Mercedes C-Class',
-          type: 'review_new',
-          read: true,
-          createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() // 3 hours ago
-        }
-      ]);
+      setNotifications([]);
     } finally {
       setNotificationsLoading(false);
     }
@@ -164,18 +138,14 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
   // Convert notification type to icon
   const getNotificationIcon = (type) => {
     switch (type) {
-      case 'booking_new':
+      case 'booking':
         return <Calendar className="w-5 h-5" />;
-      case 'booking_canceled':
-        return <X className="w-5 h-5" />;
-      case 'booking_completed':
-        return <Check className="w-5 h-5" />;
-      case 'review_new':
-        return <Star className="w-5 h-5" />;
-      case 'message_new':
-        return <MessageSquare className="w-5 h-5" />;
-      case 'payment_received':
+      case 'payment':
         return <ShoppingCart className="w-5 h-5" />;
+      case 'user':
+        return <Star className="w-5 h-5" />;
+      case 'system':
+        return <Bell className="w-5 h-5" />;
       default:
         return <Bell className="w-5 h-5" />;
     }
@@ -235,20 +205,16 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
   // Determine background color for notification icon
   const getNotificationColor = (type) => {
     switch (type) {
-      case 'booking_new':
+      case 'booking':
         return 'bg-blue-600';
-      case 'booking_canceled':
-        return 'bg-red-600';
-      case 'booking_completed':
+      case 'payment':
         return 'bg-green-600';
-      case 'review_new':
+      case 'user':
         return 'bg-yellow-600';
-      case 'message_new':
-        return 'bg-purple-600';
-      case 'payment_received':
-        return 'bg-green-600';
+      case 'system':
+        return 'bg-red-600';
       default:
-        return 'bg-blue-600';
+        return 'bg-gray-600';
     }
   };
 
@@ -361,7 +327,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                       {notifications.map((notification) => (
                         <div
                           key={notification._id}
-                          onClick={() => router.push('/dashboard')}
+                          onClick={() => router.push('/dashboard/notifications')}
                           className={`flex px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                         >
                           <div className="flex-shrink-0">
@@ -379,7 +345,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                               <span className="font-semibold text-gray-900 dark:text-white">
                                 {notification.title}
                               </span>
-                              <div>{notification.message}</div>
+                              <div>{notification.content}</div>
                             </div>
                             <div className="text-xs text-blue-600 dark:text-blue-500 flex items-center">
                               <Clock className="w-3 h-3 mr-1" />

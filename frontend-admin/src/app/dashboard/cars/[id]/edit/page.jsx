@@ -64,10 +64,12 @@ export default function EditCar({ params }) {
       setPageLoading(true);
       try {
         const response = await carsAPI.getCarById(id);
-        if (response.data.success) {
-          const carData = response.data.data;
-          console.log('Car data from server:', carData);
-          console.log('Category data:', carData.category);
+        
+        // Check if the response was successful and has data
+        if (response.success) {
+          const carData = response.data;
+          
+          // Set form data from API response
           setFormData({
             name: carData.name || '',
             brand: carData.brand || '',
@@ -96,31 +98,6 @@ export default function EditCar({ params }) {
       } catch (error) {
         console.error('Error fetching car details:', error);
         setError('Error loading car data');
-        
-        // Sample data for error case
-        setFormData({
-          name: 'Toyota Camry XLE',
-          brand: 'Toyota',
-          model: 'Camry',
-          year: 2023,
-          price: {
-            daily: 89.99,
-            weekly: 89.99 * 6,
-            monthly: 89.99 * 25
-          },
-          category: 'cat-1',
-          description: 'The Toyota Camry is a comfortable, fuel-efficient sedan with excellent safety features and reliability.',
-          features: ['Bluetooth', 'Cruise Control', 'Backup Camera', 'Sunroof', 'Leather Seats'],
-          status: 'available',
-          seats: 5,
-          transmission: 'automatic',
-          fuelType: 'gasoline',
-        });
-        
-        setCurrentImages([
-          { _id: 'img1', url: 'https://images.unsplash.com/photo-1553440569-bcc63803a83d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2025&q=80' },
-          { _id: 'img2', url: 'https://images.unsplash.com/photo-1550355291-bbee04a92027?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1536&q=80' }
-        ]);
       } finally {
         setPageLoading(false);
       }
@@ -137,19 +114,15 @@ export default function EditCar({ params }) {
       setCategoryLoading(true);
       try {
         const response = await categoriesAPI.getAllCategories();
-        if (response.data.success) {
-          setCategories(response.data.data || []);
+        if (response.success) {
+          setCategories(response.data || []);
+        } else {
+          console.error('Error fetching categories:', response.message);
+          setCategories([]);
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
-        // Use sample categories if API fails
-        setCategories([
-          { _id: 'cat-1', name: 'Sedan' },
-          { _id: 'cat-2', name: 'SUV' },
-          { _id: 'cat-3', name: 'Truck' },
-          { _id: 'cat-4', name: 'Sport' },
-          { _id: 'cat-5', name: 'Luxury' }
-        ]);
+        setCategories([]);
       } finally {
         setCategoryLoading(false);
       }
@@ -264,7 +237,7 @@ export default function EditCar({ params }) {
       // Update car information
       const carResponse = await carsAPI.updateCar(id, carDataToSend);
       
-      if (carResponse.data?.success) {
+      if (carResponse.success) {
         // Delete marked images
         for (const imageId of imagesToDelete) {
           await carsAPI.deleteImage(id, imageId);
@@ -291,7 +264,7 @@ export default function EditCar({ params }) {
           router.push(`/dashboard/cars/${id}`);
         }, 1500);
       } else {
-        setError(carResponse.data?.message || 'An error occurred while updating the car.');
+        setError(carResponse.message || 'An error occurred while updating the car.');
       }
     } catch (error) {
       console.error('Error updating car:', error);

@@ -34,8 +34,8 @@ export default function UserDetails({ params }) {
         setLoading(true);
         const response = await usersAPI.getUserById(id);
         
-        if (response.data?.success) {
-          setUser(response.data.data);
+        if (response.success) {
+          setUser(response.data);
         } else {
           setError('Unable to load user information');
         }
@@ -71,11 +71,11 @@ export default function UserDetails({ params }) {
       
       const response = await usersAPI.deleteUser(id);
       
-      if (response.data?.success) {
+      if (response.success) {
         // Redirect to users list after successful deletion
         router.push('/dashboard/users');
       } else {
-        setError('Failed to delete user: ' + (response.data?.message || 'Unknown error'));
+        setError('Failed to delete user: ' + (response.message || 'Unknown error'));
         setShowDeleteConfirm(false);
       }
     } catch (error) {
