@@ -115,11 +115,6 @@ export default function BookingsManagement() {
         if (response.data && response.data.bookings) {
           const bookingsData = response.data.bookings;
           
-          // Log the first booking to debug structure
-          if (bookingsData.length > 0) {
-            console.log('Sample booking data:', bookingsData[0]);
-          }
-          
           setBookings(bookingsData);
           setTotalPages(response.data.totalPages || 1);
           setTotalItems(response.data.totalBookings || 0);

@@ -364,8 +364,7 @@ exports.requestPasswordReset = async (req, res) => {
     // Return success message (in a real application, you would send email with reset link)
     res.status(200).json({
       success: true,
-      message: 'Password reset email sent',
-      resetToken // Only for development, remove in production
+      message: 'Password reset email sent'
     });
   } catch (error) {
     res.status(500).json({

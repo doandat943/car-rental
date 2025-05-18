@@ -21,13 +21,4 @@ router.patch('/mark-all-read', notificationController.markAllAsRead);
 // Delete a notification
 router.delete('/:id', notificationController.deleteNotification);
 
-// Routes only used for development
-if (process.env.NODE_ENV === 'development') {
-  // Create test notification
-  router.post('/test', notificationController.createTestNotification);
-  
-  // Create multiple test notifications
-  router.post('/test-multiple', notificationController.createMultipleTestNotifications);
-}
-
 module.exports = router; 

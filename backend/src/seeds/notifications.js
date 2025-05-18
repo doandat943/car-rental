@@ -73,7 +73,7 @@ const seedNotifications = async () => {
         
         notificationsToCreate.push({
           title,
-          content, // Using content instead of message
+          content,
           type,
           read,
           user: user._id,
