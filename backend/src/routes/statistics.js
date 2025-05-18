@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const statisticsController = require('../controllers/statistics');
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize } = require('../middlewares/auth');
 
 // Get overview statistics
 router.get('/', protect, authorize('admin'), statisticsController.getStatistics);

@@ -9,6 +9,8 @@ const websiteRoutes = require('./website');
 const uploadRoutes = require('./upload');
 const notificationRoutes = require('./notification');
 const reviewsRoutes = require('./reviews');
+const statisticsRoutes = require('./statistics');
+const settingsRoutes = require('./settings');
 
 /**
  * Initialize all routes
@@ -26,6 +28,8 @@ function setRoutes(app) {
   app.use('/api/upload', uploadRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/reviews', reviewsRoutes);
+  app.use('/api/statistics', statisticsRoutes);
+  app.use('/api/settings', settingsRoutes);
 
   // Home route
   app.get('/', (req, res) => {
