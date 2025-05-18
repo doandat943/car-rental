@@ -58,10 +58,10 @@ export default function NotificationsPage() {
       }
 
       const response = await notificationsAPI.getAllNotifications(params);
-      setNotifications(response?.data?.data || []);
+      setNotifications(response?.data || []);
       
       // Calculate total pages
-      const total = response?.data?.total || 0;
+      const total = response?.total || 0;
       setTotalPages(Math.ceil(total / LIMIT) || 1);
       
     } catch (error) {
@@ -159,43 +159,39 @@ export default function NotificationsPage() {
     }
   };
 
-  // Convert notification type to icon
-  const getNotificationIcon = (type) => {
+  // Get fully styled notification icon with background
+  const getStyledNotificationIcon = (type) => {
     switch (type) {
-      case 'booking_new':
-        return <Calendar className="w-5 h-5" />;
-      case 'booking_canceled':
-        return <X className="w-5 h-5" />;
-      case 'booking_completed':
-        return <Check className="w-5 h-5" />;
-      case 'review_new':
-        return <Star className="w-5 h-5" />;
-      case 'message_new':
-        return <MessageSquare className="w-5 h-5" />;
-      case 'payment_received':
-        return <ShoppingCart className="w-5 h-5" />;
+      case 'booking':
+        return (
+          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-white bg-blue-600">
+            <Calendar className="w-5 h-5" />
+          </div>
+        );
+      case 'payment':
+        return (
+          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-white bg-green-600">
+            <ShoppingCart className="w-5 h-5" />
+          </div>
+        );
+      case 'user':
+        return (
+          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-white bg-yellow-600">
+            <Star className="w-5 h-5" />
+          </div>
+        );
+      case 'system':
+        return (
+          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-white bg-red-600">
+            <Bell className="w-5 h-5" />
+          </div>
+        );
       default:
-        return <Bell className="w-5 h-5" />;
-    }
-  };
-
-  // Determine background color for notification icon
-  const getNotificationColor = (type) => {
-    switch (type) {
-      case 'booking_new':
-        return 'bg-blue-600';
-      case 'booking_canceled':
-        return 'bg-red-600';
-      case 'booking_completed':
-        return 'bg-green-600';
-      case 'review_new':
-        return 'bg-yellow-600';
-      case 'message_new':
-        return 'bg-purple-600';
-      case 'payment_received':
-        return 'bg-green-600';
-      default:
-        return 'bg-blue-600';
+        return (
+          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-white bg-gray-600">
+            <Bell className="w-5 h-5" />
+          </div>
+        );
     }
   };
 
@@ -248,18 +244,14 @@ export default function NotificationsPage() {
   // Get display name for notification type
   const getNotificationTypeName = (type) => {
     switch (type) {
-      case 'booking_new':
-        return 'New Booking';
-      case 'booking_canceled':
-        return 'Booking Canceled';
-      case 'booking_completed':
-        return 'Booking Completed';
-      case 'review_new':
-        return 'New Review';
-      case 'message_new':
-        return 'New Message';
-      case 'payment_received':
+      case 'booking':
+        return 'Booking';
+      case 'payment':
         return 'Payment';
+      case 'user':
+        return 'User';
+      case 'system':
+        return 'System';
       default:
         return 'Notification';
     }
@@ -328,12 +320,10 @@ export default function NotificationsPage() {
                 className="text-sm bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="all">All</option>
-                <option value="booking_new">New Booking</option>
-                <option value="booking_canceled">Booking Canceled</option>
-                <option value="booking_completed">Booking Completed</option>
-                <option value="review_new">New Review</option>
-                <option value="message_new">New Message</option>
-                <option value="payment_received">Payment</option>
+                <option value="booking">Booking</option>
+                <option value="payment">Payment</option>
+                <option value="user">User</option>
+                <option value="system">System</option>
               </select>
             </div>
           </div>
@@ -361,22 +351,21 @@ export default function NotificationsPage() {
             <Bell className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <h3 className="mb-2 text-xl font-medium text-gray-900 dark:text-white">No notifications</h3>
             <p className="text-gray-500 dark:text-gray-400">
-              New notifications will appear here when customers perform actions in the system.
+              You don't have any notifications at the moment.
             </p>
           </div>
         ) : (
           <>
             <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {notifications.map(notification => (
+              {notifications.map(notification => {
+                return (
                 <li 
                   key={notification._id} 
                   className={`p-4 ${notification.read ? '' : 'bg-blue-50 dark:bg-blue-900/20'}`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center">
                     <div className="flex items-start flex-1">
-                      <div className={`flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-white ${getNotificationColor(notification.type)}`}>
-                        {getNotificationIcon(notification.type)}
-                      </div>
+                      {getStyledNotificationIcon(notification.type)}
                       
                       <div className="ml-4 flex-1">
                         <div className="flex items-center mb-1">
@@ -394,7 +383,7 @@ export default function NotificationsPage() {
                         </div>
                         
                         <p className="text-gray-600 dark:text-gray-300">
-                          {notification.message}
+                          {notification.content}
                         </p>
                         
                         <div className="mt-1 flex items-center text-xs text-gray-500 dark:text-gray-400">
@@ -433,7 +422,8 @@ export default function NotificationsPage() {
                     </div>
                   </div>
                 </li>
-              ))}
+              );
+              })}
             </ul>
             
             {/* Pagination */}

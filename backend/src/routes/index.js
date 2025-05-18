@@ -35,7 +35,7 @@ function setRoutes(app) {
   app.get('/', (req, res) => {
     res.json({ message: 'Car Rental API' });
   });
-  
+
   // 404 handler
   app.use((req, res) => {
     res.status(404).json({
