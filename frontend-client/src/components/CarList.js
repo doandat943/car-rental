@@ -67,11 +67,11 @@ const CarList = ({ cars = [], title = "Our Cars" }) => {
                 <div className="flex justify-between text-sm text-gray-500 mb-6">
                   <div className="flex items-center">
                     <FaUsers className="mr-1" />
-                    <span>{car.specifications?.seats || 5} Seats</span>
+                    <span>{car.seats || 5} Seats</span>
                   </div>
                   <div className="flex items-center">
                     <FaCog className="mr-1" />
-                    <span>{car.specifications?.transmission || 'Auto'}</span>
+                    <span>{car.transmission || 'Auto'}</span>
                   </div>
                 </div>
                 

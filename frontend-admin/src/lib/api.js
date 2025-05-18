@@ -685,6 +685,175 @@ export const reviewsAPI = {
 };
 
 /**
+ * Brand management APIs
+ */
+export const brandsAPI = {
+  // Get all brands
+  getAllBrands: async () => {
+    return fetchWithAuth('/brands', {
+      method: 'GET',
+    });
+  },
+
+  // Get brand by ID
+  getBrandById: async (id) => {
+    return fetchWithAuth(`/brands/${id}`, {
+      method: 'GET',
+    });
+  },
+
+  // Create brand
+  createBrand: async (brandData) => {
+    return fetchWithAuth('/brands', {
+      method: 'POST',
+      body: JSON.stringify(brandData),
+    });
+  },
+
+  // Update brand
+  updateBrand: async (id, brandData) => {
+    return fetchWithAuth(`/brands/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(brandData),
+    });
+  },
+
+  // Delete brand
+  deleteBrand: async (id) => {
+    return fetchWithAuth(`/brands/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+/**
+ * Transmission management APIs
+ */
+export const transmissionsAPI = {
+  // Get all transmissions
+  getAllTransmissions: async () => {
+    return fetchWithAuth('/transmissions', {
+      method: 'GET',
+    });
+  },
+
+  // Get transmission by ID
+  getTransmissionById: async (id) => {
+    return fetchWithAuth(`/transmissions/${id}`, {
+      method: 'GET',
+    });
+  },
+
+  // Create transmission
+  createTransmission: async (transmissionData) => {
+    return fetchWithAuth('/transmissions', {
+      method: 'POST',
+      body: JSON.stringify(transmissionData),
+    });
+  },
+
+  // Update transmission
+  updateTransmission: async (id, transmissionData) => {
+    return fetchWithAuth(`/transmissions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(transmissionData),
+    });
+  },
+
+  // Delete transmission
+  deleteTransmission: async (id) => {
+    return fetchWithAuth(`/transmissions/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+/**
+ * Fuel management APIs
+ */
+export const fuelsAPI = {
+  // Get all fuels
+  getAllFuels: async () => {
+    return fetchWithAuth('/fuels', {
+      method: 'GET',
+    });
+  },
+
+  // Get fuel by ID
+  getFuelById: async (id) => {
+    return fetchWithAuth(`/fuels/${id}`, {
+      method: 'GET',
+    });
+  },
+
+  // Create fuel
+  createFuel: async (fuelData) => {
+    return fetchWithAuth('/fuels', {
+      method: 'POST',
+      body: JSON.stringify(fuelData),
+    });
+  },
+
+  // Update fuel
+  updateFuel: async (id, fuelData) => {
+    return fetchWithAuth(`/fuels/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(fuelData),
+    });
+  },
+
+  // Delete fuel
+  deleteFuel: async (id) => {
+    return fetchWithAuth(`/fuels/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+/**
+ * Feature management APIs
+ */
+export const featuresAPI = {
+  // Get all features
+  getAllFeatures: async (category) => {
+    const queryString = category ? `?category=${category}` : '';
+    return fetchWithAuth(`/features${queryString}`, {
+      method: 'GET',
+    });
+  },
+
+  // Get feature by ID
+  getFeatureById: async (id) => {
+    return fetchWithAuth(`/features/${id}`, {
+      method: 'GET',
+    });
+  },
+
+  // Create feature
+  createFeature: async (featureData) => {
+    return fetchWithAuth('/features', {
+      method: 'POST',
+      body: JSON.stringify(featureData),
+    });
+  },
+
+  // Update feature
+  updateFeature: async (id, featureData) => {
+    return fetchWithAuth(`/features/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(featureData),
+    });
+  },
+
+  // Delete feature
+  deleteFeature: async (id) => {
+    return fetchWithAuth(`/features/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+/**
  * Axios API client (kept from src/lib/api.js for future reference)
  * 
  * Example usage:

@@ -16,18 +16,20 @@ exports.getCars = async (req, res) => {
       maxPrice,
       seats,
       status,
+      fuel,
+      transmission,
       sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
-    
-    console.log('Query params:', req.query);
     
     // Build filter object
     const filter = {};
     
     if (brand) filter.brand = brand;
     if (category) filter.category = category;
-    if (seats) filter['specifications.seats'] = seats;
+    if (seats) filter.seats = seats;
+    if (fuel) filter.fuel = fuel;
+    if (transmission) filter.transmission = transmission;
     
     // Use status field directly
     if (status) {
@@ -41,33 +43,23 @@ exports.getCars = async (req, res) => {
       if (maxPrice) filter['price.daily'].$lte = Number(maxPrice);
     }
     
-    console.log('Filter object:', filter);
-    
     // Build sort object
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
     
-    console.log('Sort object:', sort);
-    
     // Execute query with pagination
     const cars = await Car.find(filter)
       .populate('category', 'name')
+      .populate('brand', 'name')
+      .populate('transmission', 'name')
+      .populate('fuel', 'name')
+      .populate('features', 'name')
       .sort(sort)
       .limit(Number(limit))
       .skip((Number(page) - 1) * Number(limit));
     
     // Get total count
     const totalCars = await Car.countDocuments(filter);
-    
-    console.log('Found cars count:', cars.length);
-    console.log('Total cars in DB matching filter:', totalCars);
-    
-    // Log sample car for debugging
-    if (cars.length > 0) {
-      console.log('Sample car data structure:', 
-        JSON.stringify(cars[0].toObject ? cars[0].toObject() : cars[0], null, 2)
-      );
-    }
     
     // Return data in the format expected by the frontend
     const responseObj = {
@@ -80,16 +72,8 @@ exports.getCars = async (req, res) => {
       }
     };
     
-    console.log('Response structure:', {
-      success: responseObj.success,
-      dataType: Array.isArray(responseObj.data) ? 'array' : typeof responseObj.data,
-      dataLength: Array.isArray(responseObj.data) ? responseObj.data.length : 'not an array',
-      meta: responseObj.meta
-    });
-    
     res.status(200).json(responseObj);
   } catch (error) {
-    console.error('Error fetching cars:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching cars',
@@ -105,7 +89,12 @@ exports.getCars = async (req, res) => {
  */
 exports.getCarById = async (req, res) => {
   try {
-    const car = await Car.findById(req.params.id).populate('category', 'name');
+    const car = await Car.findById(req.params.id)
+      .populate('category', 'name')
+      .populate('brand', 'name')
+      .populate('transmission', 'name')
+      .populate('fuel', 'name')
+      .populate('features', 'name');
     
     if (!car) {
       return res.status(404).json({
@@ -144,13 +133,9 @@ exports.createCar = async (req, res) => {
     const car = new Car({
       ...req.body,
       images,
-      specifications: {
-        seats: req.body.seats,
-        doors: req.body.doors,
-        transmission: req.body.transmission,
-        fuelType: req.body.fuelType,
-        engineCapacity: req.body.engineCapacity
-      },
+      seats: req.body.seats,
+      transmission: req.body.transmission,
+      fuel: req.body.fuel,
       price: {
         hourly: req.body.hourlyPrice,
         daily: req.body.dailyPrice,
@@ -204,13 +189,9 @@ exports.updateCar = async (req, res) => {
       {
         ...req.body,
         images,
-        specifications: {
-          seats: req.body.seats || car.specifications.seats,
-          doors: req.body.doors || car.specifications.doors,
-          transmission: req.body.transmission || car.specifications.transmission,
-          fuelType: req.body.fuelType || car.specifications.fuelType,
-          engineCapacity: req.body.engineCapacity || car.specifications.engineCapacity
-        },
+        seats: req.body.seats || car.seats,
+        transmission: req.body.transmission || car.transmission,
+        fuel: req.body.fuel || car.fuel,
         price: {
           hourly: req.body.hourlyPrice || car.price.hourly,
           daily: req.body.dailyPrice || car.price.daily,

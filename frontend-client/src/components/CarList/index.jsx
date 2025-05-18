@@ -7,8 +7,8 @@ const CarCard = ({ car }) => {
   const carId = car._id || car.id;
   const carImage = car.images?.[0] || car.image || "/placeholder-car.jpg";
   const carPrice = car.price?.daily || car.price || 0;
-  const carSeats = car.specifications?.seats || 5;
-  const carTransmission = car.specifications?.transmission || 'Automatic';
+  const carSeats = car.seats || 5;
+  const carTransmission = car.transmission || 'Automatic';
   
   return (
     <div className="card car-card hover:shadow-lg transition-shadow duration-300">

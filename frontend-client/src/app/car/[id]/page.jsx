@@ -176,19 +176,15 @@ export default function CarDetailPage({ params }) {
                   </div>
                   <div>
                     <div className="text-gray-600">Seats</div>
-                    <div className="font-semibold">{car.specifications?.seats || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Doors</div>
-                    <div className="font-semibold">{car.specifications?.doors || 'N/A'}</div>
+                    <div className="font-semibold">{car.seats || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Transmission</div>
-                    <div className="font-semibold">{car.specifications?.transmission || 'N/A'}</div>
+                    <div className="font-semibold">{car.transmission || 'N/A'}</div>
                   </div>
                   <div>
-                    <div className="text-gray-600">Fuel Type</div>
-                    <div className="font-semibold">{car.specifications?.fuelType || 'N/A'}</div>
+                    <div className="text-gray-600">Fuel</div>
+                    <div className="font-semibold">{car.fuel || 'N/A'}</div>
                   </div>
                 </div>
               </div>

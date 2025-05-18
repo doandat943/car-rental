@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Check
 } from 'lucide-react';
-import { carsAPI, categoriesAPI } from '../../../../../lib/api';
+import { carsAPI, categoriesAPI, brandsAPI, transmissionsAPI, fuelsAPI, featuresAPI } from '../../../../../lib/api';
 import { Button } from '../../../../../components/ui/Button';
 import React from 'react';
 
@@ -37,13 +37,8 @@ export default function EditCar({ params }) {
     status: 'available',
     seats: 5,
     transmission: 'automatic',
-    fuelType: 'gasoline',
-    images: [],
-    specifications: {
-      seats: 5,
-      transmission: 'automatic',
-      fuelType: 'gasoline'
-    }
+    fuel: 'gasoline',
+    images: []
   });
   
   const [categories, setCategories] = useState([]);
@@ -57,6 +52,50 @@ export default function EditCar({ params }) {
   const [featureInput, setFeatureInput] = useState('');
   const [currentImages, setCurrentImages] = useState([]);
   const [imagesToDelete, setImagesToDelete] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [transmissions, setTransmissions] = useState([]);
+  const [fuels, setFuels] = useState([]);
+  const [availableFeatures, setAvailableFeatures] = useState([]);
+  const [attributesLoading, setAttributesLoading] = useState(true);
+  const [selectedFeatures, setSelectedFeatures] = useState([]);
+
+  // Get attributes list
+  useEffect(() => {
+    const fetchAttributes = async () => {
+      setAttributesLoading(true);
+      try {
+        // Fetch brands
+        const brandsResponse = await brandsAPI.getAllBrands();
+        if (brandsResponse.success) {
+          setBrands(brandsResponse.data || []);
+        }
+        
+        // Fetch transmissions
+        const transmissionsResponse = await transmissionsAPI.getAllTransmissions();
+        if (transmissionsResponse.success) {
+          setTransmissions(transmissionsResponse.data || []);
+        }
+        
+        // Fetch fuels
+        const fuelsResponse = await fuelsAPI.getAllFuels();
+        if (fuelsResponse.success) {
+          setFuels(fuelsResponse.data || []);
+        }
+        
+        // Fetch features
+        const featuresResponse = await featuresAPI.getAllFeatures();
+        if (featuresResponse.success) {
+          setAvailableFeatures(featuresResponse.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching attributes:', error);
+      } finally {
+        setAttributesLoading(false);
+      }
+    };
+
+    fetchAttributes();
+  }, []);
 
   // Get information of the car to be edited
   useEffect(() => {
@@ -72,7 +111,7 @@ export default function EditCar({ params }) {
           // Set form data from API response
           setFormData({
             name: carData.name || '',
-            brand: carData.brand || '',
+            brand: carData.brand?._id || carData.brand || '',
             model: carData.model || '',
             year: carData.year || new Date().getFullYear(),
             price: {
@@ -82,12 +121,17 @@ export default function EditCar({ params }) {
             },
             category: carData.category?._id || carData.category || '',
             description: carData.description || '',
-            features: carData.features || [],
+            features: carData.features?.map(f => typeof f === 'object' ? f._id : f) || [],
             status: carData.status || 'available',
-            seats: carData.specifications?.seats || 5,
-            transmission: carData.specifications?.transmission || 'automatic',
-            fuelType: carData.specifications?.fuelType || 'gasoline',
+            seats: carData.seats || 5,
+            transmission: carData.transmission?._id || carData.transmission || '',
+            fuel: carData.fuel?._id || carData.fuel || ''
           });
+
+          // Set selected features
+          if (Array.isArray(carData.features)) {
+            setSelectedFeatures(carData.features.map(f => typeof f === 'object' ? f._id : f));
+          }
           
           if (carData.images && carData.images.length > 0) {
             setCurrentImages(carData.images);
@@ -142,49 +186,81 @@ export default function EditCar({ params }) {
         ...formData,
         price: {
           ...formData.price,
-          [priceField]: value
+          [priceField]: parseFloat(value) || 0
         }
       });
-      return;
-    }
-    
-    // Handle fields that are part of specifications
-    if (['seats', 'transmission', 'fuelType'].includes(name)) {
+    } else if (name === 'seats') {
       setFormData({
         ...formData,
-        [name]: value, // Update for UI display
-        specifications: {
-          ...formData.specifications,
-          [name]: value // Update for API submission
-        }
+        seats: parseInt(value) || 5
       });
-      return;
+    } else if (name === 'transmission') {
+      setFormData({
+        ...formData,
+        transmission: value
+      });
+    } else if (name === 'fuel') {
+      setFormData({
+        ...formData,
+        fuel: value
+      });
+    } else {
+      // Handle regular fields
+      setFormData({
+        ...formData,
+        [name]: value
+      });
     }
-    
-    // Handle regular fields
-    setFormData({
-      ...formData,
-      [name]: value
-    });
   };
 
   // Handle adding feature
   const handleAddFeature = () => {
-    if (featureInput.trim() && !formData.features.includes(featureInput.trim())) {
+    if (!featureInput) return;
+    
+    // Check if the input matches an available feature
+    const feature = availableFeatures.find(f => 
+      f.name.toLowerCase() === featureInput.trim().toLowerCase());
+    
+    if (feature && !selectedFeatures.includes(feature._id)) {
+      const newSelectedFeatures = [...selectedFeatures, feature._id];
+      setSelectedFeatures(newSelectedFeatures);
       setFormData({
         ...formData,
-        features: [...formData.features, featureInput.trim()]
+        features: newSelectedFeatures
       });
       setFeatureInput('');
+    } else if (!feature) {
+      // If it's a custom feature, show an error or prompt to add it to the system first
+      alert('Please select a feature from the available features list or add it in the Car Attributes management page first.');
     }
   };
 
-  // Handle removing feature
-  const handleRemoveFeature = (feature) => {
+  // Handle feature selection from dropdown
+  const handleFeatureSelect = (featureId) => {
+    if (!selectedFeatures.includes(featureId)) {
+      const newSelectedFeatures = [...selectedFeatures, featureId];
+      setSelectedFeatures(newSelectedFeatures);
+      setFormData({
+        ...formData,
+        features: newSelectedFeatures
+      });
+    }
+  };
+
+  // Handle removing features
+  const handleRemoveFeature = (featureId) => {
+    const newSelectedFeatures = selectedFeatures.filter(id => id !== featureId);
+    setSelectedFeatures(newSelectedFeatures);
     setFormData({
       ...formData,
-      features: formData.features.filter(f => f !== feature)
+      features: newSelectedFeatures
     });
+  };
+
+  // Get feature name by ID
+  const getFeatureName = (featureId) => {
+    const feature = availableFeatures.find(f => f._id === featureId);
+    return feature ? feature.name : 'Unknown Feature';
   };
 
   // Handle image file selection
@@ -222,17 +298,17 @@ export default function EditCar({ params }) {
       // Prepare data with correct structure for backend
       const carDataToSend = {
         ...formData,
-        specifications: {
-          seats: formData.seats,
-          transmission: formData.transmission,
-          fuelType: formData.fuelType
-        }
+        // Include top-level fields
+        seats: formData.seats,
+        transmission: formData.transmission,
+        fuel: formData.fuel
       };
       
-      // Remove individual fields that are now part of specifications
-      delete carDataToSend.seats;
-      delete carDataToSend.transmission;
-      delete carDataToSend.fuelType;
+      // Clean up price fields if needed
+      if (typeof carDataToSend.price.hourly === 'string') carDataToSend.price.hourly = parseFloat(carDataToSend.price.hourly) || 0;
+      if (typeof carDataToSend.price.daily === 'string') carDataToSend.price.daily = parseFloat(carDataToSend.price.daily) || 0;
+      if (typeof carDataToSend.price.weekly === 'string') carDataToSend.price.weekly = parseFloat(carDataToSend.price.weekly) || 0;
+      if (typeof carDataToSend.price.monthly === 'string') carDataToSend.price.monthly = parseFloat(carDataToSend.price.monthly) || 0;
       
       // Update car information
       const carResponse = await carsAPI.updateCar(id, carDataToSend);
@@ -342,16 +418,25 @@ export default function EditCar({ params }) {
             {/* Brand */}
             <div>
               <label htmlFor="brand" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Brand</label>
-              <input 
-                type="text" 
+              <select 
                 id="brand" 
                 name="brand"
                 value={formData.brand}
                 onChange={handleChange}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                placeholder="Toyota" 
-                required 
-              />
+                required
+              >
+                <option value="">Select brand</option>
+                {attributesLoading ? (
+                  <option disabled>Loading brands...</option>
+                ) : (
+                  brands.map(brand => (
+                    <option key={brand._id} value={brand._id}>
+                      {brand.name}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
             
             {/* Model */}
@@ -436,11 +521,10 @@ export default function EditCar({ params }) {
                 name="seats"
                 value={formData.seats}
                 onChange={handleChange}
+                min="1" 
+                max="50"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                placeholder="5" 
                 required 
-                min="1"
-                max="20"
               />
             </div>
             
@@ -455,27 +539,36 @@ export default function EditCar({ params }) {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option key="transmission-automatic" value="automatic">Automatic</option>
-                <option key="transmission-manual" value="manual">Manual</option>
-                <option key="transmission-semi-automatic" value="semi-automatic">Semi-automatic</option>
+                <option value="">Select transmission</option>
+                {attributesLoading ? (
+                  <option disabled>Loading transmissions...</option>
+                ) : (
+                  transmissions.map(transmission => (
+                    <option key={transmission._id} value={transmission._id}>
+                      {transmission.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             
-            {/* Fuel Type */}
+            {/* Fuel */}
             <div>
-              <label htmlFor="fuelType" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fuel Type</label>
+              <label htmlFor="fuel" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fuel</label>
               <select 
-                id="fuelType" 
-                name="fuelType"
-                value={formData.fuelType}
+                id="fuel" 
+                name="fuel"
+                value={formData.fuel}
                 onChange={handleChange}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option key="fuel-gasoline" value="gasoline">Gasoline</option>
-                <option key="fuel-diesel" value="diesel">Diesel</option>
-                <option key="fuel-electric" value="electric">Electric</option>
-                <option key="fuel-hybrid" value="hybrid">Hybrid</option>
+                <option value="">Select fuel</option>
+                {fuels.map(fuel => (
+                  <option key={fuel._id} value={fuel._id}>
+                    {fuel.name}
+                  </option>
+                ))}
               </select>
             </div>
             
@@ -515,13 +608,30 @@ export default function EditCar({ params }) {
           <div className="mb-6">
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Features</label>
             <div className="flex mb-2">
-              <input 
-                type="text" 
+              <select
                 value={featureInput}
-                onChange={(e) => setFeatureInput(e.target.value)}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg rounded-r-none focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                placeholder="Add new feature" 
-              />
+                onChange={(e) => {
+                  setFeatureInput(e.target.value);
+                  if (e.target.value) {
+                    handleFeatureSelect(e.target.value);
+                    setFeatureInput('');
+                  }
+                }}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg rounded-r-none focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              >
+                <option value="">Select feature</option>
+                {attributesLoading ? (
+                  <option disabled>Loading features...</option>
+                ) : (
+                  availableFeatures
+                    .filter(feature => !selectedFeatures.includes(feature._id))
+                    .map(feature => (
+                      <option key={feature._id} value={feature._id}>
+                        {feature.name} ({feature.category})
+                      </option>
+                    ))
+                )}
+              </select>
               <button
                 type="button"
                 onClick={handleAddFeature}
@@ -530,21 +640,28 @@ export default function EditCar({ params }) {
                 <Plus className="w-5 h-5" />
               </button>
             </div>
+            
+            <div className="mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                Can't find a feature? <a href="/dashboard/car-attributes" className="text-blue-600 dark:text-blue-500 hover:underline">Add it here</a>
+              </p>
+            </div>
+
             <div className="flex flex-wrap gap-2">
-              {formData.features.map((feature, index) => (
-                <div key={`feature-${index}-${feature}`} className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1">
-                  <span className="text-sm text-gray-800 dark:text-gray-200">{feature}</span>
+              {selectedFeatures.map((featureId) => (
+                <div key={featureId} className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1">
+                  <span className="text-sm text-gray-800 dark:text-gray-200">{getFeatureName(featureId)}</span>
                   <button
                     type="button"
-                    onClick={() => handleRemoveFeature(feature)}
+                    onClick={() => handleRemoveFeature(featureId)}
                     className="ml-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               ))}
-              {formData.features.length === 0 && (
-                <span className="text-sm text-gray-500 dark:text-gray-400">No features added yet</span>
+              {selectedFeatures.length === 0 && (
+                <span className="text-sm text-gray-500 dark:text-gray-400">No features selected</span>
               )}
             </div>
           </div>

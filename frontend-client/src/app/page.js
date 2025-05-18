@@ -80,10 +80,9 @@ export default function Home() {
             year: 2023,
             price: { daily: 45 },
             image: '/placeholder-car.jpg',
-            specifications: {
-              seats: 5,
-              transmission: 'Automatic'
-            }
+            seats: 5,
+            transmission: 'Automatic',
+            fuel: 'Gasoline'
           },
           {
             id: 2,
@@ -93,10 +92,9 @@ export default function Home() {
             year: 2023,
             price: { daily: 40 },
             image: '/placeholder-car.jpg',
-            specifications: {
-              seats: 5,
-              transmission: 'Automatic'
-            }
+            seats: 5,
+            transmission: 'Automatic',
+            fuel: 'Gasoline'
           },
           {
             id: 3,
@@ -106,10 +104,9 @@ export default function Home() {
             year: 2023,
             price: { daily: 80 },
             image: '/placeholder-car.jpg',
-            specifications: {
-              seats: 5,
-              transmission: 'Automatic'
-            }
+            seats: 5,
+            transmission: 'Automatic',
+            fuel: 'Electric'
           },
           {
             id: 4,
@@ -119,10 +116,9 @@ export default function Home() {
             year: 2023,
             price: { daily: 95 },
             image: '/placeholder-car.jpg',
-            specifications: {
-              seats: 7,
-              transmission: 'Automatic'
-            }
+            seats: 7,
+            transmission: 'Automatic',
+            fuel: 'Diesel'
           }
         ]);
       }

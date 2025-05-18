@@ -11,6 +11,10 @@ const notificationRoutes = require('./notification');
 const reviewsRoutes = require('./reviews');
 const statisticsRoutes = require('./statistics');
 const settingsRoutes = require('./settings');
+const brandRoutes = require('./brands');
+const transmissionRoutes = require('./transmissions');
+const fuelRoutes = require('./fuels');
+const featureRoutes = require('./features');
 
 /**
  * Initialize all routes
@@ -30,6 +34,10 @@ function setRoutes(app) {
   app.use('/api/reviews', reviewsRoutes);
   app.use('/api/statistics', statisticsRoutes);
   app.use('/api/settings', settingsRoutes);
+  app.use('/api/brands', brandRoutes);
+  app.use('/api/transmissions', transmissionRoutes);
+  app.use('/api/fuels', fuelRoutes);
+  app.use('/api/features', featureRoutes);
 
   // Home route
   app.get('/', (req, res) => {

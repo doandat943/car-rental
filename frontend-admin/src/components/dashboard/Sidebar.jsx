@@ -10,7 +10,8 @@ import {
   Home, CheckSquare, Bell,
   Shield, AlertTriangle, Settings,
   ChevronDown, ChevronRight,
-  Car, CalendarCheck, Users, BarChart3
+  Car, CalendarCheck, Users, BarChart3,
+  Tag
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -47,6 +48,7 @@ const Sidebar = () => {
   // Define management items
   const managementItems = [
     { name: 'Cars', icon: <Car className="h-5 w-5" />, path: '/dashboard/cars' },
+    { name: 'Car Attributes', icon: <Tag className="h-5 w-5" />, path: '/dashboard/car-attributes' },
     { name: 'Bookings', icon: <CalendarCheck className="h-5 w-5" />, path: '/dashboard/bookings' },
     { name: 'Users', icon: <Users className="h-5 w-5" />, path: '/dashboard/users' },
     { name: 'Statistics & Reports', icon: <BarChart3 className="h-5 w-5" />, path: '/dashboard/statistics' }

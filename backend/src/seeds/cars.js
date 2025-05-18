@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
-const { Car, Category } = require('../models');
+const { Car, Category, Brand, Transmission, Fuel, Feature } = require('../models');
 
 /**
- * Seeds the database with initial car and category data
- * This includes various car types, categories, and their specifications
+ * Seeds the database with initial car data
+ * This assumes categories, brands, transmissions, fuels, and features are already seeded
  */
 const seedCars = async () => {
   try {
@@ -14,30 +14,56 @@ const seedCars = async () => {
       return;
     }
 
-    // Check if categories already exist in the database
+    // Verify required reference data exists
     const categoryCount = await Category.countDocuments();
-    if (categoryCount === 0) {
-      // Create categories first
-      await seedCategories();
+    const brandCount = await Brand.countDocuments();
+    const transmissionCount = await Transmission.countDocuments();
+    const fuelCount = await Fuel.countDocuments();
+    const featureCount = await Feature.countDocuments();
+
+    if (categoryCount === 0 || brandCount === 0 || transmissionCount === 0 || 
+        fuelCount === 0 || featureCount === 0) {
+      throw new Error('Required reference data is missing. Please run the complete seed sequence.');
     }
 
-    // Fetch categories to reference in cars
+    // Fetch all the lookup data for references
     const categories = await Category.find();
-    if (categories.length === 0) {
-      throw new Error('Categories not found. Cannot seed cars');
-    }
+    const brands = await Brand.find();
+    const transmissions = await Transmission.find();
+    const fuels = await Fuel.find();
+    const features = await Feature.find();
 
-    // Create map for quick category lookup by name
+    // Create maps for quick lookup by name
     const categoryMap = {};
     categories.forEach(category => {
       categoryMap[category.name] = category._id;
+    });
+    
+    const brandMap = {};
+    brands.forEach(brand => {
+      brandMap[brand.name] = brand._id;
+    });
+    
+    const transmissionMap = {};
+    transmissions.forEach(transmission => {
+      transmissionMap[transmission.name] = transmission._id;
+    });
+    
+    const fuelMap = {};
+    fuels.forEach(fuel => {
+      fuelMap[fuel.name] = fuel._id;
+    });
+    
+    const featureMap = {};
+    features.forEach(feature => {
+      featureMap[feature.name] = feature._id;
     });
 
     // Sample cars data with varied attributes
     const carsData = [
       {
         name: 'Toyota Camry',
-        brand: 'Toyota',
+        brand: brandMap['Toyota'],
         model: 'Camry',
         year: 2023,
         description: 'Luxury D-segment sedan with excellent fuel efficiency',
@@ -46,19 +72,15 @@ const seedCars = async () => {
           weekly: 500,
           monthly: 1800
         },
-        specifications: {
-          seats: 5,
-          doors: 4,
-          transmission: 'Automatic',
-          fuelType: 'Gasoline',
-          engineCapacity: '2.5L'
-        },
+        seats: 5,
+        transmission: transmissionMap['Automatic'],
+        fuel: fuelMap['Gasoline'],
         features: [
-          'Bluetooth',
-          'Backup Camera',
-          'Navigation',
-          'Cruise Control',
-          'Keyless Entry'
+          featureMap['Bluetooth Connectivity'],
+          featureMap['Parking Sensors'],
+          featureMap['Touchscreen Navigation'],
+          featureMap['Adaptive Cruise Control'],
+          featureMap['Keyless Entry']
         ],
         images: ['/uploads/cars/toyota-camry-1.jpg', '/uploads/cars/toyota-camry-2.jpg'],
         status: 'available',
@@ -68,7 +90,7 @@ const seedCars = async () => {
       },
       {
         name: 'Honda Civic',
-        brand: 'Honda',
+        brand: brandMap['Honda'],
         model: 'Civic',
         year: 2023,
         description: 'Sporty and efficient C-segment sedan',
@@ -77,19 +99,15 @@ const seedCars = async () => {
           weekly: 450,
           monthly: 1600
         },
-        specifications: {
-          seats: 5,
-          doors: 4,
-          transmission: 'Automatic',
-          fuelType: 'Gasoline',
-          engineCapacity: '1.5L'
-        },
+        seats: 5,
+        transmission: transmissionMap['Automatic'],
+        fuel: fuelMap['Gasoline'],
         features: [
-          'Bluetooth',
-          'Backup Camera',
-          'Apple CarPlay',
-          'Android Auto',
-          'Lane Keeping Assist'
+          featureMap['Bluetooth Connectivity'],
+          featureMap['Parking Sensors'],
+          featureMap['Apple CarPlay'],
+          featureMap['Android Auto'],
+          featureMap['Lane Departure Warning']
         ],
         images: ['/uploads/cars/honda-civic-1.jpg', '/uploads/cars/honda-civic-2.jpg'],
         status: 'available',
@@ -99,7 +117,7 @@ const seedCars = async () => {
       },
       {
         name: 'Tesla Model 3',
-        brand: 'Tesla',
+        brand: brandMap['Tesla'],
         model: 'Model 3',
         year: 2023,
         description: 'High-performance electric car with self-driving technology',
@@ -108,20 +126,15 @@ const seedCars = async () => {
           weekly: 720,
           monthly: 2600
         },
-        specifications: {
-          seats: 5,
-          doors: 4,
-          transmission: 'Automatic',
-          fuelType: 'Electric',
-          engineCapacity: 'Electric Motor'
-        },
+        seats: 5,
+        transmission: transmissionMap['Automatic'],
+        fuel: fuelMap['Electric'],
         features: [
-          'Autopilot',
-          'Premium Sound System',
-          'Glass Roof',
-          'Supercharging',
-          'Over-the-air Updates',
-          'Heated Seats'
+          featureMap['Touchscreen Navigation'],
+          featureMap['Premium Sound System'],
+          featureMap['Panoramic Sunroof'],
+          featureMap['Wireless Charging'],
+          featureMap['Heated Seats']
         ],
         images: ['/uploads/cars/tesla-model3-1.jpg', '/uploads/cars/tesla-model3-2.jpg'],
         status: 'available',
@@ -131,7 +144,7 @@ const seedCars = async () => {
       },
       {
         name: 'BMW X5',
-        brand: 'BMW',
+        brand: brandMap['BMW'],
         model: 'X5',
         year: 2023,
         description: 'Luxury SUV with outstanding performance',
@@ -140,20 +153,15 @@ const seedCars = async () => {
           weekly: 1050,
           monthly: 3800
         },
-        specifications: {
-          seats: 7,
-          doors: 5,
-          transmission: 'Automatic',
-          fuelType: 'Diesel',
-          engineCapacity: '3.0L'
-        },
+        seats: 7,
+        transmission: transmissionMap['Automatic'],
+        fuel: fuelMap['Diesel'],
         features: [
-          'Panoramic Sunroof',
-          'Leather Seats',
-          'Wireless Charging',
-          'Harman Kardon Sound',
-          'Gesture Control',
-          'Navigation',
+          featureMap['Panoramic Sunroof'],
+          featureMap['Leather Seats'],
+          featureMap['Wireless Charging'],
+          featureMap['Premium Sound System'],
+          featureMap['Touchscreen Navigation']
         ],
         images: ['/uploads/cars/bmw-x5-1.jpg', '/uploads/cars/bmw-x5-2.jpg'],
         status: 'available',
@@ -163,7 +171,7 @@ const seedCars = async () => {
       },
       {
         name: 'Ford Mustang',
-        brand: 'Ford',
+        brand: brandMap['Ford'],
         model: 'Mustang GT',
         year: 2023,
         description: 'Iconic American sports car',
@@ -172,19 +180,15 @@ const seedCars = async () => {
           weekly: 900,
           monthly: 3200
         },
-        specifications: {
-          seats: 4,
-          doors: 2,
-          transmission: 'Manual',
-          fuelType: 'Gasoline',
-          engineCapacity: '5.0L V8'
-        },
+        seats: 4,
+        transmission: transmissionMap['Manual'],
+        fuel: fuelMap['Gasoline'],
         features: [
-          'V8 Engine',
-          'Performance Exhaust',
-          'Track Mode',
-          'Leather Seats',
-          'Launch Control'
+          featureMap['Sport Mode'],
+          featureMap['Performance Exhaust'],
+          featureMap['Leather Seats'],
+          featureMap['Premium Sound System'],
+          featureMap['Touchscreen Navigation']
         ],
         images: ['/uploads/cars/ford-mustang-1.jpg', '/uploads/cars/ford-mustang-2.jpg'],
         status: 'available',
@@ -194,7 +198,7 @@ const seedCars = async () => {
       },
       {
         name: 'Mercedes C-Class',
-        brand: 'Mercedes-Benz',
+        brand: brandMap['Mercedes-Benz'],
         model: 'C300',
         year: 2022,
         description: 'Luxury sedan with advanced technology',
@@ -203,20 +207,15 @@ const seedCars = async () => {
           weekly: 960,
           monthly: 3500
         },
-        specifications: {
-          seats: 5,
-          doors: 4,
-          transmission: 'Automatic',
-          fuelType: 'Gasoline',
-          engineCapacity: '2.0L'
-        },
+        seats: 5,
+        transmission: transmissionMap['Automatic'],
+        fuel: fuelMap['Gasoline'],
         features: [
-          'MBUX Infotainment',
-          'LED Headlights',
-          'Burmester Sound System',
-          'Heated Seats',
-          'Ambient Lighting',
-          'Driver Assistance Package'
+          featureMap['Touchscreen Navigation'],
+          featureMap['Premium Sound System'],
+          featureMap['Heated Seats'],
+          featureMap['Ambient Lighting'],
+          featureMap['Blind Spot Monitor']
         ],
         images: ['/uploads/cars/mercedes-c-class-1.jpg', '/uploads/cars/mercedes-c-class-2.jpg'],
         status: 'available',
@@ -226,7 +225,7 @@ const seedCars = async () => {
       },
       {
         name: 'Toyota Prius',
-        brand: 'Toyota',
+        brand: brandMap['Toyota'],
         model: 'Prius',
         year: 2023,
         description: 'Fuel-efficient hybrid vehicle',
@@ -235,84 +234,31 @@ const seedCars = async () => {
           weekly: 420,
           monthly: 1500
         },
-        specifications: {
-          seats: 5,
-          doors: 4,
-          transmission: 'CVT',
-          fuelType: 'Hybrid',
-          engineCapacity: '1.8L'
-        },
+        seats: 5,
+        transmission: transmissionMap['CVT'],
+        fuel: fuelMap['Hybrid'],
         features: [
-          'Hybrid Powertrain',
-          'Toyota Safety Sense',
-          'Smart Key System',
-          'Energy Monitor',
-          'Wireless Charging'
+          featureMap['Bluetooth Connectivity'],
+          featureMap['Lane Departure Warning'],
+          featureMap['Keyless Entry'],
+          featureMap['Wireless Charging'],
+          featureMap['Apple CarPlay']
         ],
         images: ['/uploads/cars/toyota-prius-1.jpg', '/uploads/cars/toyota-prius-2.jpg'],
         status: 'available',
-        rating: 4.2,
-        reviewCount: 16,
-        category: categoryMap['Electric']
+        rating: 4.4,
+        reviewCount: 14,
+        category: categoryMap['Hybrid']
       }
     ];
 
-    // Insert the cars into the database
-    const createdCars = await Car.insertMany(carsData);
-    
-    console.log(`${createdCars.length} cars seeded successfully`);
-    return createdCars;
+    // Insert cars into database
+    await Car.insertMany(carsData);
+    console.log('Cars seeded successfully');
   } catch (error) {
     console.error('Error seeding cars:', error);
     throw error;
   }
 };
-
-/**
- * Seeds the database with car categories
- */
-async function seedCategories() {
-  try {
-    const categoriesData = [
-      {
-        name: 'Sedan',
-        description: '4-door sedan comfortable for families',
-        image: '/uploads/categories/sedan.jpg'
-      },
-      {
-        name: 'SUV',
-        description: 'Versatile high-clearance vehicle for all terrains',
-        image: '/uploads/categories/suv.jpg'
-      },
-      {
-        name: 'Sports Car',
-        description: 'High-speed sports vehicles',
-        image: '/uploads/categories/sports.jpg'
-      },
-      {
-        name: 'Electric',
-        description: 'Environmentally friendly electric vehicles',
-        image: '/uploads/categories/electric.jpg'
-      },
-      {
-        name: 'Luxury',
-        description: 'Premium luxury vehicles',
-        image: '/uploads/categories/luxury.jpg'
-      },
-      {
-        name: 'Compact',
-        description: 'Small, fuel-efficient vehicles',
-        image: '/uploads/categories/compact.jpg'
-      }
-    ];
-
-    const createdCategories = await Category.insertMany(categoriesData);
-    console.log(`${createdCategories.length} categories seeded successfully`);
-    return createdCategories;
-  } catch (error) {
-    console.error('Error seeding categories:', error);
-    throw error;
-  }
-}
 
 module.exports = seedCars; 

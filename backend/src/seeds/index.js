@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { connectDB } = require('../db');
 
 // Import all seed modules with error handling
-let seedUsers, seedCars, seedBookings, seedReviews, seedNotifications, seedSettings, seedStatistics;
+let seedUsers, seedBrands, seedTransmissions, seedFuels, seedFeatures, seedCategories, seedCars, seedBookings, seedReviews, seedNotifications, seedSettings, seedStatistics;
 
 try {
   seedUsers = require('./users');
@@ -10,6 +10,51 @@ try {
   console.warn('Users seed module not found:', error.message);
   seedUsers = async () => {
     console.log('Skipping users seed (module not available)');
+  };
+}
+
+try {
+  seedBrands = require('./brands');
+} catch (error) {
+  console.warn('Brands seed module not found:', error.message);
+  seedBrands = async () => {
+    console.log('Skipping brands seed (module not available)');
+  };
+}
+
+try {
+  seedTransmissions = require('./transmissions');
+} catch (error) {
+  console.warn('Transmissions seed module not found:', error.message);
+  seedTransmissions = async () => {
+    console.log('Skipping transmissions seed (module not available)');
+  };
+}
+
+try {
+  seedFuels = require('./fuels');
+} catch (error) {
+  console.warn('Fuels seed module not found:', error.message);
+  seedFuels = async () => {
+    console.log('Skipping fuels seed (module not available)');
+  };
+}
+
+try {
+  seedFeatures = require('./features');
+} catch (error) {
+  console.warn('Features seed module not found:', error.message);
+  seedFeatures = async () => {
+    console.log('Skipping features seed (module not available)');
+  };
+}
+
+try {
+  seedCategories = require('./categories');
+} catch (error) {
+  console.warn('Categories seed module not found:', error.message);
+  seedCategories = async () => {
+    console.log('Skipping categories seed (module not available)');
   };
 }
 
@@ -79,22 +124,29 @@ const seedAll = async () => {
     // 1. Seed users first to have user IDs for other models
     await seedUsers();
     
-    // 2. Seed cars
+    // 2. Seed car attributes first (needed for cars)
+    await seedBrands();
+    await seedTransmissions();
+    await seedFuels();
+    await seedFeatures();
+    await seedCategories();
+    
+    // 3. Seed cars
     await seedCars();
     
-    // 3. Seed bookings 
+    // 4. Seed bookings 
     await seedBookings();
     
-    // 4. Seed reviews
+    // 5. Seed reviews
     await seedReviews();
     
-    // 5. Seed notifications
+    // 6. Seed notifications
     await seedNotifications();
     
-    // 6. Seed settings
+    // 7. Seed settings
     await seedSettings();
     
-    // 7. Seed statistics (should run last to get accurate counts)
+    // 8. Seed statistics (should run last to get accurate counts)
     await seedStatistics();
     
     console.log('Seed process completed successfully');

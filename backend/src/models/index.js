@@ -7,6 +7,10 @@ const Setting = require('./setting');
 const Statistic = require('./statistic');
 const Review = require('./review');
 const Notification = require('./notification');
+const Brand = require('./Brand');
+const Transmission = require('./Transmission');
+const Fuel = require('./fuel');
+const Feature = require('./Feature');
 
 module.exports = {
   User,
@@ -17,5 +21,9 @@ module.exports = {
   Setting,
   Statistic,
   Review,
-  Notification
+  Notification,
+  Brand,
+  Transmission,
+  Fuel,
+  Feature
 }; 

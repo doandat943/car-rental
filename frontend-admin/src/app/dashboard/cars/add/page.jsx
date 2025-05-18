@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Check
 } from 'lucide-react';
-import { carsAPI, categoriesAPI } from '../../../../lib/api';
+import { carsAPI, categoriesAPI, brandsAPI, transmissionsAPI, fuelsAPI, featuresAPI } from '../../../../lib/api';
 import { Button } from '../../../../components/ui/Button';
 
 export default function AddCar() {
@@ -24,6 +24,7 @@ export default function AddCar() {
     model: '',
     year: new Date().getFullYear(),
     price: {
+      hourly: 0,
       daily: 0,
       weekly: 0,
       monthly: 0
@@ -32,46 +33,100 @@ export default function AddCar() {
     description: '',
     features: [],
     status: 'available',
-    seats: 5,
-    transmission: 'automatic',
-    fuelType: 'gasoline',
-    images: []
+    fuel: '',
+    transmission: '',
+    seats: 5
   });
   
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [transmissions, setTransmissions] = useState([]);
+  const [fuels, setFuels] = useState([]);
+  const [availableFeatures, setAvailableFeatures] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [categoryLoading, setCategoryLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [attributesLoading, setAttributesLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [featureInput, setFeatureInput] = useState('');
+  const [selectedFeatures, setSelectedFeatures] = useState([]);
 
-  // Get categories list when component mounts
+  // Get categories and attributes when component mounts
   useEffect(() => {
     const fetchCategories = async () => {
-      setCategoryLoading(true);
+      setCategoriesLoading(true);
       try {
         const response = await categoriesAPI.getAllCategories();
-        if (response.data.success) {
-          setCategories(response.data.data || []);
+        if (response.success) {
+          setCategories(response.data || []);
+        } else {
+          console.error('Error fetching categories:', response.message);
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
-        // Use sample categories if API fails
-        setCategories([
-          { _id: 'cat-1', name: 'Sedan' },
-          { _id: 'cat-2', name: 'SUV' },
-          { _id: 'cat-3', name: 'Truck' },
-          { _id: 'cat-4', name: 'Sport' },
-          { _id: 'cat-5', name: 'Luxury' }
-        ]);
       } finally {
-        setCategoryLoading(false);
+        setCategoriesLoading(false);
+      }
+    };
+
+    const fetchAttributes = async () => {
+      setAttributesLoading(true);
+      try {
+        // Fetch brands
+        const brandsResponse = await brandsAPI.getAllBrands();
+        if (brandsResponse.success) {
+          setBrands(brandsResponse.data || []);
+          // Set default brand if available
+          if (brandsResponse.data && brandsResponse.data.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              brand: brandsResponse.data[0]._id
+            }));
+          }
+        }
+        
+        // Fetch transmissions
+        const transmissionsResponse = await transmissionsAPI.getAllTransmissions();
+        if (transmissionsResponse.success) {
+          setTransmissions(transmissionsResponse.data || []);
+          // Set default transmission if available
+          if (transmissionsResponse.data && transmissionsResponse.data.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              transmission: transmissionsResponse.data[0]._id
+            }));
+          }
+        }
+        
+        // Fetch fuels
+        const fuelsResponse = await fuelsAPI.getAllFuels();
+        if (fuelsResponse.success) {
+          setFuels(fuelsResponse.data || []);
+          // Set default fuel if available
+          if (fuelsResponse.data && fuelsResponse.data.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              fuel: fuelsResponse.data[0]._id
+            }));
+          }
+        }
+        
+        // Fetch features
+        const featuresResponse = await featuresAPI.getAllFeatures();
+        if (featuresResponse.success) {
+          setAvailableFeatures(featuresResponse.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching attributes:', error);
+      } finally {
+        setAttributesLoading(false);
       }
     };
 
     fetchCategories();
+    fetchAttributes();
   }, []);
 
   // Handle input changes
@@ -86,6 +141,21 @@ export default function AddCar() {
           [priceField]: parseFloat(value) || 0
         }
       });
+    } else if (name === 'seats') {
+      setFormData({
+        ...formData,
+        seats: parseInt(value) || 5
+      });
+    } else if (name === 'transmission') {
+      setFormData({
+        ...formData,
+        transmission: value
+      });
+    } else if (name === 'fuel') {
+      setFormData({
+        ...formData,
+        fuel: value
+      });
     } else {
       setFormData({
         ...formData,
@@ -96,20 +166,44 @@ export default function AddCar() {
 
   // Handle adding features
   const handleAddFeature = () => {
-    if (featureInput.trim() && !formData.features.includes(featureInput.trim())) {
+    if (!featureInput) return;
+    
+    // Check if the input matches an available feature
+    const feature = availableFeatures.find(f => 
+      f.name.toLowerCase() === featureInput.trim().toLowerCase());
+    
+    if (feature && !selectedFeatures.includes(feature._id)) {
+      setSelectedFeatures([...selectedFeatures, feature._id]);
       setFormData({
         ...formData,
-        features: [...formData.features, featureInput.trim()]
+        features: [...selectedFeatures, feature._id]
       });
       setFeatureInput('');
+    } else if (!feature) {
+      // If it's a custom feature, show an error or prompt to add it to the system first
+      alert('Please select a feature from the available features list or add it in the Car Attributes management page first.');
+    }
+  };
+
+  // Handle feature selection from dropdown
+  const handleFeatureSelect = (featureId) => {
+    if (!selectedFeatures.includes(featureId)) {
+      const newSelectedFeatures = [...selectedFeatures, featureId];
+      setSelectedFeatures(newSelectedFeatures);
+      setFormData({
+        ...formData,
+        features: newSelectedFeatures
+      });
     }
   };
 
   // Handle removing features
-  const handleRemoveFeature = (feature) => {
+  const handleRemoveFeature = (featureId) => {
+    const newSelectedFeatures = selectedFeatures.filter(id => id !== featureId);
+    setSelectedFeatures(newSelectedFeatures);
     setFormData({
       ...formData,
-      features: formData.features.filter(f => f !== feature)
+      features: newSelectedFeatures
     });
   };
 
@@ -142,8 +236,8 @@ export default function AddCar() {
       // Create new car
       const carResponse = await carsAPI.createCar(formData);
       
-      if (carResponse.data.success) {
-        const carId = carResponse.data.data._id;
+      if (carResponse.success) {
+        const carId = carResponse.data._id;
         
         // If there are image files, upload each one
         if (selectedFiles.length > 0) {
@@ -172,6 +266,12 @@ export default function AddCar() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get feature name by ID
+  const getFeatureName = (featureId) => {
+    const feature = availableFeatures.find(f => f._id === featureId);
+    return feature ? feature.name : 'Unknown Feature';
   };
 
   return (
@@ -234,16 +334,25 @@ export default function AddCar() {
             {/* Brand */}
             <div>
               <label htmlFor="brand" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Brand</label>
-              <input 
-                type="text" 
+              <select 
                 id="brand" 
                 name="brand"
                 value={formData.brand}
                 onChange={handleChange}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                placeholder="Toyota" 
-                required 
-              />
+                required
+              >
+                <option value="">Select brand</option>
+                {attributesLoading ? (
+                  <option disabled>Loading brands...</option>
+                ) : (
+                  brands.map(brand => (
+                    <option key={brand._id} value={brand._id}>
+                      {brand.name}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
             
             {/* Model */}
@@ -307,7 +416,7 @@ export default function AddCar() {
                 required
               >
                 <option value="">Select category</option>
-                {categoryLoading ? (
+                {categoriesLoading ? (
                   <option disabled>Loading categories...</option>
                 ) : (
                   categories.map(category => (
@@ -347,27 +456,40 @@ export default function AddCar() {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="automatic">Automatic</option>
-                <option value="manual">Manual</option>
-                <option value="semi-automatic">Semi-automatic</option>
+                <option value="">Select transmission</option>
+                {attributesLoading ? (
+                  <option disabled>Loading transmissions...</option>
+                ) : (
+                  transmissions.map(transmission => (
+                    <option key={transmission._id} value={transmission._id}>
+                      {transmission.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             
-            {/* Fuel type */}
+            {/* Fuel */}
             <div>
-              <label htmlFor="fuelType" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fuel type</label>
+              <label htmlFor="fuel" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fuel</label>
               <select 
-                id="fuelType" 
-                name="fuelType"
-                value={formData.fuelType}
+                id="fuel" 
+                name="fuel"
+                value={formData.fuel}
                 onChange={handleChange}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 required
               >
-                <option value="gasoline">Gasoline</option>
-                <option value="diesel">Diesel</option>
-                <option value="electric">Electric</option>
-                <option value="hybrid">Hybrid</option>
+                <option value="">Select fuel</option>
+                {attributesLoading ? (
+                  <option disabled>Loading fuels...</option>
+                ) : (
+                  fuels.map(fuel => (
+                    <option key={fuel._id} value={fuel._id}>
+                      {fuel.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             
@@ -407,13 +529,30 @@ export default function AddCar() {
           <div className="mb-6">
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Features</label>
             <div className="flex mb-2">
-              <input 
-                type="text" 
+              <select
                 value={featureInput}
-                onChange={(e) => setFeatureInput(e.target.value)}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg rounded-r-none focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                placeholder="Add new feature" 
-              />
+                onChange={(e) => {
+                  setFeatureInput(e.target.value);
+                  if (e.target.value) {
+                    handleFeatureSelect(e.target.value);
+                    setFeatureInput('');
+                  }
+                }}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg rounded-r-none focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              >
+                <option value="">Select feature</option>
+                {attributesLoading ? (
+                  <option disabled>Loading features...</option>
+                ) : (
+                  availableFeatures
+                    .filter(feature => !selectedFeatures.includes(feature._id))
+                    .map(feature => (
+                      <option key={feature._id} value={feature._id}>
+                        {feature.name} ({feature.category})
+                      </option>
+                    ))
+                )}
+              </select>
               <button
                 type="button"
                 onClick={handleAddFeature}
@@ -422,21 +561,28 @@ export default function AddCar() {
                 <Plus className="w-5 h-5" />
               </button>
             </div>
+            
+            <div className="mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                Can't find a feature? <a href="/dashboard/car-attributes" className="text-blue-600 dark:text-blue-500 hover:underline">Add it here</a>
+              </p>
+            </div>
+            
             <div className="flex flex-wrap gap-2">
-              {formData.features.map((feature, index) => (
-                <div key={index} className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1">
-                  <span className="text-sm text-gray-800 dark:text-gray-200">{feature}</span>
+              {selectedFeatures.map((featureId) => (
+                <div key={featureId} className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1">
+                  <span className="text-sm text-gray-800 dark:text-gray-200">{getFeatureName(featureId)}</span>
                   <button
                     type="button"
-                    onClick={() => handleRemoveFeature(feature)}
+                    onClick={() => handleRemoveFeature(featureId)}
                     className="ml-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               ))}
-              {formData.features.length === 0 && (
-                <span className="text-sm text-gray-500 dark:text-gray-400">No features added</span>
+              {selectedFeatures.length === 0 && (
+                <span className="text-sm text-gray-500 dark:text-gray-400">No features selected</span>
               )}
             </div>
           </div>
