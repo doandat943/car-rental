@@ -6,6 +6,7 @@ const path = require('path');
 const { connectDB } = require('./db');
 const errorHandler = require('./middlewares/error');
 const cookieParser = require('cookie-parser');
+const setRoutes = require('./routes');
 
 // Load env vars from root .env file
 dotenv.config();
@@ -35,37 +36,8 @@ app.use(cors({
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const carRoutes = require('./routes/cars');
-const bookingRoutes = require('./routes/bookings');
-const categoryRoutes = require('./routes/categories');
-const websiteRoutes = require('./routes/website');
-const dashboardRoutes = require('./routes/dashboard');
-const uploadRoutes = require('./routes/upload');
-const notificationRoutes = require('./routes/notification');
-
-// Route middleware
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/cars', carRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/website', websiteRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/notifications', notificationRoutes);
-
-// Home route
-app.get('/', (req, res) => {
-  res.json({ message: 'Car Rental API' });
-});
-
-// 404 route
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
+// Initialize all routes
+setRoutes(app);
 
 // Error handler middleware
 app.use(errorHandler);

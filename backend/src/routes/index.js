@@ -4,6 +4,11 @@ const carRoutes = require('./cars');
 const bookingRoutes = require('./bookings');
 const dashboardRoutes = require('./dashboard');
 const userRoutes = require('./users');
+const categoryRoutes = require('./categories');
+const websiteRoutes = require('./website');
+const uploadRoutes = require('./upload');
+const notificationRoutes = require('./notification');
+const reviewsRoutes = require('./reviews');
 
 /**
  * Initialize all routes
@@ -12,11 +17,21 @@ const userRoutes = require('./users');
 function setRoutes(app) {
   // API routes
   app.use('/api/auth', authRoutes);
+  app.use('/api/users', userRoutes);
   app.use('/api/cars', carRoutes);
   app.use('/api/bookings', bookingRoutes);
+  app.use('/api/categories', categoryRoutes);
+  app.use('/api/website', websiteRoutes);
   app.use('/api/dashboard', dashboardRoutes);
-  app.use('/api/users', userRoutes);
+  app.use('/api/upload', uploadRoutes);
+  app.use('/api/notifications', notificationRoutes);
+  app.use('/api/reviews', reviewsRoutes);
 
+  // Home route
+  app.get('/', (req, res) => {
+    res.json({ message: 'Car Rental API' });
+  });
+  
   // 404 handler
   app.use((req, res) => {
     res.status(404).json({
