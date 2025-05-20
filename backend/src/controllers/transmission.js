@@ -1,4 +1,4 @@
-const Transmission = require('../models');
+const { Transmission } = require('../models');
 const { errorHandler } = require('../utils/errorHandler');
 
 // Get all transmissions

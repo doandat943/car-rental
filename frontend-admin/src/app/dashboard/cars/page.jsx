@@ -103,7 +103,19 @@ export default function CarsManagement() {
       const response = await carsAPI.getAllCars(params);
       
       if (response.success) {
-        setCars(response.data || []);
+        const processedCars = (response.data || []).map(car => ({
+          ...car,
+          brand: typeof car.brand === 'object' ? car.brand : { name: car.brand },
+          model: typeof car.model === 'object' ? car.model : { name: car.model },
+          category: typeof car.category === 'object' ? car.category : { name: car.category },
+          transmission: typeof car.transmission === 'object' ? car.transmission : { name: car.transmission },
+          fuel: typeof car.fuel === 'object' ? car.fuel : { name: car.fuel },
+          features: Array.isArray(car.features) 
+            ? car.features.map(feature => typeof feature === 'object' ? feature : { name: feature })
+            : []
+        }));
+        
+        setCars(processedCars);
         setTotalItems(response.meta?.totalItems || 0);
         setTotalPages(response.meta?.totalPages || 1);
       } else {
@@ -337,7 +349,7 @@ export default function CarsManagement() {
                         </div>
                         <div>
                           <div className="font-medium text-gray-900 dark:text-white">
-                            {car.brand} {car.model}
+                            {typeof car.brand === 'object' ? car.brand.name : car.brand} {typeof car.model === 'object' ? car.model.name : car.model}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             {car.year} - {car.category?.name || 'N/A'}

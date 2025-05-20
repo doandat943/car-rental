@@ -1,4 +1,4 @@
-const Brand = require('../models');
+const { Brand } = require('../models');
 const { errorHandler } = require('../utils/errorHandler');
 
 // Get all brands
