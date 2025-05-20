@@ -4,11 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { carsAPI, categoriesAPI, brandsAPI, fuelsAPI, transmissionsAPI } from '@/lib/api';
 
-export const metadata = {
-  title: 'Car Listings | Car Rental Service',
-  description: 'Browse our collection of vehicles available for rent',
-};
-
 export default function CarsPage() {
   const [cars, setCars] = useState([]);
   const [categories, setCategories] = useState([]);

@@ -131,6 +131,7 @@ async function updateCarRatings() {
     // Get all cars
     const cars = await Car.find();
     
+    let updatedCount = 0;
     for (const car of cars) {
       // Get all reviews for this car
       const reviews = await Review.find({ car: car._id });
@@ -148,10 +149,11 @@ async function updateCarRatings() {
             reviewCount: reviews.length
           }
         );
+        updatedCount++;
       }
     }
     
-    console.log('Car ratings updated successfully');
+    console.log(`${updatedCount} car ratings updated successfully`);
   } catch (error) {
     console.error('Error updating car ratings:', error);
   }

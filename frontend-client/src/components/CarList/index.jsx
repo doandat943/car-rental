@@ -8,7 +8,9 @@ const CarCard = ({ car }) => {
   const carImage = car.images?.[0] || car.image || "/placeholder-car.jpg";
   const carPrice = car.price?.daily || car.price || 0;
   const carSeats = car.seats || 5;
-  const carTransmission = car.transmission || 'Automatic';
+  const carTransmission = typeof car.transmission === 'object' ? car.transmission.name : car.transmission || 'Automatic';
+  const carBrand = typeof car.brand === 'object' ? car.brand.name : car.brand || '';
+  const carModel = typeof car.model === 'object' ? car.model.name : car.model || '';
   
   return (
     <div className="card car-card hover:shadow-lg transition-shadow duration-300">
@@ -28,7 +30,7 @@ const CarCard = ({ car }) => {
           </span>
         </div>
         <p className="text-sm text-secondary mb-3">
-          {car.brand} {car.model} • {car.year}
+          {carBrand} {carModel} • {car.year}
         </p>
         
         <div className="flex text-sm text-secondary mb-4">

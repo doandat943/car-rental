@@ -254,7 +254,7 @@ const seedCars = async () => {
 
     // Insert cars into database
     await Car.insertMany(carsData);
-    console.log('Cars seeded successfully');
+    console.log(`${carsData.length} cars seeded successfully`);
   } catch (error) {
     console.error('Error seeding cars:', error);
     throw error;

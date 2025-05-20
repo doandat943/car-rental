@@ -160,11 +160,11 @@ export default function CarDetailPage({ params }) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <div className="text-gray-600">Brand</div>
-                    <div className="font-semibold">{car.brand}</div>
+                    <div className="font-semibold">{typeof car.brand === 'object' ? car.brand.name : car.brand}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Model</div>
-                    <div className="font-semibold">{car.model}</div>
+                    <div className="font-semibold">{typeof car.model === 'object' ? car.model.name : car.model}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Year</div>
@@ -172,7 +172,7 @@ export default function CarDetailPage({ params }) {
                   </div>
                   <div>
                     <div className="text-gray-600">Category</div>
-                    <div className="font-semibold">{car.category?.name || 'N/A'}</div>
+                    <div className="font-semibold">{typeof car.category === 'object' ? car.category.name : car.category || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Seats</div>
@@ -180,11 +180,11 @@ export default function CarDetailPage({ params }) {
                   </div>
                   <div>
                     <div className="text-gray-600">Transmission</div>
-                    <div className="font-semibold">{car.transmission || 'N/A'}</div>
+                    <div className="font-semibold">{typeof car.transmission === 'object' ? car.transmission.name : car.transmission || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Fuel</div>
-                    <div className="font-semibold">{car.fuel || 'N/A'}</div>
+                    <div className="font-semibold">{typeof car.fuel === 'object' ? car.fuel.name : car.fuel || 'N/A'}</div>
                   </div>
                 </div>
               </div>
@@ -201,7 +201,7 @@ export default function CarDetailPage({ params }) {
                     {car.features.map((feature, index) => (
                       <li key={index} className="flex items-center">
                         <span className="bg-blue-100 text-blue-600 p-1 rounded-full mr-2"><FaCheck size={12} /></span>
-                        <span>{feature}</span>
+                        <span>{typeof feature === 'object' ? feature.name : feature}</span>
                       </li>
                     ))}
                   </ul>

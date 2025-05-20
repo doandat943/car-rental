@@ -35,7 +35,16 @@ export default function Home() {
                               [];
         console.log('Final categories data:', categoriesData);
         console.log('Is categories data array?', Array.isArray(categoriesData));
-        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        
+        // Process categories to ensure they're properly formatted
+        const processedCategories = Array.isArray(categoriesData) 
+          ? categoriesData.map(category => ({
+              id: category._id || category.id,
+              name: category.name
+            }))
+          : [];
+        
+        setCategories(processedCategories);
         
         // Fetch cars (featured or all)
         const carsResponse = await carsAPI.getAllCars();
@@ -54,7 +63,23 @@ export default function Home() {
                         [];
         console.log('Final cars data:', carsData);
         console.log('Is cars data array?', Array.isArray(carsData));
-        setCars(Array.isArray(carsData) ? carsData : []);
+        
+        // Process cars to ensure references are properly handled
+        const processedCars = Array.isArray(carsData)
+          ? carsData.map(car => ({
+              ...car,
+              brand: typeof car.brand === 'object' ? car.brand.name : car.brand,
+              model: typeof car.model === 'object' ? car.model.name : car.model,
+              category: typeof car.category === 'object' ? car.category.name : car.category,
+              transmission: typeof car.transmission === 'object' ? car.transmission.name : car.transmission,
+              fuel: typeof car.fuel === 'object' ? car.fuel.name : car.fuel,
+              features: Array.isArray(car.features) 
+                ? car.features.map(feature => typeof feature === 'object' ? feature.name : feature)
+                : car.features
+            }))
+          : [];
+            
+        setCars(processedCars);
         
         setLoading(false);
       } catch (err) {
@@ -148,7 +173,23 @@ export default function Home() {
                       response?.data || 
                       [];
       console.log('Filtered cars data:', carsData);
-      setCars(Array.isArray(carsData) ? carsData : []);
+      
+      // Process cars to ensure references are properly handled
+      const processedCars = Array.isArray(carsData)
+        ? carsData.map(car => ({
+            ...car,
+            brand: typeof car.brand === 'object' ? car.brand.name : car.brand,
+            model: typeof car.model === 'object' ? car.model.name : car.model,
+            category: typeof car.category === 'object' ? car.category.name : car.category,
+            transmission: typeof car.transmission === 'object' ? car.transmission.name : car.transmission,
+            fuel: typeof car.fuel === 'object' ? car.fuel.name : car.fuel,
+            features: Array.isArray(car.features) 
+              ? car.features.map(feature => typeof feature === 'object' ? feature.name : feature)
+              : car.features
+          }))
+        : [];
+          
+      setCars(processedCars);
     } catch (err) {
       console.error("Error filtering cars:", err);
       setError("Failed to filter cars. Please try again later.");
