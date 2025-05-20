@@ -337,7 +337,7 @@ export default function CarsManagement() {
                         <div className="flex-shrink-0 h-10 w-10 relative rounded-md overflow-hidden mr-4">
                           {car.images && car.images.length > 0 ? (
                             <img
-                              src={car.images[0].startsWith('http') ? car.images[0] : `https://via.placeholder.com/100x100?text=${car.brand || 'Car'}`}
+                              src={car.images[0].startsWith('http') ? car.images[0] : `https://placehold.co/100x100?text=${typeof car.brand === 'object' ? car.brand.name : car.brand || 'Car'}`}
                               alt={car.name}
                               className="h-10 w-10 object-cover rounded-md"
                             />
