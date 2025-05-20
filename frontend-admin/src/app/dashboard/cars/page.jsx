@@ -31,6 +31,7 @@ export default function CarsManagement() {
     status: ''
   });
   const [processingCarId, setProcessingCarId] = useState(null);
+  const [imageLoadErrors, setImageLoadErrors] = useState({});
   
   const ITEMS_PER_PAGE = 10;
   
@@ -335,11 +336,17 @@ export default function CarsManagement() {
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 relative rounded-md overflow-hidden mr-4">
-                          {car.images && car.images.length > 0 ? (
+                          {car.images && car.images.length > 0 && !imageLoadErrors[car._id] ? (
                             <img
-                              src={car.images[0].startsWith('http') ? car.images[0] : `https://placehold.co/100x100?text=${typeof car.brand === 'object' ? car.brand.name : car.brand || 'Car'}`}
+                              src={car.images[0].startsWith('http') ? car.images[0] : `https://via.placeholder.com/100x100?text=${car.brand || 'Car'}`}
                               alt={car.name}
                               className="h-10 w-10 object-cover rounded-md"
+                              onError={() => {
+                                setImageLoadErrors(prev => ({
+                                  ...prev,
+                                  [car._id]: true
+                                }));
+                              }}
                             />
                           ) : (
                             <div className="h-10 w-10 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-md">
