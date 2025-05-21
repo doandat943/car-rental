@@ -19,7 +19,6 @@ interface Car {
 
 interface Booking {
   id: number;
-  bookingNumber: string;
   customer: Customer;
   car: Car;
   startDate: string;
@@ -48,6 +47,14 @@ const RecentBookingsTable = ({ bookings }: RecentBookingsTableProps) => {
       default:
         return "bg-secondary/10 text-secondary";
     }
+  };
+
+  // Function to generate booking code from ID
+  const generateBookingCode = (id: number) => {
+    // Convert ID to string and take the last 6 characters
+    const idStr = id.toString();
+    const code = idStr.substring(Math.max(0, idStr.length - 6)).padStart(6, '0').toUpperCase();
+    return `BK-${code}`;
   };
 
   return (
@@ -84,7 +91,7 @@ const RecentBookingsTable = ({ bookings }: RecentBookingsTableProps) => {
               <tr key={booking.id}>
                 <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                   <p className="text-black dark:text-white">
-                    {booking.bookingNumber}
+                    {generateBookingCode(booking.id)}
                   </p>
                 </td>
                 <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">

@@ -221,6 +221,11 @@ export default function StatisticsPage() {
   const [topCars, setTopCars] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
   const [timeFrame, setTimeFrame] = useState('month');
+  const [revenuePeriod, setRevenuePeriod] = useState('month');
+  const [revenueChartData, setRevenueChartData] = useState({
+    labels: [],
+    datasets: []
+  });
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -259,6 +264,14 @@ export default function StatisticsPage() {
     fetchDashboardData();
   }, [timeFrame]);
 
+  // Only fetch revenue chart data separately when revenuePeriod changes
+  // and it's different from timeFrame
+  useEffect(() => {
+    if (revenuePeriod !== timeFrame || !loading) {
+      fetchRevenueChartData();
+    }
+  }, [revenuePeriod]);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
@@ -268,13 +281,40 @@ export default function StatisticsPage() {
       const response = await dashboardAPI.getStatistics({ timeFrame });
       const statsData = response.data;
       
+      console.log('Top cars data from API:', statsData.topCars);
+      
+      // Calculate and prepare data
+      const processedTopCars = Array.isArray(statsData.topCars) 
+        ? statsData.topCars.map(car => {
+            // Calculate utilization based on bookings count (estimated)
+            // Example: 1 booking = 10% utilization, maximum 100%
+            const calculatedUtilization = Math.min(car.bookingsCount * 10, 100);
+            
+            return {
+              ...car,
+              // Use totalRevenue instead of revenue
+              revenue: car.totalRevenue || 0,
+              // Create utilization field
+              utilization: calculatedUtilization
+            };
+          })
+        : [];
+      
+      // Process recent bookings to ensure they have a consistent ID format
+      const processedBookings = Array.isArray(statsData.recentBookings)
+        ? statsData.recentBookings
+        : [];
+      
       // Update data from API
       setStats(statsData.overview);
-      setRevenueData(statsData.revenueChart);
       setBookingsData(statsData.bookingsChart);
       setCarStatusData(statsData.carStatusChart);
-      setTopCars(statsData.topCars);
-      setRecentBookings(statsData.recentBookings);
+      setTopCars(processedTopCars);
+      setRecentBookings(processedBookings);
+      
+      // On initial load, explicitly fetch the revenue chart data for the selected period
+      // This ensures we get the correct data for the displayed period
+      await fetchRevenueChartData();
       
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
@@ -284,7 +324,95 @@ export default function StatisticsPage() {
     }
   };
 
+  const fetchRevenueChartData = async () => {
+    try {
+      console.log(`Fetching revenue data for period: ${revenuePeriod}`);
+      
+      // Use a local loading state so we don't reload the entire page
+      const response = await dashboardAPI.getRevenueChart(revenuePeriod).catch(err => {
+        console.error("Error fetching revenue chart:", err);
+        return { data: { data: [] }};
+      });
+      
+      // Update revenue chart data
+      if (response.data) {
+        // Handle different API response structures
+        const chartData = response.data.data || response.data;
+        console.log("Revenue chart data received:", chartData);
+        
+        // Detect the actual data structure (day, month, year) by checking properties
+        const hasDayProperty = chartData.some(item => item.day !== undefined);
+        const hasMonthProperty = chartData.some(item => item.month !== undefined);
+        const hasQuarterProperty = chartData.some(item => item.quarter !== undefined);
+        
+        // Determine the data format based on the actual properties in the data
+        let actualPeriod = revenuePeriod;
+        if (hasDayProperty && revenuePeriod !== 'week') {
+          console.warn('Data contains day properties but period is not week, adjusting labels');
+          actualPeriod = 'week';
+        } else if (hasMonthProperty && revenuePeriod !== 'month') {
+          console.warn('Data contains month properties but period is not month, adjusting labels');
+          actualPeriod = 'month';
+        } else if (hasQuarterProperty && revenuePeriod !== 'year') {
+          console.warn('Data contains quarter properties but period is not year, adjusting labels');
+          actualPeriod = 'year';
+        }
+        
+        // Format data for Chart.js based on the detected data format
+        const formattedData = {
+          labels: chartData.map((item, index) => {
+            if (actualPeriod === 'week') {
+              if (item.day) {
+                // If it's a number, format it as Day 1, Day 2, etc.
+                if (!isNaN(item.day)) return `Day ${item.day}`;
+                // If it's already a string (like 'Mon', 'Tue'), use it directly
+                return item.day;
+              }
+              return `Day ${index + 1}`;
+            }
+            if (actualPeriod === 'month') {
+              if (item.month) {
+                if (!isNaN(item.month)) return `Month ${item.month}`;
+                return item.month;
+              }
+              return `Month ${index + 1}`;
+            }
+            // Year period - quarters
+            if (item.quarter) {
+              if (!isNaN(item.quarter)) return `Q${item.quarter}`;
+              return item.quarter;
+            }
+            return `Q${index + 1}`;
+          }),
+          datasets: [
+            {
+              label: 'Revenue',
+              data: chartData.map(item => item.revenue || 0),
+              borderColor: colors.blue.primary,
+              backgroundColor: colors.blue.light,
+              tension: 0.4,
+            }
+          ]
+        };
+        
+        setRevenueChartData(formattedData);
+      }
+    } catch (err) {
+      console.error('Failed to fetch revenue chart data:', err);
+    }
+  };
+
+  const handleRevenuePeriodChange = (period) => {
+    if (period === revenuePeriod) return;
+    setRevenuePeriod(period);
+  };
+
   const formatCurrency = (value) => {
+    // Handle undefined, null, NaN or non-numeric values
+    if (value === undefined || value === null || isNaN(value) || typeof value !== 'number') {
+      return '$0';
+    }
+    
     return new Intl.NumberFormat('en-US', { 
       style: 'currency', 
       currency: 'USD',
@@ -478,28 +606,28 @@ export default function StatisticsPage() {
             <div className="inline-flex rounded-md shadow-sm mt-2 sm:mt-0">
               <button
                 type="button"
-                onClick={() => setTimeFrame('week')}
-                className={`px-4 py-2 text-sm font-medium rounded-l-md border ${timeFrame === 'week' ? 'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900 dark:text-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}`}
+                onClick={() => handleRevenuePeriodChange('week')}
+                className={`px-4 py-2 text-sm font-medium rounded-l-md border ${revenuePeriod === 'week' ? 'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900 dark:text-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}`}
               >
                 Week
               </button>
               <button
                 type="button"
-                onClick={() => setTimeFrame('month')}
-                className={`px-4 py-2 text-sm font-medium border-t border-b ${timeFrame === 'month' ? 'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900 dark:text-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}`}
+                onClick={() => handleRevenuePeriodChange('month')}
+                className={`px-4 py-2 text-sm font-medium border-t border-b ${revenuePeriod === 'month' ? 'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900 dark:text-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}`}
               >
                 Month
               </button>
               <button
                 type="button"
-                onClick={() => setTimeFrame('year')}
-                className={`px-4 py-2 text-sm font-medium rounded-r-md border ${timeFrame === 'year' ? 'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900 dark:text-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}`}
+                onClick={() => handleRevenuePeriodChange('year')}
+                className={`px-4 py-2 text-sm font-medium rounded-r-md border ${revenuePeriod === 'year' ? 'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900 dark:text-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}`}
               >
                 Year
               </button>
             </div>
           </div>
-          <LineChart data={revenueData} />
+          <LineChart data={revenueChartData} />
         </div>
       </div>
       
@@ -532,29 +660,42 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {topCars.map((car, index) => (
-                  <tr key={car._id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      <Link href={`/dashboard/cars/${car._id}`} className="hover:text-blue-600 dark:hover:text-blue-400">
-                        {car.name}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {car.bookingsCount} bookings
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {formatCurrency(car.revenue)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                          <div className="bg-blue-600 h-2.5 rounded-full dark:bg-blue-500" style={{ width: `${car.utilization}%` }}></div>
+                {topCars.map((car, index) => {
+                  // Make sure revenue and utilization have valid values
+                  const revenue = typeof car.revenue === 'number' ? car.revenue : 0;
+                  const utilization = typeof car.utilization === 'number' ? car.utilization : 0;
+                  
+                  return (
+                    <tr key={car._id || index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                        <Link href={`/dashboard/cars/${car._id}`} className="hover:text-blue-600 dark:hover:text-blue-400">
+                          {car.name || `Car ${index + 1}`}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {car.bookingsCount || 0} bookings
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {formatCurrency(revenue)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                            <div className="bg-blue-600 h-2.5 rounded-full dark:bg-blue-500" style={{ width: `${utilization}%` }}></div>
+                          </div>
+                          <span className="ml-2">{utilization}%</span>
                         </div>
-                        <span className="ml-2">{car.utilization}%</span>
-                      </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {topCars.length === 0 && (
+                  <tr className="bg-white dark:bg-gray-800">
+                    <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      No data available
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -591,7 +732,7 @@ export default function StatisticsPage() {
                   <tr key={booking._id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       <Link href={`/dashboard/bookings/${booking._id}`} className="hover:text-blue-600 dark:hover:text-blue-400">
-                        {booking.bookingCode}
+                        {`BK-${booking._id.substring(booking._id.length - 6).toUpperCase()}`}
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">

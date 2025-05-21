@@ -340,7 +340,7 @@ export default function BookingDetailsPage({ params }) {
           <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
             <div className="flex justify-between items-start border-b pb-4 mb-4">
               <div>
-                <h1 className="text-xl font-bold">Booking Details #{booking.bookingCode}</h1>
+                <h1 className="text-xl font-bold">Booking Details #{`BK-${booking._id.substring(booking._id.length - 6).toUpperCase()}`}</h1>
                 <p className="text-gray-600 mt-1">Created: {formatDate(booking.createdAt)}</p>
               </div>
               <div className={`px-4 py-2 rounded-md border flex items-center space-x-2 ${getStatusClass(booking.status)}`}>
