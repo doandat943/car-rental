@@ -4,6 +4,36 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { carsAPI, categoriesAPI, brandsAPI, fuelsAPI, transmissionsAPI } from '@/lib/api';
 import { API_BASE_URL } from '@/lib/api';
+import { motion } from 'framer-motion';
+import { FaFilter, FaCheck, FaCar } from 'react-icons/fa';
+import CarCard from '@/components/car/CarCard';
+
+// Helper function to process car data and handle nested objects
+const processCarData = (car) => {
+  if (!car) return null;
+  
+  // Create a new object to avoid mutating the original
+  const processed = { ...car };
+  
+  // Process nested objects if they exist
+  if (processed.brand && typeof processed.brand === 'object') {
+    processed.brandName = processed.brand.name;
+  }
+  
+  if (processed.category && typeof processed.category === 'object') {
+    processed.categoryName = processed.category.name;
+  }
+  
+  if (processed.fuel && typeof processed.fuel === 'object') {
+    processed.fuelName = processed.fuel.name;
+  }
+  
+  if (processed.transmission && typeof processed.transmission === 'object') {
+    processed.transmissionName = processed.transmission.name;
+  }
+  
+  return processed;
+};
 
 export default function CarsPage() {
   const [cars, setCars] = useState([]);
@@ -23,6 +53,7 @@ export default function CarsPage() {
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterVisible, setFilterVisible] = useState(true);
   
   useEffect(() => {
     // Load initial data and available filter options
@@ -30,43 +61,58 @@ export default function CarsPage() {
       try {
         setLoading(true);
         
-        // Fetch cars
+        // Fetch cars first
         const carsResponse = await carsAPI.getAllCars();
         const carsData = carsResponse?.data?.data || [];
-        setCars(Array.isArray(carsData) ? carsData : []);
         
-        // Fetch categories for filters
-        const categoriesResponse = await categoriesAPI.getAllCategories();
-        const categoriesData = categoriesResponse?.data?.data || [];
-        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        // Process each car to handle nested objects
+        const processedCars = Array.isArray(carsData) 
+          ? carsData.map(car => processCarData(car))
+          : [];
+          
+        setCars(processedCars);
         
-        // Fetch brands for filters (if API available)
-        try {
-          const brandsResponse = await brandsAPI.getAllBrands();
-          const brandsData = brandsResponse?.data?.data || [];
+        // Fetch filter options - using Promise.allSettled to handle failing API endpoints
+        const [categoriesResult, brandsResult, fuelsResult, transmissionsResult] = await Promise.allSettled([
+          categoriesAPI.getAllCategories(),
+          brandsAPI.getAllBrands(),
+          fuelsAPI.getAllFuels(),
+          transmissionsAPI.getAllTransmissions()
+        ]);
+        
+        // Handle categories
+        if (categoriesResult.status === 'fulfilled') {
+          const categoriesData = categoriesResult.value?.data?.data || [];
+          setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        } else {
+          console.error('Failed to fetch categories:', categoriesResult.reason);
+          setCategories([]);
+        }
+        
+        // Handle brands
+        if (brandsResult.status === 'fulfilled') {
+          const brandsData = brandsResult.value?.data?.data || [];
           setBrands(Array.isArray(brandsData) ? brandsData : []);
-        } catch (err) {
-          console.error('Failed to fetch brands:', err);
+        } else {
+          console.error('Failed to fetch brands:', brandsResult.reason);
           setBrands([]);
         }
         
-        // Fetch fuels for filters (if API available)
-        try {
-          const fuelsResponse = await fuelsAPI.getAllFuels();
-          const fuelsData = fuelsResponse?.data?.data || [];
+        // Handle fuels
+        if (fuelsResult.status === 'fulfilled') {
+          const fuelsData = fuelsResult.value?.data?.data || [];
           setFuels(Array.isArray(fuelsData) ? fuelsData : []);
-        } catch (err) {
-          console.error('Failed to fetch fuels:', err);
+        } else {
+          console.error('Failed to fetch fuels:', fuelsResult.reason);
           setFuels([]);
         }
         
-        // Fetch transmissions for filters (if API available)
-        try {
-          const transmissionsResponse = await transmissionsAPI.getAllTransmissions();
-          const transmissionsData = transmissionsResponse?.data?.data || [];
+        // Handle transmissions
+        if (transmissionsResult.status === 'fulfilled') {
+          const transmissionsData = transmissionsResult.value?.data?.data || [];
           setTransmissions(Array.isArray(transmissionsData) ? transmissionsData : []);
-        } catch (err) {
-          console.error('Failed to fetch transmissions:', err);
+        } else {
+          console.error('Failed to fetch transmissions:', transmissionsResult.reason);
           setTransmissions([]);
         }
         
@@ -125,7 +171,13 @@ export default function CarsPage() {
       const response = await carsAPI.getAllCars(params);
       
       const carsData = response?.data?.data || [];
-      setCars(Array.isArray(carsData) ? carsData : []);
+      
+      // Process each car to handle nested objects
+      const processedCars = Array.isArray(carsData) 
+        ? carsData.map(car => processCarData(car))
+        : [];
+        
+      setCars(processedCars);
     } catch (err) {
       console.error("Error filtering cars:", err);
       setError("Failed to filter cars. Please try again later.");
@@ -133,198 +185,217 @@ export default function CarsPage() {
       setLoading(false);
     }
   };
+
+  // Animation variants for the page
+  const pageVariants = {
+    initial: { opacity: 0 },
+    animate: { 
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.4 }
+    }
+  };
   
   return (
-    <main className="min-h-screen bg-gray-50 py-12">
+    <motion.main 
+      className="min-h-screen bg-gray-50 py-12"
+      initial="initial"
+      animate="animate"
+      variants={pageVariants}
+    >
       <div className="container mx-auto px-6">
-        <h1 className="text-3xl font-bold mb-8">Available Cars</h1>
+        <motion.div variants={itemVariants}>
+          <h1 className="text-3xl font-bold mb-2">Available Cars</h1>
+          <p className="text-gray-600 mb-8">Find and book your perfect rental car</p>
+        </motion.div>
         
         {/* Filters */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-semibold mb-4">Filters</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* First row */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Car Type</label>
-              <select 
-                name="category"
-                value={filters.category}
-                onChange={handleFilterChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Types</option>
-                {categories.map(category => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Brand</label>
-              <select 
-                name="brand"
-                value={filters.brand}
-                onChange={handleFilterChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Brands</option>
-                {brands.map(brand => (
-                  <option key={brand._id} value={brand._id}>
-                    {brand.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Price Range</label>
-              <select 
-                name="priceRange"
-                value={filters.priceRange}
-                onChange={handleFilterChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Any Price</option>
-                <option value="budget">$0 - $75</option>
-                <option value="mid">$75 - $125</option>
-                <option value="premium">$125+</option>
-              </select>
-            </div>
-            
-            {/* Second row */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Fuel</label>
-              <select 
-                name="fuel"
-                value={filters.fuel}
-                onChange={handleFilterChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Fuel Types</option>
-                {fuels.map(fuel => (
-                  <option key={fuel._id} value={fuel._id}>
-                    {fuel.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Transmission</label>
-              <select 
-                name="transmission"
-                value={filters.transmission}
-                onChange={handleFilterChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Transmissions</option>
-                {transmissions.map(transmission => (
-                  <option key={transmission._id} value={transmission._id}>
-                    {transmission.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Seats</label>
-              <select 
-                name="seats"
-                value={filters.seats}
-                onChange={handleFilterChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Any Seats</option>
-                <option value="2">2 Seats</option>
-                <option value="4">4 Seats</option>
-                <option value="5">5 Seats</option>
-                <option value="7">7+ Seats</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button 
-                onClick={applyFilters}
-                className="bg-blue-600 text-white w-full px-6 py-2 rounded hover:bg-blue-700 transition"
-              >
-                Apply Filters
-              </button>
-            </div>
+        <motion.div variants={itemVariants} className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Filters</h2>
+            <button 
+              onClick={() => setFilterVisible(!filterVisible)}
+              className="flex items-center gap-2 text-primary hover:text-primary-dark"
+            >
+              <FaFilter />
+              <span>{filterVisible ? 'Hide Filters' : 'Show Filters'}</span>
+            </button>
           </div>
-        </div>
-        
-        {/* Loading state */}
-        {loading && (
-          <div className="flex justify-center my-12">
-            <div className="animate-pulse text-xl">Loading...</div>
-          </div>
-        )}
-        
-        {/* Error message */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-8">
-            {error}
-          </div>
-        )}
-        
-        {/* No results */}
-        {!loading && !error && cars.length === 0 && (
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-8">
-            No cars found matching your filters. Try adjusting your search criteria.
-          </div>
-        )}
-        
-        {/* Cars Grid */}
-        {!loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {cars.map((car) => (
-              <div key={car._id || car.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="h-48 bg-gray-200 relative">
-                  {car.images && car.images.length > 0 ? (
-                    <img 
-                      src={car.images[0].startsWith('http') ? car.images[0] : `${API_BASE_URL}${car.images[0]}`}
-                      alt={car.name}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <span className="text-gray-500">Car Image</span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{car.name}</h3>
-                  <div className="flex justify-between mb-4">
-                    <span className="text-gray-600">{car.category?.name || car.category}</span>
-                    <span className="font-bold text-blue-600">${car.price?.daily || 0}/day</span>
-                  </div>
-                  <div className="flex text-sm text-gray-600 mb-4">
-                    <div className="mr-4">{car.seats} Seats</div>
-                    <div className="mr-4">{car.transmission?.name || car.transmission}</div>
-                    <div>{car.fuel?.name || car.fuel}</div>
-                  </div>
-                  <Link 
-                    href={`/car/${car._id || car.id}`} 
-                    className="block text-center bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+          
+          {filterVisible && (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {/* First row */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Car Type</label>
+                  <select 
+                    name="category"
+                    value={filters.category}
+                    onChange={handleFilterChange}
+                    className="w-full p-2 border rounded focus:ring-primary focus:border-primary"
                   >
-                    View Details
-                  </Link>
+                    <option value="">All Types</option>
+                    {categories.map(category => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Brand</label>
+                  <select 
+                    name="brand"
+                    value={filters.brand}
+                    onChange={handleFilterChange}
+                    className="w-full p-2 border rounded focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">All Brands</option>
+                    {brands.map(brand => (
+                      <option key={brand._id} value={brand._id}>
+                        {brand.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Price Range</label>
+                  <select 
+                    name="priceRange"
+                    value={filters.priceRange}
+                    onChange={handleFilterChange}
+                    className="w-full p-2 border rounded focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">Any Price</option>
+                    <option value="budget">$0 - $75</option>
+                    <option value="mid">$75 - $125</option>
+                    <option value="premium">$125+</option>
+                  </select>
+                </div>
+                
+                {/* Second row */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Fuel</label>
+                  <select 
+                    name="fuel"
+                    value={filters.fuel}
+                    onChange={handleFilterChange}
+                    className="w-full p-2 border rounded focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">All Fuel Types</option>
+                    {fuels.map(fuel => (
+                      <option key={fuel._id} value={fuel._id}>
+                        {fuel.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Transmission</label>
+                  <select 
+                    name="transmission"
+                    value={filters.transmission}
+                    onChange={handleFilterChange}
+                    className="w-full p-2 border rounded focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">All Transmissions</option>
+                    {transmissions.map(transmission => (
+                      <option key={transmission._id} value={transmission._id}>
+                        {transmission.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Seats</label>
+                  <select 
+                    name="seats"
+                    value={filters.seats}
+                    onChange={handleFilterChange}
+                    className="w-full p-2 border rounded focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">Any Seats</option>
+                    <option value="2">2 Seats</option>
+                    <option value="4">4 Seats</option>
+                    <option value="5">5 Seats</option>
+                    <option value="7">7+ Seats</option>
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button 
+                    onClick={applyFilters}
+                    className="bg-primary text-white w-full px-6 py-2 rounded hover:bg-primary-dark transition flex justify-center items-center gap-2"
+                  >
+                    <FaCheck />
+                    <span>Apply Filters</span>
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-        
-        {/* Pagination */}
-        {!loading && cars.length > 0 && (
-          <div className="mt-12 flex justify-center">
-            <div className="flex space-x-2">
-              <button className="px-4 py-2 border rounded bg-white hover:bg-gray-50">Previous</button>
-              <button className="px-4 py-2 border rounded bg-blue-600 text-white">1</button>
-              <button className="px-4 py-2 border rounded bg-white hover:bg-gray-50">2</button>
-              <button className="px-4 py-2 border rounded bg-white hover:bg-gray-50">3</button>
-              <button className="px-4 py-2 border rounded bg-white hover:bg-gray-50">Next</button>
             </div>
-          </div>
-        )}
+          )}
+        </motion.div>
+        
+        {/* Cars List */}
+        <motion.div variants={itemVariants}>
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : error ? (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-5">
+              <p>{error}</p>
+            </div>
+          ) : cars.length === 0 ? (
+            <div className="bg-white p-8 rounded-lg shadow-md text-center">
+              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <FaCar className="text-gray-400 text-2xl" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">No Cars Found</h3>
+              <p className="text-gray-600 mb-6">
+                We couldn't find any cars matching your criteria. Try adjusting your filters.
+              </p>
+              <button 
+                onClick={() => {
+                  setFilters({
+                    category: '',
+                    brand: '',
+                    fuel: '',
+                    transmission: '',
+                    seats: '',
+                    priceRange: ''
+                  });
+                  applyFilters();
+                }}
+                className="bg-primary text-white px-6 py-2 rounded hover:bg-primary-dark transition"
+              >
+                Reset Filters
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="text-gray-600 mb-6">Found {cars.length} car{cars.length !== 1 ? 's' : ''}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {cars.map(car => (
+                  <motion.div 
+                    key={car._id}
+                    variants={itemVariants}
+                  >
+                    <CarCard car={car} />
+                  </motion.div>
+                ))}
+              </div>
+            </>
+          )}
+        </motion.div>
       </div>
-    </main>
+    </motion.main>
   );
 } 

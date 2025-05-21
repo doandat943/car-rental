@@ -214,10 +214,16 @@ export default function CarDetailPage({ params }) {
             {/* Car Images */}
             <div className="bg-white p-4 rounded-lg shadow-md mb-8">
               <div className="bg-gray-200 h-80 relative mb-4 rounded-lg overflow-hidden">
-                {car.images && car.images.length > 0 ? (
+                {car.images && Array.isArray(car.images) && car.images.length > 0 ? (
                   <Image 
-                    src={car.images[0].url || (car.images[0].startsWith('http') ? car.images[0] : `${API_BASE_URL}${car.images[0]}`)}
-                    alt={car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`}
+                    src={
+                      typeof car.images[0] === 'object' && car.images[0].url 
+                        ? car.images[0].url 
+                        : typeof car.images[0] === 'string' && car.images[0].startsWith('http') 
+                          ? car.images[0] 
+                          : `${API_BASE_URL}${car.images[0]}`
+                    }
+                    alt={car.name || `${typeof car.brand === 'object' ? car.brand.name : car.brand} ${typeof car.model === 'object' ? car.model.name : car.model}`}
                     fill
                     className="object-cover"
                   />
@@ -227,13 +233,19 @@ export default function CarDetailPage({ params }) {
                   </div>
                 )}
               </div>
-              {car.images && car.images.length > 1 && (
+              {car.images && Array.isArray(car.images) && car.images.length > 1 && (
                 <div className="grid grid-cols-3 gap-4">
                   {car.images.slice(1).map((image, index) => (
                     <div key={index} className="bg-gray-200 h-24 relative rounded-lg overflow-hidden">
                       <Image 
-                        src={image.url || (image.startsWith('http') ? image : `${API_BASE_URL}${image}`)}
-                        alt={`${car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`} - Image ${index + 2}`}
+                        src={
+                          typeof image === 'object' && image.url 
+                            ? image.url 
+                            : typeof image === 'string' && image.startsWith('http') 
+                              ? image 
+                              : `${API_BASE_URL}${image}`
+                        }
+                        alt={`${car.name || `${typeof car.brand === 'object' ? car.brand.name : car.brand} ${typeof car.model === 'object' ? car.model.name : car.model}`} - Image ${index + 2}`}
                         fill
                         className="object-cover"
                       />
@@ -300,7 +312,7 @@ export default function CarDetailPage({ params }) {
                 <div>
                   <h2 className="text-xl font-semibold mb-3">Features</h2>
                   <ul className="grid grid-cols-2 gap-2">
-                    {car.features.map((feature, index) => (
+                    {Array.isArray(car.features) && car.features.map((feature, index) => (
                       <li key={index} className="flex items-center">
                         <span className="bg-blue-100 text-blue-600 p-1 rounded-full mr-2"><FaCheck size={12} /></span>
                         <span>{typeof feature === 'object' ? feature.name : feature}</span>

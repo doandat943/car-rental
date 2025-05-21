@@ -124,6 +124,77 @@ export const categoriesAPI = {
   },
 };
 
+// Brands API - Added for car filters
+export const brandsAPI = {
+  getAllBrands: async () => {
+    try {
+      console.log('Fetching all brands');
+      const response = await api.get('/brands');
+      console.log('Raw brands API response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+      throw error;
+    }
+  },
+  getBrandById: async (id) => {
+    try {
+      console.log('Fetching brand with ID:', id);
+      const response = await api.get(`/brands/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching brand details:', error);
+      throw error;
+    }
+  },
+};
+
+// Fuels API - Added for car filters
+export const fuelsAPI = {
+  getAllFuels: async () => {
+    try {
+      console.log('Fetching all fuel types');
+      const response = await api.get('/fuels');
+      return response;
+    } catch (error) {
+      console.error('Error fetching fuel types:', error);
+      throw error;
+    }
+  },
+  getFuelById: async (id) => {
+    try {
+      const response = await api.get(`/fuels/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching fuel type details:', error);
+      throw error;
+    }
+  },
+};
+
+// Transmissions API - Added for car filters
+export const transmissionsAPI = {
+  getAllTransmissions: async () => {
+    try {
+      console.log('Fetching all transmission types');
+      const response = await api.get('/transmissions');
+      return response;
+    } catch (error) {
+      console.error('Error fetching transmission types:', error);
+      throw error;
+    }
+  },
+  getTransmissionById: async (id) => {
+    try {
+      const response = await api.get(`/transmissions/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching transmission type details:', error);
+      throw error;
+    }
+  },
+};
+
 // Bookings API
 export const bookingsAPI = {
   getUserBookings: () => api.get('/bookings/user'),

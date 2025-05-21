@@ -43,22 +43,22 @@ export default function Header() {
       <div className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-blue-600">
+          <Link href="/" className="text-2xl font-bold text-primary">
             CarRental
           </Link>
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-blue-600">
+            <Link href="/" className="text-gray-700 hover:text-primary">
               Home
             </Link>
-            <Link href="/cars" className="text-gray-700 hover:text-blue-600">
+            <Link href="/cars" className="text-gray-700 hover:text-primary">
               Cars
             </Link>
-            <Link href="/about" className="text-gray-700 hover:text-blue-600">
+            <Link href="/about" className="text-gray-700 hover:text-primary">
               About
             </Link>
-            <Link href="/contact" className="text-gray-700 hover:text-blue-600">
+            <Link href="/contact" className="text-gray-700 hover:text-primary">
               Contact
             </Link>
           </nav>
@@ -69,7 +69,7 @@ export default function Header() {
               <div className="relative">
                 <button 
                   onClick={toggleUserMenu}
-                  className="flex items-center text-gray-700 hover:text-blue-600"
+                  className="flex items-center text-gray-700 hover:text-primary"
                 >
                   <span className="mr-1">{user?.name || 'My Account'}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -99,10 +99,10 @@ export default function Header() {
               </div>
             ) : (
               <>
-                <Link href="/login" className="text-gray-700 hover:text-blue-600">
+                <Link href="/login" className="text-gray-700 hover:text-primary">
                   Login
                 </Link>
-                <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                <Link href="/register" className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition">
                   Register
                 </Link>
               </>
@@ -113,7 +113,7 @@ export default function Header() {
           <div className="md:hidden">
             <button 
               onClick={toggleMenu}
-              className="text-gray-700 hover:text-blue-600 focus:outline-none"
+              className="text-gray-700 hover:text-primary focus:outline-none"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 {isMenuOpen ? (
@@ -130,16 +130,16 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden mt-4 pb-4 border-t border-gray-200">
             <nav className="flex flex-col mt-4 space-y-4">
-              <Link href="/" className="text-gray-700 hover:text-blue-600">
+              <Link href="/" className="text-gray-700 hover:text-primary">
                 Home
               </Link>
-              <Link href="/cars" className="text-gray-700 hover:text-blue-600">
+              <Link href="/cars" className="text-gray-700 hover:text-primary">
                 Cars
               </Link>
-              <Link href="/about" className="text-gray-700 hover:text-blue-600">
+              <Link href="/about" className="text-gray-700 hover:text-primary">
                 About
               </Link>
-              <Link href="/contact" className="text-gray-700 hover:text-blue-600">
+              <Link href="/contact" className="text-gray-700 hover:text-primary">
                 Contact
               </Link>
               
@@ -147,29 +147,29 @@ export default function Header() {
               {isLoggedIn ? (
                 <>
                   <div className="border-t border-gray-200 pt-4">
-                    <Link href="/account" className="text-gray-700 hover:text-blue-600">
+                    <Link href="/account" className="text-gray-700 hover:text-primary">
                       Dashboard
                     </Link>
                   </div>
-                  <Link href="/account/bookings" className="text-gray-700 hover:text-blue-600">
+                  <Link href="/account/bookings" className="text-gray-700 hover:text-primary">
                     My Bookings
                   </Link>
-                  <Link href="/account/profile" className="text-gray-700 hover:text-blue-600">
+                  <Link href="/account/profile" className="text-gray-700 hover:text-primary">
                     Profile Settings
                   </Link>
                   <button 
                     onClick={handleLogout}
-                    className="text-left text-gray-700 hover:text-blue-600"
+                    className="text-left text-gray-700 hover:text-primary"
                   >
                     Logout
                   </button>
                 </>
               ) : (
                 <div className="flex flex-col space-y-4 pt-4 border-t border-gray-200">
-                  <Link href="/login" className="text-gray-700 hover:text-blue-600">
+                  <Link href="/login" className="text-gray-700 hover:text-primary">
                     Login
                   </Link>
-                  <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-center">
+                  <Link href="/register" className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition text-center">
                     Register
                   </Link>
                 </div>
