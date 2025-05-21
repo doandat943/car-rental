@@ -126,7 +126,7 @@ export default function BookingDetailsPage({ params }) {
       
       const response = await bookingsAPI.updateBookingStatus(bookingId, 'confirmed');
       
-      if (response.data?.success) {
+      if (response.success) {
         // Update booking
         setBooking(prevBooking => ({
           ...prevBooking,
@@ -136,25 +136,11 @@ export default function BookingDetailsPage({ params }) {
         
         setSuccess('Booking has been confirmed successfully');
       } else {
-        setError(response.data?.message || 'Unable to confirm booking. Please try again later.');
-        
-        // Update UI for demo
-        setBooking(prevBooking => ({
-          ...prevBooking,
-          status: 'confirmed',
-          updatedAt: new Date().toISOString()
-        }));
+        setError(response.message || 'Unable to confirm booking. Please try again later.');
       }
     } catch (err) {
       console.error('Failed to confirm booking:', err);
       setError('Unable to confirm booking. Please try again later.');
-      
-      // Update UI for demo
-      setBooking(prevBooking => ({
-        ...prevBooking,
-        status: 'confirmed',
-        updatedAt: new Date().toISOString()
-      }));
     } finally {
       setProcessing(false);
     }
@@ -168,7 +154,7 @@ export default function BookingDetailsPage({ params }) {
       
       const response = await bookingsAPI.updateBookingStatus(bookingId, 'completed');
       
-      if (response.data?.success) {
+      if (response.success) {
         // Update booking
         setBooking(prevBooking => ({
           ...prevBooking,
@@ -178,25 +164,11 @@ export default function BookingDetailsPage({ params }) {
         
         setSuccess('Booking has been marked as completed');
       } else {
-        setError(response.data?.message || 'Unable to complete booking. Please try again later.');
-        
-        // Update UI for demo
-        setBooking(prevBooking => ({
-          ...prevBooking,
-          status: 'completed',
-          updatedAt: new Date().toISOString()
-        }));
+        setError(response.message || 'Unable to complete booking. Please try again later.');
       }
     } catch (err) {
       console.error('Failed to complete booking:', err);
       setError('Unable to complete booking. Please try again later.');
-      
-      // Update UI for demo
-      setBooking(prevBooking => ({
-        ...prevBooking,
-        status: 'completed',
-        updatedAt: new Date().toISOString()
-      }));
     } finally {
       setProcessing(false);
     }
@@ -224,7 +196,7 @@ export default function BookingDetailsPage({ params }) {
       
       const response = await bookingsAPI.cancelBooking(bookingId, cancelReason);
       
-      if (response.data?.success) {
+      if (response.success) {
         // Update booking
         setBooking(prevBooking => ({
           ...prevBooking,
@@ -236,28 +208,12 @@ export default function BookingDetailsPage({ params }) {
         setSuccess('Booking has been cancelled successfully');
         closeCancelModal();
       } else {
-        setError(response.data?.message || 'Unable to cancel booking. Please try again later.');
-        
-        // Update UI for demo
-        setBooking(prevBooking => ({
-          ...prevBooking,
-          status: 'cancelled',
-          cancellationReason: cancelReason,
-          updatedAt: new Date().toISOString()
-        }));
+        setError(response.message || 'Unable to cancel booking. Please try again later.');
         closeCancelModal();
       }
     } catch (err) {
       console.error('Failed to cancel booking:', err);
       setError('Unable to cancel booking. Please try again later.');
-      
-      // Update UI for demo
-      setBooking(prevBooking => ({
-        ...prevBooking,
-        status: 'cancelled',
-        cancellationReason: cancelReason,
-        updatedAt: new Date().toISOString()
-      }));
       closeCancelModal();
     } finally {
       setProcessing(false);

@@ -250,7 +250,7 @@ export default function BookingsManagement() {
       
       const response = await bookingsAPI.cancelBooking(bookingId, 'Cancelled by admin');
       
-      if (response.data?.success) {
+      if (response.success) {
         // Update the booking in the list
         setBookings(prevBookings => prevBookings.map(booking => 
           booking._id === bookingId ? { ...booking, status: 'cancelled' } : booking
@@ -258,16 +258,11 @@ export default function BookingsManagement() {
         
         setSuccess('Booking has been cancelled successfully');
       } else {
-        setError(response.data?.message || 'Unable to cancel booking. Please try again later.');
+        setError(response.message || 'Unable to cancel booking. Please try again later.');
       }
     } catch (err) {
       console.error('Failed to cancel booking:', err);
       setError('Unable to cancel booking. Please try again later.');
-      
-      // Update UI for demo
-      setBookings(prevBookings => prevBookings.map(booking => 
-        booking._id === bookingId ? { ...booking, status: 'cancelled' } : booking
-      ));
     } finally {
       setProcessingBookingId(null);
     }
@@ -281,7 +276,7 @@ export default function BookingsManagement() {
       
       const response = await bookingsAPI.updateBookingStatus(bookingId, 'completed');
       
-      if (response.data?.success) {
+      if (response.success) {
         // Update the booking in the list
         setBookings(prevBookings => prevBookings.map(booking => 
           booking._id === bookingId ? { ...booking, status: 'completed' } : booking
@@ -289,16 +284,11 @@ export default function BookingsManagement() {
         
         setSuccess('Booking has been marked as completed');
       } else {
-        setError(response.data?.message || 'Unable to complete booking. Please try again later.');
+        setError(response.message || 'Unable to complete booking. Please try again later.');
       }
     } catch (err) {
       console.error('Failed to complete booking:', err);
       setError('Unable to complete booking. Please try again later.');
-      
-      // Update UI for demo
-      setBookings(prevBookings => prevBookings.map(booking => 
-        booking._id === bookingId ? { ...booking, status: 'completed' } : booking
-      ));
     } finally { 
       setProcessingBookingId(null);
     }
