@@ -6,13 +6,7 @@ const { Transmission } = require('../models');
  */
 const seedTransmissions = async () => {
   try {
-    // Check if transmissions already exist in the database
-    const count = await Transmission.countDocuments();
-    if (count > 0) {
-      console.log('Transmissions already seeded');
-      return;
-    }
-
+    
     // Sample transmissions data
     const transmissionsData = [
       {

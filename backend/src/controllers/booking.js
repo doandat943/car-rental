@@ -113,7 +113,15 @@ exports.getBookingById = async (req, res) => {
  */
 exports.createBooking = async (req, res) => {
   try {
-    const { carId, startDate, endDate, pickupLocation, dropoffLocation } = req.body;
+    const { 
+      carId, 
+      startDate, 
+      endDate, 
+      pickupLocation, 
+      dropoffLocation,
+      includeDriver = false,
+      doorstepDelivery = false 
+    } = req.body;
     
     // Check if car exists
     const car = await Car.findById(carId);
@@ -159,8 +167,16 @@ exports.createBooking = async (req, res) => {
     const durationInMs = end - start;
     const durationInDays = Math.ceil(durationInMs / (1000 * 60 * 60 * 24));
     
+    // Calculate service fees
+    const driverFee = includeDriver ? 30 * durationInDays : 0; // $30 per day
+    const deliveryFee = doorstepDelivery ? 25 : 0; // Fixed $25 fee
+    
     // Calculate total amount based on daily price
-    const totalAmount = car.price.daily * durationInDays;
+    const rentalAmount = car.price.daily * durationInDays;
+    const totalAmount = rentalAmount + driverFee + deliveryFee;
+    
+    // Generate a unique booking code
+    const bookingCode = `BK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     
     // Create new booking
     const booking = new Booking({
@@ -170,7 +186,13 @@ exports.createBooking = async (req, res) => {
       endDate,
       totalAmount,
       pickupLocation,
-      dropoffLocation
+      dropoffLocation,
+      includeDriver,
+      doorstepDelivery,
+      driverFee,
+      deliveryFee,
+      totalDays: durationInDays,
+      bookingCode
     });
     
     await booking.save();

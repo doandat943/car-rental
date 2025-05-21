@@ -7,13 +7,7 @@ const { Statistic, Booking, User, Car } = require('../models');
  */
 const seedStatistics = async () => {
   try {
-    // Check if statistics already exist in the database
-    const count = await Statistic.countDocuments();
-    if (count > 0) {
-      console.log('Statistics already seeded');
-      return;
-    }
-
+    
     // Get counts from other collections for realistic statistics
     const userCount = await User.countDocuments();
     const carCount = await Car.countDocuments();

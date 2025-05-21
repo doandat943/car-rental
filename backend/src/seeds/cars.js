@@ -7,13 +7,7 @@ const { Car, Category, Brand, Transmission, Fuel, Feature } = require('../models
  */
 const seedCars = async () => {
   try {
-    // Check if cars already exist in the database
-    const carCount = await Car.countDocuments();
-    if (carCount > 0) {
-      console.log('Cars already seeded');
-      return;
-    }
-
+    
     // Verify required reference data exists
     const categoryCount = await Category.countDocuments();
     const brandCount = await Brand.countDocuments();

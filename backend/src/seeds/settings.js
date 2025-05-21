@@ -7,13 +7,7 @@ const { Setting } = require('../models');
  */
 const seedSettings = async () => {
   try {
-    // Check if settings already exist in the database
-    const count = await Setting.countDocuments();
-    if (count > 0) {
-      console.log('Settings already seeded');
-      return;
-    }
-
+    
     // Sample application settings
     const settingsData = [
       {

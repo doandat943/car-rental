@@ -8,13 +8,7 @@ const { User } = require('../models');
  */
 const seedUsers = async () => {
   try {
-    // Check if users already exist in the database
-    const count = await User.countDocuments();
-    if (count > 0) {
-      console.log('Users already seeded');
-      return;
-    }
-
+    
     // Sample user data with varied roles and attributes
     const usersData = [
       {

@@ -6,13 +6,7 @@ const { Feature } = require('../models');
  */
 const seedFeatures = async () => {
   try {
-    // Check if features already exist in the database
-    const count = await Feature.countDocuments();
-    if (count > 0) {
-      console.log('Features already seeded');
-      return;
-    }
-
+    
     // Sample features data organized by category
     const featuresData = [
       // Comfort features

@@ -7,13 +7,7 @@ const { Review, User, Car, Booking } = require('../models');
  */
 const seedReviews = async () => {
   try {
-    // Check if reviews already exist in the database
-    const count = await Review.countDocuments();
-    if (count > 0) {
-      console.log('Reviews already seeded');
-      return;
-    }
-
+    
     // Get completed bookings to create reviews for
     const completedBookings = await Booking.find({ status: 'completed' })
       .populate('customer')

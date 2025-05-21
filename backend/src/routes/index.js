@@ -15,6 +15,7 @@ const brandRoutes = require('./brands');
 const transmissionRoutes = require('./transmissions');
 const fuelRoutes = require('./fuels');
 const featureRoutes = require('./features');
+const locationRoutes = require('./locations');
 
 /**
  * Initialize all routes
@@ -38,6 +39,7 @@ function setRoutes(app) {
   app.use('/api/transmissions', transmissionRoutes);
   app.use('/api/fuels', fuelRoutes);
   app.use('/api/features', featureRoutes);
+  app.use('/api/locations', locationRoutes);
 
   // Home route
   app.get('/', (req, res) => {

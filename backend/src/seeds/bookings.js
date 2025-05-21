@@ -7,13 +7,6 @@ const { Booking, User, Car } = require('../models');
  */
 const seedBookings = async () => {
   try {
-    // Check if bookings already exist in the database
-    const count = await Booking.countDocuments();
-    if (count > 0) {
-      console.log('Bookings already seeded');
-      return;
-    }
-
     // Get users and cars to create bookings
     const users = await User.find({ role: 'user' });
     const cars = await Car.find();
@@ -67,6 +60,17 @@ const seedBookings = async () => {
       // Random payment status
       const paymentStatus = status === 'completed' ? 'paid' : (Math.random() > 0.5 ? 'paid' : 'pending');
       
+      // Random premium services (30% chance for each)
+      const includeDriver = Math.random() > 0.7;
+      const doorstepDelivery = Math.random() > 0.7;
+      
+      // Calculate fees for premium services
+      const driverFee = includeDriver ? 30 * duration : 0;
+      const deliveryFee = doorstepDelivery ? 25 : 0;
+      
+      // Calculate final total amount with premium services
+      const finalTotalAmount = totalAmount + driverFee + deliveryFee;
+      
       // Create booking object
       const booking = {
         customer: user._id, // Changed from user to customer
@@ -74,10 +78,15 @@ const seedBookings = async () => {
         startDate,
         endDate,
         status,
-        totalAmount, // Changed from totalPrice to totalAmount
+        totalAmount: finalTotalAmount, // Updated to include premium service fees
         paymentStatus, // Changed from isPaid to paymentStatus
         pickupLocation: 'Main Office, San Francisco',
         dropoffLocation: 'Main Office, San Francisco',
+        totalDays: duration, // Add required totalDays field
+        includeDriver,
+        doorstepDelivery,
+        driverFee,
+        deliveryFee,
         createdAt: new Date(startDate.getTime() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)) // 1-7 days before start date
       };
       

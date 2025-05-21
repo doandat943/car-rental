@@ -6,13 +6,7 @@ const { Brand } = require('../models');
  */
 const seedBrands = async () => {
   try {
-    // Check if brands already exist in the database
-    const count = await Brand.countDocuments();
-    if (count > 0) {
-      console.log('Brands already seeded');
-      return;
-    }
-
+    
     // Sample brands data
     const brandsData = [
       {

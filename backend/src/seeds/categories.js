@@ -7,13 +7,7 @@ const { Category } = require('../models');
  */
 const seedCategories = async () => {
   try {
-    // Check if categories already exist in the database
-    const count = await Category.countDocuments();
-    if (count > 0) {
-      console.log('Categories already seeded');
-      return;
-    }
-
+    
     // Sample categories data
     const categoriesData = [
       { name: 'Sedan', description: 'Traditional four-door car with separate trunk' },

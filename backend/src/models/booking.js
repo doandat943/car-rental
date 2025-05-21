@@ -17,8 +17,21 @@ const Booking = mongoose.models.Booking || mongoose.model('Booking', new mongoos
     enum: ['pending', 'paid', 'refunded'],
     default: 'pending'
   },
-  pickupLocation: String,
-  dropoffLocation: String,
+  pickupLocation: { type: String, required: true },
+  dropoffLocation: { type: String, required: true },
+  
+  // Thêm các trường mới cho dịch vụ bổ sung
+  includeDriver: { type: Boolean, default: false },
+  doorstepDelivery: { type: Boolean, default: false },
+  driverFee: { type: Number, default: 0 },
+  deliveryFee: { type: Number, default: 0 },
+  totalDays: { type: Number, required: true },
+  
+  // Các trường theo dõi
+  bookingCode: { type: String },
+  specialRequests: { type: String },
+  cancelReason: { type: String },
+  
   createdAt: { type: Date, default: Date.now }
 }));
 

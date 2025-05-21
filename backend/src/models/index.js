@@ -11,6 +11,7 @@ const Brand = require('./Brand');
 const Transmission = require('./Transmission');
 const Fuel = require('./fuel');
 const Feature = require('./Feature');
+const Location = require('./location');
 
 module.exports = {
   User,
@@ -25,5 +26,6 @@ module.exports = {
   Brand,
   Transmission,
   Fuel,
-  Feature
+  Feature,
+  Location
 }; 

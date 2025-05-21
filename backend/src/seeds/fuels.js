@@ -6,13 +6,7 @@ const { Fuel } = require('../models');
  */
 const seedFuels = async () => {
   try {
-    // Check if fuels already exist in the database
-    const count = await Fuel.countDocuments();
-    if (count > 0) {
-      console.log('Fuels already seeded');
-      return;
-    }
-
+    
     // Sample fuels data
     const fuelsData = [
       {
