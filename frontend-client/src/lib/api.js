@@ -199,7 +199,47 @@ export const transmissionsAPI = {
 export const bookingsAPI = {
   getUserBookings: () => api.get('/bookings/user'),
   getBookingById: (id) => api.get(`/bookings/${id}`),
-  createBooking: (bookingData) => api.post('/bookings', bookingData),
+  createBooking: async (bookingData) => {
+    try {
+      console.log('Creating booking with data:', bookingData);
+      // Check auth token
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      console.log('Auth token present:', !!token);
+      
+      if (!token) {
+        console.error('No authentication token found. User must be logged in to book.');
+        throw new Error('Authentication required. Please log in to continue.');
+      }
+      
+      const response = await api.post('/bookings', bookingData);
+      console.log('Booking created successfully:', response);
+      return response;
+    } catch (error) {
+      // Log complete error details
+      console.error('Error creating booking:', error);
+      
+      // Log specific response data if available 
+      if (error.response) {
+        console.error('Server response data:', error.response.data);
+        console.error('Server response status:', error.response.status);
+        console.error('Server response headers:', error.response.headers);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+      } else {
+        // Something happened in setting up the request
+        console.error('Request setup error:', error.message);
+      }
+      
+      // Throw a more informative error
+      const errorMessage = error.response?.data?.message || error.message || 'Unknown booking error';
+      throw {
+        message: errorMessage,
+        status: error.response?.status,
+        data: error.response?.data
+      };
+    }
+  },
   cancelBooking: (id) => api.patch(`/bookings/${id}/cancel`),
 };
 

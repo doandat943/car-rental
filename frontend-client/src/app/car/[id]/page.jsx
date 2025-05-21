@@ -141,6 +141,36 @@ export default function CarDetailPage({ params }) {
 
   const handleBooking = async (e) => {
     e.preventDefault();
+    
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Save booking details to localStorage
+      localStorage.setItem('pendingBooking', JSON.stringify({
+        carId: id,
+        startDate: pickupDate,
+        endDate: returnDate,
+        pickupLocation,
+        dropoffLocation: pickupLocation,
+        includeDriver,
+        doorstepDelivery,
+        returnUrl: window.location.pathname
+      }));
+      
+      // Redirect to login page
+      alert('Please log in to book this car');
+      router.push('/login');
+      return;
+    }
+    
+    // Validate booking dates
+    const start = new Date(pickupDate);
+    const end = new Date(returnDate);
+    if (end <= start) {
+      alert('Return date must be after pickup date');
+      return;
+    }
+    
     console.log('Booking car with ID:', id);
     console.log('Pickup date:', pickupDate);
     console.log('Return date:', returnDate);
@@ -164,6 +194,7 @@ export default function CarDetailPage({ params }) {
     };
     
     try {
+      setLoading(true); // Show loading state
       const response = await bookingsAPI.createBooking(bookingData);
       
       if (response?.data?.success) {
@@ -173,8 +204,27 @@ export default function CarDetailPage({ params }) {
         alert('Booking failed: ' + (response?.data?.message || 'Unknown error'));
       }
     } catch (err) {
-      console.error('Error creating booking:', err);
-      alert('Booking failed: ' + (err.message || 'Unknown error'));
+      console.error('Booking error:', err);
+      
+      if (err.status === 401) {
+        // Authentication error
+        alert('Your session has expired. Please log in again.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/login');
+      } else if (err.status === 400) {
+        // Validation error
+        alert('Booking error: ' + (err.message || 'Please check your booking details'));
+      } else if (err.status === 404) {
+        // Car not found
+        alert('Sorry, this car is no longer available.');
+        router.push('/cars');
+      } else {
+        // General error
+        alert('Sorry, we couldn\'t complete your booking: ' + (err.message || 'Please try again later'));
+      }
+    } finally {
+      setLoading(false); // Hide loading state
     }
   };
 

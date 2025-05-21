@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authAPI } from '@/lib/api';
@@ -11,6 +11,20 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [pendingBooking, setPendingBooking] = useState(null);
+
+  // Check for pending booking on component mount
+  useEffect(() => {
+    const bookingData = localStorage.getItem('pendingBooking');
+    if (bookingData) {
+      try {
+        setPendingBooking(JSON.parse(bookingData));
+      } catch (e) {
+        console.error('Error parsing pending booking:', e);
+        localStorage.removeItem('pendingBooking');
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +38,13 @@ export default function LoginPage() {
         // Save auth token and user data
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user || {}));
+        
+        // Check for pending booking
+        if (pendingBooking && pendingBooking.returnUrl) {
+          localStorage.removeItem('pendingBooking');
+          router.push(pendingBooking.returnUrl);
+          return;
+        }
         
         // Redirect to the previous page or home
         const redirect = new URLSearchParams(window.location.search).get('redirect');
@@ -52,6 +73,14 @@ export default function LoginPage() {
               continue as guest
             </Link>
           </p>
+          
+          {pendingBooking && (
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-md">
+              <p className="text-sm text-blue-800 text-center">
+                Please sign in to complete your car booking
+              </p>
+            </div>
+          )}
         </div>
         
         {error && (

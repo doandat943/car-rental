@@ -113,6 +113,17 @@ exports.getBookingById = async (req, res) => {
  */
 exports.createBooking = async (req, res) => {
   try {
+    console.log('Creating booking with data:', req.body);
+    console.log('User in request:', req.user);
+    
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: 'User authentication failed. Please log in again.',
+        error: 'UNAUTHORIZED'
+      });
+    }
+    
     const { 
       carId, 
       startDate, 
@@ -122,6 +133,21 @@ exports.createBooking = async (req, res) => {
       includeDriver = false,
       doorstepDelivery = false 
     } = req.body;
+    
+    // Validate required fields
+    if (!carId || !startDate || !endDate || !pickupLocation || !dropoffLocation) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required booking information',
+        missingFields: {
+          carId: !carId,
+          startDate: !startDate,
+          endDate: !endDate,
+          pickupLocation: !pickupLocation,
+          dropoffLocation: !dropoffLocation
+        }
+      });
+    }
     
     // Check if car exists
     const car = await Car.findById(carId);
@@ -161,55 +187,73 @@ exports.createBooking = async (req, res) => {
       });
     }
     
-    // Calculate booking duration in days
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const durationInMs = end - start;
-    const durationInDays = Math.ceil(durationInMs / (1000 * 60 * 60 * 24));
-    
-    // Calculate service fees
-    const driverFee = includeDriver ? 30 * durationInDays : 0; // $30 per day
-    const deliveryFee = doorstepDelivery ? 25 : 0; // Fixed $25 fee
-    
-    // Calculate total amount based on daily price
-    const rentalAmount = car.price.daily * durationInDays;
-    const totalAmount = rentalAmount + driverFee + deliveryFee;
-    
-    // Generate a unique booking code
-    const bookingCode = `BK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-    
-    // Create new booking
-    const booking = new Booking({
-      customer: req.user.id,
-      car: carId,
-      startDate,
-      endDate,
-      totalAmount,
-      pickupLocation,
-      dropoffLocation,
-      includeDriver,
-      doorstepDelivery,
-      driverFee,
-      deliveryFee,
-      totalDays: durationInDays,
-      bookingCode
-    });
-    
-    await booking.save();
-    
-    // Update car status to 'reserved'
-    await Car.findByIdAndUpdate(carId, { status: 'reserved' });
-    
-    res.status(201).json({
-      success: true,
-      message: 'Booking created successfully',
-      data: booking
-    });
+    try {
+      // Calculate booking duration in days
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const durationInMs = end - start;
+      const durationInDays = Math.ceil(durationInMs / (1000 * 60 * 60 * 24));
+      
+      if (durationInDays <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid booking dates. End date must be after start date.'
+        });
+      }
+      
+      // Calculate service fees
+      const driverFee = includeDriver ? 30 * durationInDays : 0; // $30 per day
+      const deliveryFee = doorstepDelivery ? 25 : 0; // Fixed $25 fee
+      
+      // Calculate total amount based on daily price
+      const dailyPrice = car.price && car.price.daily ? car.price.daily : 0;
+      const rentalAmount = dailyPrice * durationInDays;
+      const totalAmount = rentalAmount + driverFee + deliveryFee;
+      
+      // Generate a unique booking code
+      const bookingCode = `BK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      
+      // Create new booking
+      const booking = new Booking({
+        customer: req.user.id,
+        car: carId,
+        startDate,
+        endDate,
+        totalAmount,
+        pickupLocation,
+        dropoffLocation,
+        includeDriver,
+        doorstepDelivery,
+        driverFee,
+        deliveryFee,
+        totalDays: durationInDays,
+        bookingCode
+      });
+      
+      await booking.save();
+      
+      // Update car status to 'reserved'
+      await Car.findByIdAndUpdate(carId, { status: 'reserved' });
+      
+      res.status(201).json({
+        success: true,
+        message: 'Booking created successfully',
+        data: booking
+      });
+    } catch (err) {
+      console.error('Error processing booking data:', err);
+      return res.status(400).json({
+        success: false,
+        message: 'Error processing booking data',
+        error: err.message
+      });
+    }
   } catch (error) {
+    console.error('Booking creation failed:', error);
     res.status(500).json({
       success: false,
       message: 'Error creating booking',
-      error: error.message
+      error: error.message || 'Unknown server error'
     });
   }
 };

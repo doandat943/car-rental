@@ -147,18 +147,18 @@ export default function Home() {
       
       <section className="py-16 px-6">
         <div className="container mx-auto">
-          <CarList 
-            cars={cars} 
+      <CarList 
+        cars={cars} 
             title={selectedCategory ? "Filtered Cars" : "Featured Cars"}
-          />
+      />
           
-          {error && (
+      {error && (
             <div className="mt-8">
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            </div>
-          )}
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        </div>
+      )}
         </div>
       </section>
       
