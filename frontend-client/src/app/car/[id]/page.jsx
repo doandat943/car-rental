@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { carsAPI } from '@/lib/api';
@@ -8,14 +8,31 @@ import { API_BASE_URL } from '@/lib/api';
 import { FaStar, FaCheck } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
+// Helper function to format date as YYYY-MM-DD
+const formatDate = (date) => {
+  return date.toISOString().split('T')[0];
+};
+
+// Helper function to get tomorrow's date
+const getTomorrow = () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow;
+};
+
 export default function CarDetailPage({ params }) {
-  const { id } = params;
   const router = useRouter();
+  const { id } = use(params);
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pickupDate, setPickupDate] = useState('');
-  const [returnDate, setReturnDate] = useState('');
+  
+  // Initialize with today and tomorrow dates
+  const today = new Date();
+  const tomorrow = getTomorrow();
+  const [pickupDate, setPickupDate] = useState(formatDate(today));
+  const [returnDate, setReturnDate] = useState(formatDate(tomorrow));
+  
   const [totalDays, setTotalDays] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
 
@@ -35,7 +52,7 @@ export default function CarDetailPage({ params }) {
           // Set page title dynamically
           document.title = `${carData.name || `${carData.brand?.name || carData.brand} ${carData.model?.name || carData.model}`} | Car Rental Service`;
           
-          // Set initial price calculation
+          // Set initial price calculation with default dates
           setTotalPrice(carData.price?.daily || 0);
         } else {
           setError('Car details not found');
@@ -249,8 +266,20 @@ export default function CarDetailPage({ params }) {
                     type="date" 
                     className="w-full p-2 border rounded" 
                     value={pickupDate}
-                    onChange={(e) => setPickupDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => {
+                      const newPickupDate = e.target.value;
+                      setPickupDate(newPickupDate);
+                      
+                      // If return date is before new pickup date, adjust it
+                      const pickupTime = new Date(newPickupDate).getTime();
+                      const returnTime = new Date(returnDate).getTime();
+                      if (returnTime <= pickupTime) {
+                        const nextDay = new Date(newPickupDate);
+                        nextDay.setDate(nextDay.getDate() + 1);
+                        setReturnDate(formatDate(nextDay));
+                      }
+                    }}
+                    min={formatDate(new Date())}
                     required
                   />
                 </div>
@@ -261,7 +290,7 @@ export default function CarDetailPage({ params }) {
                     className="w-full p-2 border rounded" 
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    min={pickupDate || new Date().toISOString().split('T')[0]}
+                    min={pickupDate}
                     required
                   />
                 </div>
