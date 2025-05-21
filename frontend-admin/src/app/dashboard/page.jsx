@@ -120,29 +120,36 @@ export default function DashboardPage() {
         setStats(statsCards);
         
         // Format booking data
-        const bookingsData = bookingsResponse.data.data || [];
+        const bookingsData = bookingsResponse.data?.bookings || bookingsResponse.data || [];
         const formattedBookings = Array.isArray(bookingsData) 
           ? bookingsData.map(booking => ({
               id: booking._id,
-              customer: booking.user?.name || 'Customer',
-              car: booking.car?.name || 'Unknown car',
+              customer: booking.customer?.name || 
+                        (booking.customer?.firstName && booking.customer?.lastName ? 
+                         `${booking.customer.firstName} ${booking.customer.lastName}` : 
+                         booking.customer?.firstName || booking.customer?.lastName || 'Customer'),
+              car: booking.car?.name || 
+                   (booking.car?.brand && booking.car?.model ? 
+                    `${booking.car.brand} ${booking.car.model}` : 
+                    'Unknown car'),
               status: booking.status,
               date: new Date(booking.startDate).toLocaleDateString(),
-              amount: `$${booking.totalAmount.toLocaleString()}`,
+              amount: `$${booking.totalAmount?.toLocaleString() || '0'}`,
             }))
           : [];
         
+        console.log("Formatted bookings:", formattedBookings);
         setRecentBookings(formattedBookings);
         
         // Format top cars data
-        const topCarsData = topCarsResponse.data.data || [];
+        const topCarsData = topCarsResponse.data?.data || topCarsResponse.data || [];
         const formattedTopCars = Array.isArray(topCarsData)
           ? topCarsData.map(car => ({
               id: car._id,
-              name: car.name,
-              bookings: car.bookingsCount,
-              revenue: `$${car.totalRevenue.toLocaleString()}`,
-              rating: car.averageRating || 0,
+              name: car.name || (car.brand && car.model ? `${car.brand} ${car.model}` : 'Unknown car'),
+              bookings: car.bookingsCount || car.bookingCount || 0,
+              revenue: `$${(car.totalRevenue || car.revenue || 0).toLocaleString()}`,
+              rating: car.averageRating || car.rating || 0,
             }))
           : [];
         
@@ -238,8 +245,145 @@ export default function DashboardPage() {
 
   // Handle period change for revenue chart
   const handlePeriodChange = async (period) => {
-    // Rest of the function implementation
+    setPeriodFilter(period);
+    try {
+      setLoading(true);
+      
+      const revenueChartResponse = await dashboardAPI.getRevenueChart(period).catch(err => {
+        console.error("Error fetching revenue chart:", err);
+        return { data: { data: [] }};
+      });
+      
+      // Add chart data to state
+      const chartData = revenueChartResponse.data.data || [];
+      setRevenueData(Array.isArray(chartData) ? chartData : []);
+      
+      setLoading(false);
+    } catch (err) {
+      console.error("Error updating chart data:", err);
+      setLoading(false);
+    }
   };
 
-  // Rest of the component implementation
+  return (
+    <div className="px-4 pt-6">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard Overview</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Welcome to your Dashboard. Check the latest metrics and performance.
+        </p>
+      </div>
+      
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        {stats.map((stat, index) => (
+          <StatCard
+            key={index}
+            title={stat.title}
+            value={stat.value}
+            icon={stat.icon}
+            percentageChange={stat.percentageChange}
+            trend={stat.trend}
+            trendData={stat.trendData}
+            color={stat.color}
+          />
+        ))}
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Revenue Chart */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Revenue Overview</CardTitle>
+              <div className="flex space-x-2">
+                <Button 
+                  size="sm" 
+                  variant={periodFilter === 'week' ? 'default' : 'outline'}
+                  onClick={() => handlePeriodChange('week')}
+                >
+                  Week
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant={periodFilter === 'month' ? 'default' : 'outline'}
+                  onClick={() => handlePeriodChange('month')}
+                >
+                  Month
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant={periodFilter === 'year' ? 'default' : 'outline'}
+                  onClick={() => handlePeriodChange('year')}
+                >
+                  Year
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="h-80">
+              <RevenueChart data={revenueData} period={periodFilter} />
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Top Cars */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Cars</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {topCars.slice(0, 5).map((car) => (
+                  <div key={car.id} className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <p className="font-medium">{car.name}</p>
+                      <p className="text-sm text-gray-500">{car.bookings} bookings</p>
+                    </div>
+                    <p className="font-medium">{car.revenue}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      {/* Recent Bookings */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Recent Bookings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={[
+              { header: "Customer", key: "customer" },
+              { header: "Car", key: "car" },
+              { 
+                header: "Status", 
+                key: "status",
+                cell: (row) => {
+                  const status = row.status || '';
+                  return (
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                      status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                      status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </span>
+                  );
+                }
+              },
+              { header: "Date", key: "date" },
+              { header: "Amount", key: "amount" },
+            ]}
+            data={recentBookings}
+            emptyMessage="No recent bookings found"
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
 } 
