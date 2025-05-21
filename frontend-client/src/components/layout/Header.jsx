@@ -1,17 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Header() {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      setIsLoggedIn(true);
+      try {
+        setUser(JSON.parse(userData));
+      } catch (e) {
+        console.error('Error parsing user data', e);
+      }
+    }
+  }, []);
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);
   
-  // This would be determined by authentication state in a real app
-  const isLoggedIn = false;
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    setUser(null);
+    setIsUserMenuOpen(false);
+    router.push('/');
+  };
   
   return (
     <header className="bg-white shadow-md">
@@ -46,7 +71,7 @@ export default function Header() {
                   onClick={toggleUserMenu}
                   className="flex items-center text-gray-700 hover:text-blue-600"
                 >
-                  <span className="mr-1">My Account</span>
+                  <span className="mr-1">{user?.name || 'My Account'}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
@@ -63,7 +88,10 @@ export default function Header() {
                     <Link href="/account/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                       Profile Settings
                     </Link>
-                    <button className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <button 
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                    >
                       Logout
                     </button>
                   </div>
@@ -129,7 +157,10 @@ export default function Header() {
                   <Link href="/account/profile" className="text-gray-700 hover:text-blue-600">
                     Profile Settings
                   </Link>
-                  <button className="text-left text-gray-700 hover:text-blue-600">
+                  <button 
+                    onClick={handleLogout}
+                    className="text-left text-gray-700 hover:text-blue-600"
+                  >
                     Logout
                   </button>
                 </>

@@ -3,8 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { carsAPI } from '@/lib/api';
-import { API_BASE_URL } from '@/lib/api';
+import { carsAPI, API_BASE_URL, locationsAPI, bookingsAPI } from '@/lib/api';
 import { FaStar, FaCheck } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
@@ -35,6 +34,41 @@ export default function CarDetailPage({ params }) {
   
   const [totalDays, setTotalDays] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
+  
+  // Additional state for new features
+  const [pickupLocation, setPickupLocation] = useState('airport');
+  const [includeDriver, setIncludeDriver] = useState(false);
+  const [doorstepDelivery, setDoorstepDelivery] = useState(false);
+  const [driverFee, setDriverFee] = useState(0);
+  const [deliveryFee, setDeliveryFee] = useState(0);
+  
+  // State for pickup locations
+  const [locations, setLocations] = useState([]);
+  const [loadingLocations, setLoadingLocations] = useState(true);
+
+  useEffect(() => {
+    // Fetch pickup locations
+    const fetchLocations = async () => {
+      try {
+        setLoadingLocations(true);
+        const response = await locationsAPI.getPickupLocations();
+        if (response?.data?.data) {
+          setLocations(response.data.data);
+          
+          // Set default location if locations are available
+          if (response.data.data.length > 0) {
+            setPickupLocation(response.data.data[0].code);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching pickup locations:', err);
+      } finally {
+        setLoadingLocations(false);
+      }
+    };
+    
+    fetchLocations();
+  }, []);
 
   useEffect(() => {
     const fetchCarDetails = async () => {
@@ -70,7 +104,7 @@ export default function CarDetailPage({ params }) {
     }
   }, [id]);
 
-  // Calculate total price when dates change
+  // Calculate total price when dates or services change
   useEffect(() => {
     if (pickupDate && returnDate && car) {
       const start = new Date(pickupDate);
@@ -79,19 +113,69 @@ export default function CarDetailPage({ params }) {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       setTotalDays(diffDays || 1);
-      setTotalPrice((car.price?.daily || 0) * (diffDays || 1));
+      
+      // Base rental cost
+      let total = (car.price?.daily || 0) * (diffDays || 1);
+      
+      // Add driver fee if selected
+      if (includeDriver) {
+        const driverCost = 30 * (diffDays || 1); // $30 per day
+        setDriverFee(driverCost);
+        total += driverCost;
+      } else {
+        setDriverFee(0);
+      }
+      
+      // Add delivery fee if selected
+      if (doorstepDelivery) {
+        const delivery = 25; // Fixed $25 fee
+        setDeliveryFee(delivery);
+        total += delivery;
+      } else {
+        setDeliveryFee(0);
+      }
+      
+      setTotalPrice(total);
     }
-  }, [pickupDate, returnDate, car]);
+  }, [pickupDate, returnDate, car, includeDriver, doorstepDelivery]);
 
-  const handleBooking = (e) => {
+  const handleBooking = async (e) => {
     e.preventDefault();
-    // Implement booking logic here
     console.log('Booking car with ID:', id);
     console.log('Pickup date:', pickupDate);
     console.log('Return date:', returnDate);
+    console.log('Pickup location:', pickupLocation);
+    console.log('Additional services:', {
+      includeDriver,
+      doorstepDelivery
+    });
     console.log('Total price:', totalPrice);
     
-    alert('Booking functionality will be implemented in the next phase!');
+    // Prepare booking data
+    const bookingData = {
+      carId: id,
+      startDate: pickupDate,
+      endDate: returnDate,
+      pickupLocation,
+      dropoffLocation: pickupLocation, // Same as pickup for now
+      includeDriver,
+      doorstepDelivery,
+      totalAmount: totalPrice
+    };
+    
+    try {
+      const response = await bookingsAPI.createBooking(bookingData);
+      
+      if (response?.data?.success) {
+        // Navigate to booking confirmation page
+        router.push(`/booking/confirmation/${response.data.data._id}`);
+      } else {
+        alert('Booking failed: ' + (response?.data?.message || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Error creating booking:', err);
+      alert('Booking failed: ' + (err.message || 'Unknown error'));
+    }
   };
 
   if (loading) {
@@ -296,12 +380,67 @@ export default function CarDetailPage({ params }) {
                 </div>
                 <div className="mb-6">
                   <label className="block text-sm font-medium mb-2">Pickup Location</label>
-                  <select className="w-full p-2 border rounded" required>
-                    <option value="">Select location</option>
-                    <option value="airport">Airport Terminal</option>
-                    <option value="downtown">Downtown Office</option>
-                    <option value="mall">Shopping Mall</option>
+                  <select 
+                    className="w-full p-2 border rounded" 
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                    required
+                  >
+                    {loadingLocations ? (
+                      <option value="">Loading locations...</option>
+                    ) : locations.length === 0 ? (
+                      <option value="">No locations available</option>
+                    ) : (
+                      locations.map(location => (
+                        <option key={location._id} value={location.code}>
+                          {location.name} - {location.address}
+                        </option>
+                      ))
+                    )}
                   </select>
+                </div>
+                
+                {/* Additional Services Section */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-700 mb-3">Additional Services</h3>
+                  
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded mb-2">
+                    <div>
+                      <div className="font-medium">Include Driver</div>
+                      <div className="text-sm text-gray-500">Professional driver for your journey</div>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-gray-600 mr-3">${30}/day</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer"
+                          checked={includeDriver}
+                          onChange={() => setIncludeDriver(!includeDriver)}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div>
+                      <div className="font-medium">Doorstep Delivery</div>
+                      <div className="text-sm text-gray-500">We'll deliver the car to your location</div>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-gray-600 mr-3">$25</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer"
+                          checked={doorstepDelivery}
+                          onChange={() => setDoorstepDelivery(!doorstepDelivery)}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="bg-gray-50 p-4 rounded-lg mb-6">
@@ -313,7 +452,19 @@ export default function CarDetailPage({ params }) {
                     <span>Number of days:</span>
                     <span>{totalDays}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-lg">
+                  {includeDriver && (
+                    <div className="flex justify-between mb-2">
+                      <span>Driver Service:</span>
+                      <span>${driverFee}</span>
+                    </div>
+                  )}
+                  {doorstepDelivery && (
+                    <div className="flex justify-between mb-2">
+                      <span>Doorstep Delivery:</span>
+                      <span>${deliveryFee}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-bold text-lg border-t border-gray-300 pt-2 mt-2">
                     <span>Total:</span>
                     <span>${totalPrice}</span>
                   </div>
