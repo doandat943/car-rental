@@ -6,12 +6,7 @@ const Car = mongoose.models.Car || mongoose.model('Car', new mongoose.Schema({
   brand: { type: mongoose.Schema.Types.ObjectId, ref: 'Brand', required: true },
   model: { type: String, required: true },
   year: { type: Number, required: true },
-  price: { 
-    hourly: Number,
-    daily: Number, 
-    weekly: Number, 
-    monthly: Number 
-  },
+  price: { type: Number, required: true }, // Daily rate only
   description: String,
   features: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Feature' }],
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },

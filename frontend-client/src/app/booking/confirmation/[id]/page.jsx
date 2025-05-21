@@ -66,6 +66,7 @@ export default function BookingConfirmationPage({ params }) {
   }
 
   const carName = booking.car?.name || `${booking.car?.brand} ${booking.car?.model}`;
+  const bookingCode = `BK-${booking._id.substr(-6).toUpperCase()}`;
   
   return (
     <main className="min-h-screen bg-gray-50 py-12">
@@ -76,11 +77,9 @@ export default function BookingConfirmationPage({ params }) {
             <FaCheckCircle className="mx-auto text-4xl mb-3" />
             <h1 className="text-2xl font-bold">Booking Confirmed!</h1>
             <p className="text-green-100">Your booking has been successfully placed</p>
-            {booking.bookingCode && (
-              <div className="mt-4 bg-white/20 rounded-lg py-2 px-4 inline-block">
-                <span className="font-medium">Booking Reference:</span> {booking.bookingCode}
-              </div>
-            )}
+            <div className="mt-4 bg-white/20 rounded-lg py-2 px-4 inline-block">
+              <span className="font-medium">Booking Reference:</span> {bookingCode}
+            </div>
           </div>
           
           {/* Car Details */}

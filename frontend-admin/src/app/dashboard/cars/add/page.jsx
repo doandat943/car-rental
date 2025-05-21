@@ -33,12 +33,7 @@ export default function AddCar() {
     brand: '',
     model: '',
     year: new Date().getFullYear(),
-    price: {
-      hourly: 0,
-      daily: 0,
-      weekly: 0,
-      monthly: 0
-    },
+    price: 0,
     category: '',
     description: '',
     features: [],
@@ -152,14 +147,10 @@ export default function AddCar() {
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name.startsWith('price.')) {
-      const priceField = name.split('.')[1];
+    if (name === 'price') {
       setFormData({
         ...formData,
-        price: {
-          ...formData.price,
-          [priceField]: parseFloat(value) || 0
-        }
+        price: parseFloat(value) || 0
       });
     } else if (name === 'seats') {
       setFormData({
@@ -524,12 +515,12 @@ export default function AddCar() {
             
             {/* Daily rental price */}
             <div>
-              <label htmlFor="price.daily" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rent price / day ($)</label>
+              <label htmlFor="price" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rent price / day ($)</label>
               <input 
                 type="number" 
-                id="price.daily" 
-                name="price.daily"
-                value={formData.price.daily}
+                id="price" 
+                name="price"
+                value={formData.price}
                 onChange={handleChange}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 placeholder="99.99" 

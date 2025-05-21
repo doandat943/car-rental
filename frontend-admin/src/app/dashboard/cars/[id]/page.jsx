@@ -571,31 +571,19 @@ export default function CarDetails({ params }) {
             </div>
           </div>
 
-          {/* Pricing */}
+          {/* Pricing */}          
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-medium text-gray-900 dark:text-white">Pricing</h2>
             </div>
             <div className="p-4">
               <ul className="space-y-2">
-                {carData.price?.daily && (
-                  <li className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Daily Rate</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(carData.price.daily)}</span>
-                  </li>
-                )}
-                {carData.price?.weekly && (
-                  <li className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Weekly Rate</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(carData.price.weekly)}</span>
-                  </li>
-                )}
-                {carData.price?.monthly && (
-                  <li className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Monthly Rate</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(carData.price.monthly)}</span>
-                  </li>
-                )}
+                <li className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Daily Rate</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {carData.price ? formatCurrency(carData.price) : 'N/A'}
+                  </span>
+                </li>
               </ul>
             </div>
           </div>

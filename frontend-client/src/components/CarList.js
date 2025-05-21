@@ -67,7 +67,7 @@ const CarCard = ({ car }) => {
         
         <div className="flex justify-between items-center mb-4">
           <span className="text-primary text-xl font-bold">
-            ${car.price?.daily} <span className="text-sm font-normal text-gray-500">/day</span>
+            ${car.price || 0} <span className="text-sm font-normal text-gray-500">/day</span>
           </span>
           
           {car.rating && (

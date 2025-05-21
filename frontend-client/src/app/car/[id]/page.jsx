@@ -87,7 +87,7 @@ export default function CarDetailPage({ params }) {
           document.title = `${carData.name || `${carData.brand?.name || carData.brand} ${carData.model?.name || carData.model}`} | Car Rental Service`;
           
           // Set initial price calculation with default dates
-          setTotalPrice(carData.price?.daily || 0);
+          setTotalPrice(carData.price || 0);
         } else {
           setError('Car details not found');
         }
@@ -115,7 +115,7 @@ export default function CarDetailPage({ params }) {
       setTotalDays(diffDays || 1);
       
       // Base rental cost
-      let total = (car.price?.daily || 0) * (diffDays || 1);
+      let total = (car.price || 0) * (diffDays || 1);
       
       // Add driver fee if selected
       if (includeDriver) {
@@ -382,26 +382,8 @@ export default function CarDetailPage({ params }) {
               <div className="mb-6">
                 <h3 className="font-semibold mb-2">Rental Prices</h3>
                 <div className="grid grid-cols-2 gap-y-2">
-                  {car.price?.hourly && (
-                    <>
-                      <div className="text-gray-600">Hourly:</div>
-                      <div className="font-semibold">${car.price.hourly}</div>
-                    </>
-                  )}
-                  <div className="text-gray-600">Daily:</div>
-                  <div className="font-semibold">${car.price?.daily || 'N/A'}</div>
-                  {car.price?.weekly && (
-                    <>
-                      <div className="text-gray-600">Weekly:</div>
-                      <div className="font-semibold">${car.price.weekly}</div>
-                    </>
-                  )}
-                  {car.price?.monthly && (
-                    <>
-                      <div className="text-gray-600">Monthly:</div>
-                      <div className="font-semibold">${car.price.monthly}</div>
-                    </>
-                  )}
+                  <div className="text-gray-600">Daily Rate:</div>
+                  <div className="font-semibold">${car.price || 'N/A'}</div>
                 </div>
               </div>
               
@@ -508,7 +490,7 @@ export default function CarDetailPage({ params }) {
                 <div className="bg-gray-50 p-4 rounded-lg mb-6">
                   <div className="flex justify-between mb-2">
                     <span>Daily Rate:</span>
-                    <span>${car.price?.daily || 0}</span>
+                    <span>${car.price || 0}</span>
                   </div>
                   <div className="flex justify-between mb-2">
                     <span>Number of days:</span>

@@ -42,11 +42,7 @@ export default function EditCar({ params }) {
     brand: '',
     model: '',
     year: new Date().getFullYear(),
-    price: {
-      daily: 0,
-      weekly: 0,
-      monthly: 0
-    },
+    price: 0,
     category: '',
     description: '',
     features: [],
@@ -141,11 +137,7 @@ export default function EditCar({ params }) {
             brand: carData.brand?._id || carData.brand || '',
             model: carData.model || '',
             year: carData.year || new Date().getFullYear(),
-            price: {
-              daily: carData.price?.daily || 0,
-              weekly: carData.price?.weekly || 0,
-              monthly: carData.price?.monthly || 0
-            },
+            price: carData.price || 0,
             category: carData.category?._id || carData.category || '',
             description: carData.description || '',
             features: carData.features?.map(f => typeof f === 'object' ? f._id : f) || [],
@@ -215,15 +207,11 @@ export default function EditCar({ params }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Handle nested price object
-    if (name.startsWith('price.')) {
-      const priceField = name.split('.')[1];
+    // Handle price field
+    if (name === 'price') {
       setFormData({
         ...formData,
-        price: {
-          ...formData.price,
-          [priceField]: parseFloat(value) || 0
-        }
+        price: parseFloat(value) || 0
       });
     } else if (name === 'seats') {
       setFormData({
@@ -431,14 +419,9 @@ export default function EditCar({ params }) {
         // Include top-level fields
         seats: formData.seats,
         transmission: formData.transmission,
-        fuel: formData.fuel
+        fuel: formData.fuel,
+        price: parseFloat(formData.price) || 0
       };
-      
-      // Clean up price fields if needed
-      if (typeof carDataToSend.price.hourly === 'string') carDataToSend.price.hourly = parseFloat(carDataToSend.price.hourly) || 0;
-      if (typeof carDataToSend.price.daily === 'string') carDataToSend.price.daily = parseFloat(carDataToSend.price.daily) || 0;
-      if (typeof carDataToSend.price.weekly === 'string') carDataToSend.price.weekly = parseFloat(carDataToSend.price.weekly) || 0;
-      if (typeof carDataToSend.price.monthly === 'string') carDataToSend.price.monthly = parseFloat(carDataToSend.price.monthly) || 0;
       
       // Add image display order information
       const imageOrder = displayOrder
@@ -697,12 +680,12 @@ export default function EditCar({ params }) {
             
             {/* Daily Price */}
             <div>
-              <label htmlFor="price.daily" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Price Per Day ($)</label>
+              <label htmlFor="price" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Price Per Day ($)</label>
               <input 
                 type="number" 
-                id="price.daily" 
-                name="price.daily"
-                value={formData.price.daily}
+                id="price" 
+                name="price"
+                value={formData.price}
                 onChange={handleChange}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                 placeholder="99.99" 

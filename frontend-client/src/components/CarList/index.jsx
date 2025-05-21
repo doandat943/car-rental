@@ -7,7 +7,7 @@ const CarCard = ({ car }) => {
   // Handle car data fields
   const carId = car._id;
   const carImage = car.images?.[0]?.url || (car.images?.[0] ? (car.images[0].startsWith('http') ? car.images[0] : `${API_BASE_URL}${car.images[0]}`) : null);
-  const carPrice = car.price?.daily || 0;
+  const carPrice = car.price || 0;
   const carSeats = car.seats || 5;
   const carTransmission = typeof car.transmission === 'object' ? car.transmission.name : car.transmission || 'Automatic';
   const carBrand = typeof car.brand === 'object' ? car.brand.name : car.brand || '';

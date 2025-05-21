@@ -367,7 +367,7 @@ export default function CarsManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">
-                      {car.price?.daily ? formatAmount(car.price.daily) : 'N/A'}
+                      {car.price ? formatAmount(car.price) : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusClass(car.status)}`}>

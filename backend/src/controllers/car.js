@@ -38,9 +38,9 @@ exports.getCars = async (req, res) => {
     
     // Price filter
     if (minPrice || maxPrice) {
-      filter['price.daily'] = {};
-      if (minPrice) filter['price.daily'].$gte = Number(minPrice);
-      if (maxPrice) filter['price.daily'].$lte = Number(maxPrice);
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
     
     // Build sort object
@@ -136,12 +136,7 @@ exports.createCar = async (req, res) => {
       seats: req.body.seats,
       transmission: req.body.transmission,
       fuel: req.body.fuel,
-      price: {
-        hourly: req.body.hourlyPrice,
-        daily: req.body.dailyPrice,
-        weekly: req.body.weeklyPrice,
-        monthly: req.body.monthlyPrice
-      }
+      price: req.body.price || req.body.dailyPrice || 0
     });
     
     await car.save();
@@ -202,12 +197,7 @@ exports.updateCar = async (req, res) => {
         seats: req.body.seats || car.seats,
         transmission: req.body.transmission || car.transmission,
         fuel: req.body.fuel || car.fuel,
-        price: {
-          hourly: req.body.price?.hourly || car.price.hourly,
-          daily: req.body.price?.daily || car.price.daily,
-          weekly: req.body.price?.weekly || car.price.weekly,
-          monthly: req.body.price?.monthly || car.price.monthly
-        }
+        price: req.body.price || car.price
       },
       { new: true }
     );

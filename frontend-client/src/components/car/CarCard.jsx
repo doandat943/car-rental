@@ -38,7 +38,7 @@ export default function CarCard({ car }) {
         
         {/* Price Badge */}
         <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold">
-          ${car.price?.daily}/day
+          ${car.price}/day
         </div>
       </div>
       

@@ -53,7 +53,7 @@ const RecentBookingsTable = ({ bookings }: RecentBookingsTableProps) => {
   const generateBookingCode = (id: number) => {
     // Convert ID to string and take the last 6 characters
     const idStr = id.toString();
-    const code = idStr.substring(Math.max(0, idStr.length - 6)).padStart(6, '0').toUpperCase();
+    const code = idStr.substring(Math.max(0, idStr.length - 6)).toUpperCase();
     return `BK-${code}`;
   };
 

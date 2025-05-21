@@ -210,9 +210,6 @@ exports.createBooking = async (req, res) => {
       const rentalAmount = dailyPrice * durationInDays;
       const totalAmount = rentalAmount + driverFee + deliveryFee;
       
-      // Generate a unique booking code
-      const bookingCode = `BK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-      
       // Create new booking
       const booking = new Booking({
         customer: req.user.id,
@@ -226,8 +223,7 @@ exports.createBooking = async (req, res) => {
         doorstepDelivery,
         driverFee,
         deliveryFee,
-        totalDays: durationInDays,
-        bookingCode
+        totalDays: durationInDays
       });
       
       await booking.save();

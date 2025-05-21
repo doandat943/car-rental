@@ -20,15 +20,14 @@ const Booking = mongoose.models.Booking || mongoose.model('Booking', new mongoos
   pickupLocation: { type: String, required: true },
   dropoffLocation: { type: String, required: true },
   
-  // Thêm các trường mới cho dịch vụ bổ sung
+  // Additional fields for premium services
   includeDriver: { type: Boolean, default: false },
   doorstepDelivery: { type: Boolean, default: false },
   driverFee: { type: Number, default: 0 },
   deliveryFee: { type: Number, default: 0 },
   totalDays: { type: Number, required: true },
   
-  // Các trường theo dõi
-  bookingCode: { type: String },
+  // Tracking fields
   specialRequests: { type: String },
   cancelReason: { type: String },
   

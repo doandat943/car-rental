@@ -61,11 +61,7 @@ const seedCars = async () => {
         model: 'Camry',
         year: 2023,
         description: 'Luxury D-segment sedan with excellent fuel efficiency',
-        price: {
-          daily: 85,
-          weekly: 500,
-          monthly: 1800
-        },
+        price: 85,
         seats: 5,
         transmission: transmissionMap['Automatic'],
         fuel: fuelMap['Gasoline'],
@@ -88,11 +84,7 @@ const seedCars = async () => {
         model: 'Civic',
         year: 2023,
         description: 'Sporty and efficient C-segment sedan',
-        price: {
-          daily: 75,
-          weekly: 450,
-          monthly: 1600
-        },
+        price: 75,
         seats: 5,
         transmission: transmissionMap['Automatic'],
         fuel: fuelMap['Gasoline'],
@@ -115,11 +107,7 @@ const seedCars = async () => {
         model: 'Model 3',
         year: 2023,
         description: 'High-performance electric car with self-driving technology',
-        price: {
-          daily: 120,
-          weekly: 720,
-          monthly: 2600
-        },
+        price: 120,
         seats: 5,
         transmission: transmissionMap['Automatic'],
         fuel: fuelMap['Electric'],
@@ -142,11 +130,7 @@ const seedCars = async () => {
         model: 'X5',
         year: 2023,
         description: 'Luxury SUV with outstanding performance',
-        price: {
-          daily: 175,
-          weekly: 1050,
-          monthly: 3800
-        },
+        price: 175,
         seats: 7,
         transmission: transmissionMap['Automatic'],
         fuel: fuelMap['Diesel'],
@@ -169,11 +153,7 @@ const seedCars = async () => {
         model: 'Mustang GT',
         year: 2023,
         description: 'Iconic American sports car',
-        price: {
-          daily: 150,
-          weekly: 900,
-          monthly: 3200
-        },
+        price: 150,
         seats: 4,
         transmission: transmissionMap['Manual'],
         fuel: fuelMap['Gasoline'],
@@ -196,11 +176,7 @@ const seedCars = async () => {
         model: 'C300',
         year: 2022,
         description: 'Luxury sedan with advanced technology',
-        price: {
-          daily: 160,
-          weekly: 960,
-          monthly: 3500
-        },
+        price: 160,
         seats: 5,
         transmission: transmissionMap['Automatic'],
         fuel: fuelMap['Gasoline'],
@@ -223,11 +199,7 @@ const seedCars = async () => {
         model: 'Prius',
         year: 2023,
         description: 'Fuel-efficient hybrid vehicle',
-        price: {
-          daily: 70,
-          weekly: 420,
-          monthly: 1500
-        },
+        price: 70,
         seats: 5,
         transmission: transmissionMap['CVT'],
         fuel: fuelMap['Hybrid'],

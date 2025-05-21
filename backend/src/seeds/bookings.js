@@ -55,7 +55,7 @@ const seedBookings = async () => {
       }
       
       // Calculate total amount based on duration and car daily price
-      const totalAmount = car.price.daily * duration;
+      const totalAmount = car.price * duration;
       
       // Random payment status
       const paymentStatus = status === 'completed' ? 'paid' : (Math.random() > 0.5 ? 'paid' : 'pending');
@@ -87,7 +87,11 @@ const seedBookings = async () => {
         doorstepDelivery,
         driverFee,
         deliveryFee,
-        createdAt: new Date(startDate.getTime() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)) // 1-7 days before start date
+        // Ensure createdAt is always in the past (not in the future)
+        createdAt: new Date(Math.min(
+          Date.now(), // Current date/time
+          startDate.getTime() - Math.floor(Math.random() * 15 * 24 * 60 * 60 * 1000) // 1-15 days before start date
+        ))
       };
       
       bookingsData.push(booking);
@@ -102,6 +106,26 @@ const seedBookings = async () => {
 
     // Insert bookings into the database
     const createdBookings = await Booking.insertMany(bookingsData);
+    
+    // Find the earliest and latest createdAt dates for reporting
+    let earliestDate = new Date();
+    let latestDate = new Date(0); // Jan 1, 1970
+    
+    createdBookings.forEach(booking => {
+      if (booking.createdAt < earliestDate) earliestDate = booking.createdAt;
+      if (booking.createdAt > latestDate) latestDate = booking.createdAt;
+    });
+    
+    // Format dates for better readability
+    const formatDate = (date) => {
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
     
     console.log(`${createdBookings.length} bookings seeded successfully`);
     return createdBookings;
