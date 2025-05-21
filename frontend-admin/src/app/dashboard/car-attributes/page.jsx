@@ -10,7 +10,9 @@ import {
   X,
   ChevronDown,
   Search,
-  AlertCircle 
+  AlertCircle,
+  Plus,
+  Check
 } from 'lucide-react';
 import { brandsAPI, transmissionsAPI, fuelsAPI, featuresAPI, categoriesAPI } from '../../../lib/api';
 import { Button } from '../../../components/ui/Button';
@@ -547,11 +549,48 @@ export default function CarAttributesPage() {
                       >
                         Cancel
                       </Button>
-                      <Button
-                        type="submit"
-                      >
-                        {modalType === 'add' ? 'Add' : 'Update'}
-                      </Button>
+                      {activeTab === 'features' && modalType === 'add' ? (
+                        <button
+                          type="submit"
+                          disabled={loading || !modalData.name}
+                          className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 px-4 py-2.5 rounded-lg text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Creating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4" />
+                              <span>Add feature</span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <Button
+                          type="submit"
+                          disabled={loading || !modalData.name}
+                          className="flex items-center gap-2"
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Processing...</span>
+                            </>
+                          ) : modalType === 'add' ? (
+                            <>
+                              <Plus className="h-4 w-4" />
+                              <span>Add {activeTab.slice(0, -1)}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4" />
+                              <span>Update</span>
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </form>
                 </div>

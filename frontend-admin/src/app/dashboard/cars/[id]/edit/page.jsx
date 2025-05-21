@@ -17,6 +17,16 @@ import { carsAPI, categoriesAPI, brandsAPI, transmissionsAPI, fuelsAPI, features
 import { Button } from '../../../../../components/ui/Button';
 import React from 'react';
 
+// Feature category options
+const FEATURE_CATEGORIES = [
+  'safety',
+  'technology',
+  'comfort',
+  'performance',
+  'convenience',
+  'other'
+];
+
 export default function EditCar({ params }) {
   const router = useRouter();
   const { id } = use(params);
@@ -58,6 +68,16 @@ export default function EditCar({ params }) {
   const [availableFeatures, setAvailableFeatures] = useState([]);
   const [attributesLoading, setAttributesLoading] = useState(true);
   const [selectedFeatures, setSelectedFeatures] = useState([]);
+
+  // Modal state
+  const [showFeatureModal, setShowFeatureModal] = useState(false);
+  const [newFeatureData, setNewFeatureData] = useState({
+    name: '',
+    category: 'other',
+    description: ''
+  });
+  const [createFeatureLoading, setCreateFeatureLoading] = useState(false);
+  const [createFeatureError, setCreateFeatureError] = useState(null);
 
   // Get attributes list
   useEffect(() => {
@@ -263,6 +283,54 @@ export default function EditCar({ params }) {
     return feature ? feature.name : 'Unknown Feature';
   };
 
+  // Get feature with category
+  const getFeatureWithCategory = (featureId) => {
+    const feature = availableFeatures.find(f => f._id === featureId);
+    if (!feature) return { name: 'Unknown Feature', category: 'other' };
+    return {
+      name: feature.name,
+      category: feature.category || 'other'
+    };
+  };
+
+  // Group selected features by category
+  const groupSelectedFeaturesByCategory = () => {
+    const grouped = {};
+    
+    selectedFeatures.forEach(featureId => {
+      const feature = getFeatureWithCategory(featureId);
+      const category = feature.category;
+      
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      
+      grouped[category].push({
+        id: featureId,
+        name: feature.name
+      });
+    });
+    
+    return grouped;
+  };
+
+  // Group features by category
+  const groupFeaturesByCategory = () => {
+    const grouped = {};
+    
+    availableFeatures
+      .filter(feature => !selectedFeatures.includes(feature._id))
+      .forEach(feature => {
+        const category = feature.category || 'other';
+        if (!grouped[category]) {
+          grouped[category] = [];
+        }
+        grouped[category].push(feature);
+      });
+    
+    return grouped;
+  };
+
   // Handle image file selection
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
@@ -348,6 +416,50 @@ export default function EditCar({ params }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle creating a new feature
+  const handleCreateFeature = async (e) => {
+    e.preventDefault();
+    setCreateFeatureLoading(true);
+    setCreateFeatureError(null);
+    
+    try {
+      const response = await featuresAPI.createFeature(newFeatureData);
+      
+      if (response.success) {
+        // Add the new feature to the available features list
+        const newFeature = response.data;
+        setAvailableFeatures([...availableFeatures, newFeature]);
+        
+        // Select the new feature
+        handleFeatureSelect(newFeature._id);
+        
+        // Reset form and close modal
+        setNewFeatureData({
+          name: '',
+          category: 'other',
+          description: ''
+        });
+        setShowFeatureModal(false);
+      } else {
+        setCreateFeatureError(response.message || 'Failed to create feature');
+      }
+    } catch (error) {
+      console.error('Error creating feature:', error);
+      setCreateFeatureError(error.message || 'An error occurred while creating the feature');
+    } finally {
+      setCreateFeatureLoading(false);
+    }
+  };
+  
+  // Handle feature modal input changes
+  const handleFeatureModalInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewFeatureData({
+      ...newFeatureData,
+      [name]: value
+    });
   };
 
   if (pageLoading) {
@@ -623,45 +735,54 @@ export default function EditCar({ params }) {
                 {attributesLoading ? (
                   <option disabled>Loading features...</option>
                 ) : (
-                  availableFeatures
-                    .filter(feature => !selectedFeatures.includes(feature._id))
-                    .map(feature => (
-                      <option key={feature._id} value={feature._id}>
-                        {feature.name} ({feature.category})
-                      </option>
-                    ))
+                  Object.entries(groupFeaturesByCategory()).map(([category, features]) => (
+                    <optgroup key={category} label={category.charAt(0).toUpperCase() + category.slice(1)}>
+                      {features.map(feature => (
+                        <option key={feature._id} value={feature._id}>
+                          {feature.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))
                 )}
               </select>
               <button
                 type="button"
-                onClick={handleAddFeature}
+                onClick={() => setShowFeatureModal(true)}
                 className="px-4 py-2.5 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg rounded-l-none text-sm focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
                 <Plus className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="mt-2">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                Can't find a feature? <a href="/dashboard/car-attributes" className="text-blue-600 dark:text-blue-500 hover:underline">Add it here</a>
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {selectedFeatures.map((featureId) => (
-                <div key={featureId} className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1">
-                  <span className="text-sm text-gray-800 dark:text-gray-200">{getFeatureName(featureId)}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFeature(featureId)}
-                    className="ml-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              {selectedFeatures.length === 0 && (
+            <div className="mb-2">
+              {selectedFeatures.length === 0 ? (
                 <span className="text-sm text-gray-500 dark:text-gray-400">No features selected</span>
+              ) : (
+                <div className="space-y-4 mt-4">
+                  {Object.entries(groupSelectedFeaturesByCategory()).map(([category, features]) => (
+                    <div key={category} className="border-0 border-l-4 border-blue-500 dark:border-blue-600 pl-3">
+                      <h4 className="text-sm font-medium capitalize mb-2 text-blue-600 dark:text-blue-400">
+                        {category}
+                      </h4>
+                      <div className="space-y-1">
+                        {features.map(feature => (
+                          <div key={feature.id} className="flex items-center justify-between py-1">
+                            <span className="text-sm text-gray-800 dark:text-gray-200">{feature.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFeature(feature.id)}
+                              className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              aria-label={`Remove ${feature.name}`}
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -789,6 +910,124 @@ export default function EditCar({ params }) {
           </div>
         </form>
       </div>
+
+      {/* Feature creation modal */}
+      {showFeatureModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800">
+              <div className="absolute top-3 right-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowFeatureModal(false)}
+                  className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                  <span className="sr-only">Close modal</span>
+                </button>
+              </div>
+              <div className="p-6">
+                <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white" id="modal-title">
+                  Add New Feature
+                </h3>
+                <div className="mt-4">
+                  {createFeatureError && (
+                    <div className="mb-4 flex p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                      <AlertCircle className="flex-shrink-0 inline w-5 h-5 mr-3" />
+                      <span className="sr-only">Error</span>
+                      <div>{createFeatureError}</div>
+                    </div>
+                  )}
+                  
+                  <form onSubmit={handleCreateFeature}>
+                    <div className="mb-4">
+                      <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={newFeatureData.name}
+                        onChange={handleFeatureModalInputChange}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        placeholder="Enter feature name"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Description
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={newFeatureData.description}
+                        onChange={handleFeatureModalInputChange}
+                        rows="3"
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        placeholder="Enter feature description"
+                      ></textarea>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label htmlFor="category" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Category
+                      </label>
+                      <select
+                        id="category"
+                        name="category"
+                        value={newFeatureData.category}
+                        onChange={handleFeatureModalInputChange}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        required
+                      >
+                        <option value="comfort">Comfort</option>
+                        <option value="safety">Safety</option>
+                        <option value="performance">Performance</option>
+                        <option value="technology">Technology</option>
+                        <option value="convenience">Convenience</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowFeatureModal(false)}
+                        disabled={createFeatureLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={createFeatureLoading || !newFeatureData.name}
+                        className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 px-4 py-2.5 rounded-lg text-white text-sm font-medium"
+                      >
+                        {createFeatureLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Creating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-4 w-4" />
+                            <span>Add feature</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
