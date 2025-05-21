@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { FaSearch, FaEdit, FaTrash, FaCar, FaEye } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { carsAPI, API_BASE_URL } from '@/lib/api';
 
 /**
  * CarStatusTable Component
@@ -121,7 +121,7 @@ const CarStatusTable = ({ cars }: CarStatusTableProps) => {
                     <div className="h-10 w-10 flex-shrink-0 mr-3 relative">
                       {car.images && car.images.length > 0 ? (
                         <Image 
-                          src={car.images[0].startsWith('http') ? car.images[0] : `http://localhost:5000${car.images[0]}`}
+                          src={car.images[0].startsWith('http') ? car.images[0] : `${API_BASE_URL}${car.images[0]}`}
                           alt={car.name}
                           fill
                           className="rounded-md object-cover"
@@ -179,7 +179,7 @@ const CarStatusTable = ({ cars }: CarStatusTableProps) => {
                       onClick={async () => {
                         if (window.confirm('Are you sure you want to delete this car?')) {
                           try {
-                            await api.deleteCar(car._id);
+                            await carsAPI.deleteCar(car._id);
                             // Refresh the page to show updated list
                             router.refresh();
                           } catch (error) {

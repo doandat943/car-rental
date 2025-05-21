@@ -2,14 +2,15 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function CarCard({ car }) {
   const [isHovered, setIsHovered] = useState(false);
   
-  // Default image if no images are provided
+  // Properly handle images from API
   const displayImage = car.images && car.images.length > 0 
-    ? car.images[0] 
-    : '/placeholder.jpg';
+    ? (car.images[0].url || (car.images[0].startsWith('http') ? car.images[0] : `${API_BASE_URL}${car.images[0]}`))
+    : null;
   
   return (
     <div 
@@ -20,10 +21,17 @@ export default function CarCard({ car }) {
     >
       {/* Car Image */}
       <div className="relative h-48 bg-gray-200">
-        {/* This would be an actual image in a real app */}
-        <div className="h-full flex items-center justify-center">
-          <span className="text-gray-500">Car Image</span>
-        </div>
+        {displayImage ? (
+          <img 
+            src={displayImage}
+            alt={car.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <span className="text-gray-500">No Image Available</span>
+          </div>
+        )}
         
         {/* Price Badge */}
         <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">

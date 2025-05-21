@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { carsAPI } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/api';
 import { FaStar, FaCheck } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
@@ -32,7 +33,7 @@ export default function CarDetailPage({ params }) {
           setCar(carData);
           
           // Set page title dynamically
-          document.title = `${carData.name || `${carData.brand} ${carData.model}`} | Car Rental Service`;
+          document.title = `${carData.name || `${carData.brand?.name || carData.brand} ${carData.model?.name || carData.model}`} | Car Rental Service`;
           
           // Set initial price calculation
           setTotalPrice(carData.price?.daily || 0);
@@ -103,7 +104,7 @@ export default function CarDetailPage({ params }) {
           <span className="mx-2">/</span>
           <Link href="/cars" className="text-blue-600 hover:text-blue-800">Cars</Link>
           <span className="mx-2">/</span>
-          <span className="text-gray-600">{car.name || `${car.brand} ${car.model}`}</span>
+          <span className="text-gray-600">{car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -114,8 +115,8 @@ export default function CarDetailPage({ params }) {
               <div className="bg-gray-200 h-80 relative mb-4 rounded-lg overflow-hidden">
                 {car.images && car.images.length > 0 ? (
                   <Image 
-                    src={car.images[0].startsWith('http') ? car.images[0] : `http://localhost:5000${car.images[0]}`}
-                    alt={car.name || `${car.brand} ${car.model}`}
+                    src={car.images[0].url || (car.images[0].startsWith('http') ? car.images[0] : `${API_BASE_URL}${car.images[0]}`)}
+                    alt={car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`}
                     fill
                     className="object-cover"
                   />
@@ -130,8 +131,8 @@ export default function CarDetailPage({ params }) {
                   {car.images.slice(1).map((image, index) => (
                     <div key={index} className="bg-gray-200 h-24 relative rounded-lg overflow-hidden">
                       <Image 
-                        src={image.startsWith('http') ? image : `http://localhost:5000${image}`}
-                        alt={`${car.name || `${car.brand} ${car.model}`} - Image ${index + 2}`}
+                        src={image.url || (image.startsWith('http') ? image : `${API_BASE_URL}${image}`)}
+                        alt={`${car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`} - Image ${index + 2}`}
                         fill
                         className="object-cover"
                       />
@@ -143,7 +144,7 @@ export default function CarDetailPage({ params }) {
 
             {/* Car Details */}
             <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-              <h1 className="text-3xl font-bold mb-2">{car.name || `${car.brand} ${car.model}`}</h1>
+              <h1 className="text-3xl font-bold mb-2">{car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`}</h1>
               {car.rating && (
                 <div className="flex items-center mb-4">
                   <div className="text-yellow-400 flex mr-2">
@@ -160,11 +161,11 @@ export default function CarDetailPage({ params }) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <div className="text-gray-600">Brand</div>
-                    <div className="font-semibold">{typeof car.brand === 'object' ? car.brand.name : car.brand}</div>
+                    <div className="font-semibold">{typeof car.brand === 'object' ? car.brand.name : car.brand?.name || car.brand}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Model</div>
-                    <div className="font-semibold">{typeof car.model === 'object' ? car.model.name : car.model}</div>
+                    <div className="font-semibold">{typeof car.model === 'object' ? car.model.name : car.model?.name || car.model}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Year</div>

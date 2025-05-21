@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { carsAPI, categoriesAPI, brandsAPI, fuelsAPI, transmissionsAPI } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function CarsPage() {
   const [cars, setCars] = useState([]);
@@ -45,15 +46,8 @@ export default function CarsPage() {
           const brandsData = brandsResponse?.data?.data || [];
           setBrands(Array.isArray(brandsData) ? brandsData : []);
         } catch (err) {
-          console.log('Brands API not available, using mock data');
-          setBrands([
-            { _id: 'tesla', name: 'Tesla' },
-            { _id: 'toyota', name: 'Toyota' },
-            { _id: 'ford', name: 'Ford' },
-            { _id: 'honda', name: 'Honda' },
-            { _id: 'bmw', name: 'BMW' },
-            { _id: 'mercedes', name: 'Mercedes-Benz' }
-          ]);
+          console.error('Failed to fetch brands:', err);
+          setBrands([]);
         }
         
         // Fetch fuels for filters (if API available)
@@ -62,13 +56,8 @@ export default function CarsPage() {
           const fuelsData = fuelsResponse?.data?.data || [];
           setFuels(Array.isArray(fuelsData) ? fuelsData : []);
         } catch (err) {
-          console.log('Fuels API not available, using mock data');
-          setFuels([
-            { _id: 'gasoline', name: 'Gasoline' },
-            { _id: 'diesel', name: 'Diesel' },
-            { _id: 'electric', name: 'Electric' },
-            { _id: 'hybrid', name: 'Hybrid' }
-          ]);
+          console.error('Failed to fetch fuels:', err);
+          setFuels([]);
         }
         
         // Fetch transmissions for filters (if API available)
@@ -77,13 +66,8 @@ export default function CarsPage() {
           const transmissionsData = transmissionsResponse?.data?.data || [];
           setTransmissions(Array.isArray(transmissionsData) ? transmissionsData : []);
         } catch (err) {
-          console.log('Transmissions API not available, using mock data');
-          setTransmissions([
-            { _id: 'automatic', name: 'Automatic' },
-            { _id: 'manual', name: 'Manual' },
-            { _id: 'cvt', name: 'CVT' },
-            { _id: 'dualclutch', name: 'Dual Clutch' }
-          ]);
+          console.error('Failed to fetch transmissions:', err);
+          setTransmissions([]);
         }
         
         setLoading(false);
@@ -91,33 +75,7 @@ export default function CarsPage() {
         console.error("Error fetching data:", err);
         setError("Failed to load cars. Please try again later.");
         setLoading(false);
-        
-        // Fallback to mock data
-        setCars([
-          {
-            id: 1,
-            name: 'Tesla Model 3',
-            brand: 'Tesla',
-            category: 'Sedan',
-            price: { daily: 100 },
-            images: ['/placeholder.jpg'],
-            seats: 5,
-            transmission: 'Automatic',
-            fuel: 'Electric'
-          },
-          {
-            id: 2,
-            name: 'Toyota RAV4',
-            brand: 'Toyota',
-            category: 'SUV',
-            price: { daily: 80 },
-            images: ['/placeholder.jpg'],
-            seats: 5,
-            transmission: 'Automatic',
-            fuel: 'Hybrid'
-          },
-          // ... other mock cars
-        ]);
+        setCars([]);
       }
     };
     
@@ -321,7 +279,7 @@ export default function CarsPage() {
                 <div className="h-48 bg-gray-200 relative">
                   {car.images && car.images.length > 0 ? (
                     <img 
-                      src={car.images[0].startsWith('http') ? car.images[0] : `http://localhost:5000${car.images[0]}`}
+                      src={car.images[0].startsWith('http') ? car.images[0] : `${API_BASE_URL}${car.images[0]}`}
                       alt={car.name}
                       className="object-cover w-full h-full"
                     />

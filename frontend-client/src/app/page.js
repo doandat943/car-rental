@@ -86,66 +86,6 @@ export default function Home() {
         console.error("Error fetching data:", err);
         setError("Failed to load data. Please try again later.");
         setLoading(false);
-        
-        // Fallback to demo data if API fails
-        setCategories([
-          { id: 1, name: 'Sedan' },
-          { id: 2, name: 'SUV' },
-          { id: 3, name: 'Sports Car' },
-          { id: 4, name: 'Electric' },
-          { id: 5, name: 'Luxury' },
-        ]);
-        
-        setCars([
-          {
-            id: 1,
-            name: 'Toyota Camry',
-            brand: 'Toyota',
-            model: 'Camry',
-            year: 2023,
-            price: { daily: 45 },
-            image: '/placeholder-car.jpg',
-            seats: 5,
-            transmission: 'Automatic',
-            fuel: 'Gasoline'
-          },
-          {
-            id: 2,
-            name: 'Honda Civic',
-            brand: 'Honda',
-            model: 'Civic',
-            year: 2023,
-            price: { daily: 40 },
-            image: '/placeholder-car.jpg',
-            seats: 5,
-            transmission: 'Automatic',
-            fuel: 'Gasoline'
-          },
-          {
-            id: 3,
-            name: 'Tesla Model 3',
-            brand: 'Tesla',
-            model: 'Model 3',
-            year: 2023,
-            price: { daily: 80 },
-            image: '/placeholder-car.jpg',
-            seats: 5,
-            transmission: 'Automatic',
-            fuel: 'Electric'
-          },
-          {
-            id: 4,
-            name: 'BMW X5',
-            brand: 'BMW',
-            model: 'X5',
-            year: 2023,
-            price: { daily: 95 },
-            image: '/placeholder-car.jpg',
-            seats: 7,
-            transmission: 'Automatic',
-            fuel: 'Diesel'
-          }
-        ]);
       }
     };
     

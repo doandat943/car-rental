@@ -2,6 +2,9 @@
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000';
 const API_URL = `${API_BASE_URL}/api`;
 
+// Export API_BASE_URL for use in other components
+export { API_BASE_URL };
+
 /**
  * Utility functions for API calls
  */

@@ -1,12 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { API_BASE_URL } from '@/lib/api';
 
 const CarCard = ({ car }) => {
-  // Handle fields that might differ between API and mock data
-  const carId = car._id || car.id;
-  const carImage = car.images?.[0] || car.image || "/placeholder-car.jpg";
-  const carPrice = car.price?.daily || car.price || 0;
+  // Handle car data fields
+  const carId = car._id;
+  const carImage = car.images?.[0]?.url || (car.images?.[0] ? (car.images[0].startsWith('http') ? car.images[0] : `${API_BASE_URL}${car.images[0]}`) : null);
+  const carPrice = car.price?.daily || 0;
   const carSeats = car.seats || 5;
   const carTransmission = typeof car.transmission === 'object' ? car.transmission.name : car.transmission || 'Automatic';
   const carBrand = typeof car.brand === 'object' ? car.brand.name : car.brand || '';
@@ -15,12 +16,18 @@ const CarCard = ({ car }) => {
   return (
     <div className="card car-card hover:shadow-lg transition-shadow duration-300">
       <div className="car-card-image">
-        <Image 
-          src={carImage} 
-          alt={car.name}
-          fill
-          className="object-cover"
-        />
+        {carImage ? (
+          <Image 
+            src={carImage} 
+            alt={car.name}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+            <span className="text-gray-500">No image available</span>
+          </div>
+        )}
       </div>
       <div className="car-card-content">
         <div className="flex justify-between items-start mb-2">
@@ -79,7 +86,7 @@ const CarList = ({ cars = [], title = "Featured Cars" }) => {
       <h2 className="text-3xl font-bold mb-8">{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {carsList.map((car) => (
-          <CarCard key={car._id || car.id || Math.random()} car={car} />
+          <CarCard key={car._id} car={car} />
         ))}
       </div>
     </div>

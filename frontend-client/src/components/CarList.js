@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaUsers, FaCog, FaStar } from 'react-icons/fa';
+import { API_BASE_URL } from '@/lib/api';
 
 const CarList = ({ cars = [], title = "Our Cars" }) => {
   console.log("Cars passed to CarList:", cars);
@@ -30,18 +31,15 @@ const CarList = ({ cars = [], title = "Our Cars" }) => {
               <div className="relative h-48 w-full bg-gray-200">
                 {car.images && car.images.length > 0 ? (
                   <Image 
-                    src={car.images[0].startsWith('http') ? car.images[0] : `http://localhost:5000${car.images[0]}`} 
+                    src={car.images[0].startsWith('http') ? car.images[0] : `${API_BASE_URL}${car.images[0]}`} 
                     alt={car.name || `${car.brand} ${car.model}`}
                     fill
                     className="object-cover"
                   />
                 ) : (
-                  <Image 
-                    src="/placeholder-car.jpg" 
-                    alt={car.name || `${car.brand} ${car.model}`}
-                    fill
-                    className="object-cover"
-                  />
+                  <div className="h-full w-full flex items-center justify-center">
+                    <span className="text-gray-500">No Image Available</span>
+                  </div>
                 )}
               </div>
               
