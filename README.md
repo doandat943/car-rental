@@ -151,6 +151,32 @@ After running the seed script, you can log in with the following credentials:
 - Email: admin@carental.com
 - Password: Admin123!
 
+## AI-Powered Chatbot with Google Gemini
+
+This application includes an AI-powered chatbot that uses Google's Gemini API to provide intelligent responses to customer inquiries. The chatbot can:
+
+- Answer questions about rental policies, car availability, and booking procedures
+- Search for cars based on user requirements (type, brand, price range)
+- Maintain conversation context for more natural interactions
+- Fall back to pre-defined responses when AI is unavailable
+
+### Setting up Gemini AI
+
+1. Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Add the API key to your environment files:
+   - For the frontend: `NEXT_PUBLIC_GEMINI_API_KEY` in frontend-client/.env.local
+   - For the backend: `GEMINI_API_KEY` in backend/.env
+
+### Chatbot Fallback Mechanism
+
+The chatbot is designed to gracefully degrade functionality:
+1. First tries to match against known FAQs
+2. Then searches for car-related queries
+3. Uses Gemini AI for complex or unknown questions
+4. Falls back to rule-based responses if AI is unavailable
+
+The chat experience remains functional even without an API key, making it suitable for development and testing environments.
+
 ## License
 
 This project is licensed under the MIT License. 

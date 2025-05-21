@@ -1076,7 +1076,7 @@ export default function SettingsPage() {
                     {loading ? 'Saving...' : 'Save All FAQs'}
                   </Button>
                 </div>
-              </div>
+        </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1540,8 +1540,8 @@ export default function SettingsPage() {
                   >
                     {loading ? 'Saving...' : 'Save User Settings'}
                   </Button>
-                </div>
-              </div>
+        </div>
+      </div>
             </CardContent>
           </Card>
         </TabsContent>
