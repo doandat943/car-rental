@@ -338,7 +338,9 @@ export default function CarsManagement() {
                         <div className="flex-shrink-0 h-10 w-10 relative rounded-md overflow-hidden mr-4">
                           {car.images && car.images.length > 0 && !imageLoadErrors[car._id] ? (
                             <img
-                              src={car.images[0].startsWith('http') ? car.images[0] : `https://via.placeholder.com/100x100?text=${car.brand || 'Car'}`}
+                              src={car.images[0].startsWith('http') 
+                                  ? car.images[0] 
+                                  : `${process.env.API_BASE_URL}${car.images[0]}`}
                               alt={car.name}
                               className="h-10 w-10 object-cover rounded-md"
                               onError={() => {

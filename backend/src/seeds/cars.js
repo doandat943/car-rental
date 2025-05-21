@@ -82,7 +82,7 @@ const seedCars = async () => {
           featureMap['Adaptive Cruise Control'],
           featureMap['Keyless Entry']
         ],
-        images: ['/uploads/cars/toyota-camry-1.jpg', '/uploads/cars/toyota-camry-2.jpg'],
+        images: [],
         status: 'available',
         rating: 4.3,
         reviewCount: 19,
@@ -109,7 +109,7 @@ const seedCars = async () => {
           featureMap['Android Auto'],
           featureMap['Lane Departure Warning']
         ],
-        images: ['/uploads/cars/honda-civic-1.jpg', '/uploads/cars/honda-civic-2.jpg'],
+        images: [],
         status: 'available',
         rating: 4.5,
         reviewCount: 15,
@@ -136,7 +136,7 @@ const seedCars = async () => {
           featureMap['Wireless Charging'],
           featureMap['Heated Seats']
         ],
-        images: ['/uploads/cars/tesla-model3-1.jpg', '/uploads/cars/tesla-model3-2.jpg'],
+        images: [],
         status: 'available',
         rating: 4.8,
         reviewCount: 28,
@@ -163,7 +163,7 @@ const seedCars = async () => {
           featureMap['Premium Sound System'],
           featureMap['Touchscreen Navigation']
         ],
-        images: ['/uploads/cars/bmw-x5-1.jpg', '/uploads/cars/bmw-x5-2.jpg'],
+        images: [],
         status: 'available',
         rating: 4.6,
         reviewCount: 22,
@@ -190,7 +190,7 @@ const seedCars = async () => {
           featureMap['Premium Sound System'],
           featureMap['Touchscreen Navigation']
         ],
-        images: ['/uploads/cars/ford-mustang-1.jpg', '/uploads/cars/ford-mustang-2.jpg'],
+        images: [],
         status: 'available',
         rating: 4.5,
         reviewCount: 12,
@@ -217,7 +217,7 @@ const seedCars = async () => {
           featureMap['Ambient Lighting'],
           featureMap['Blind Spot Monitor']
         ],
-        images: ['/uploads/cars/mercedes-c-class-1.jpg', '/uploads/cars/mercedes-c-class-2.jpg'],
+        images: [],
         status: 'available',
         rating: 4.7,
         reviewCount: 18,
@@ -244,7 +244,7 @@ const seedCars = async () => {
           featureMap['Wireless Charging'],
           featureMap['Apple CarPlay']
         ],
-        images: ['/uploads/cars/toyota-prius-1.jpg', '/uploads/cars/toyota-prius-2.jpg'],
+        images: [],
         status: 'available',
         rating: 4.4,
         reviewCount: 14,

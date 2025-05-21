@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Base API URL
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000';
+const API_URL = `${API_BASE_URL}/api`;
 
 /**
  * Utility functions for API calls
@@ -23,7 +25,7 @@ async function fetchWithAuth(endpoint, options = {}) {
     }
 
     // Handle query parameters if provided
-    let url = `${API_BASE_URL}${endpoint}`;
+    let url = `${API_URL}${endpoint}`;
     if (options.params) {
       const queryParams = new URLSearchParams();
       for (const key in options.params) {
@@ -172,7 +174,7 @@ export const carsAPI = {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_BASE_URL}/cars/${carId}/images`, {
+      const response = await fetch(`${API_URL}/cars/${carId}/images`, {
         method: 'POST',
         headers,
         body: formData, // FormData doesn't need Content-Type, browser will set it automatically
@@ -403,7 +405,7 @@ export const usersAPI = {
   // Request password reset
   requestPasswordReset: async (email) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/reset-password`, {
+      const response = await fetch(`${API_URL}/users/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -427,7 +429,7 @@ export const usersAPI = {
   // Reset password with token
   resetPassword: async (token, password) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/reset-password/${token}`, {
+      const response = await fetch(`${API_URL}/users/reset-password/${token}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -456,7 +458,7 @@ export const authAPI = {
   // Login
   login: async (email, password) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

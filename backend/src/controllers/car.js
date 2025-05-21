@@ -176,10 +176,20 @@ exports.updateCar = async (req, res) => {
       });
     }
     
+    // Handle images array
+    let images = [];
+    
+    // If client sends images array, use it (maintain order)
+    if (req.body.images && Array.isArray(req.body.images)) {
+      images = req.body.images;
+    } else {
+      // Otherwise, use existing images
+      images = [...car.images];
+    }
+    
     // Add new images if files were uploaded
-    let images = [...car.images];
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => `/uploads/${file.filename}`);
+      const newImages = req.files.map(file => `/uploads/cars/${file.filename}`);
       images = [...images, ...newImages];
     }
     
@@ -188,15 +198,15 @@ exports.updateCar = async (req, res) => {
       req.params.id,
       {
         ...req.body,
-        images,
+        images, // Use images order we determined
         seats: req.body.seats || car.seats,
         transmission: req.body.transmission || car.transmission,
         fuel: req.body.fuel || car.fuel,
         price: {
-          hourly: req.body.hourlyPrice || car.price.hourly,
-          daily: req.body.dailyPrice || car.price.daily,
-          weekly: req.body.weeklyPrice || car.price.weekly,
-          monthly: req.body.monthlyPrice || car.price.monthly
+          hourly: req.body.price?.hourly || car.price.hourly,
+          daily: req.body.price?.daily || car.price.daily,
+          weekly: req.body.price?.weekly || car.price.weekly,
+          monthly: req.body.price?.monthly || car.price.monthly
         }
       },
       { new: true }
@@ -242,6 +252,96 @@ exports.deleteCar = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error deleting car',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Upload an image to a car
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.uploadImage = async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+    
+    if (!car) {
+      return res.status(404).json({
+        success: false,
+        message: 'Car not found'
+      });
+    }
+    
+    // Check if there's a file uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image file provided'
+      });
+    }
+    
+    // Generate image path
+    const imagePath = `/uploads/cars/${req.file.filename}`;
+    
+    // Add the new image to the car's images array
+    car.images.push(imagePath);
+    await car.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Image uploaded successfully',
+      data: {
+        imageUrl: imagePath
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading image',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Delete an image from a car
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.deleteImage = async (req, res) => {
+  try {
+    const { id, imageId } = req.params;
+    
+    const car = await Car.findById(id);
+    
+    if (!car) {
+      return res.status(404).json({
+        success: false,
+        message: 'Car not found'
+      });
+    }
+    
+    // Find the image in the car's images array
+    if (!car.images.includes(imageId)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Image not found'
+      });
+    }
+    
+    // Remove the image from the car's images array
+    car.images = car.images.filter(image => image !== imageId);
+    await car.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Image deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting image',
       error: error.message
     });
   }

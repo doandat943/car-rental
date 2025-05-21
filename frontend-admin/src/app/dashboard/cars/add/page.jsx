@@ -289,6 +289,29 @@ export default function AddCar() {
     setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
   };
 
+  // Handle drag start
+  const handleDragStart = (e, index) => {
+    e.dataTransfer.setData('index', index.toString());
+  };
+
+  // Handle drag over
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  // Handle drop
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    
+    const dragIndex = parseInt(e.dataTransfer.getData('index'));
+    if (dragIndex === dropIndex) return;
+    
+    const updatedFiles = [...selectedFiles];
+    const [movedFile] = updatedFiles.splice(dragIndex, 1);
+    updatedFiles.splice(dropIndex, 0, movedFile);
+    setSelectedFiles(updatedFiles);
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -735,12 +758,19 @@ export default function AddCar() {
                 <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Selected images:</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {selectedFiles.map((file, index) => (
-                    <div key={index} className="relative group">
+                    <div 
+                      key={index} 
+                      className="relative group"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, index)}
+                    >
                       <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative">
                         <img
                           src={URL.createObjectURL(file)}
                           alt={`Preview ${index}`}
-                          className="object-cover w-full h-20"
+                          className="object-cover w-full h-20 cursor-move"
                         />
                         <button
                           type="button"
@@ -749,6 +779,9 @@ export default function AddCar() {
                         >
                           <X className="w-4 h-4" />
                         </button>
+                        <div className="absolute bottom-1 left-1 bg-gray-800 bg-opacity-70 rounded-full px-2 py-0.5">
+                          <span className="text-xs text-white">{index + 1}</span>
+                        </div>
                       </div>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
                         {file.name}

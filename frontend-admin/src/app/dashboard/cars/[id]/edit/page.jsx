@@ -11,7 +11,13 @@ import {
   Plus,
   Loader2,
   AlertCircle,
-  Check
+  Check,
+  ShieldCheck,
+  Cpu,
+  Sofa,
+  Gauge,
+  Heart,
+  ListChecks
 } from 'lucide-react';
 import { carsAPI, categoriesAPI, brandsAPI, transmissionsAPI, fuelsAPI, featuresAPI } from '../../../../../lib/api';
 import { Button } from '../../../../../components/ui/Button';
@@ -68,6 +74,7 @@ export default function EditCar({ params }) {
   const [availableFeatures, setAvailableFeatures] = useState([]);
   const [attributesLoading, setAttributesLoading] = useState(true);
   const [selectedFeatures, setSelectedFeatures] = useState([]);
+  const [displayOrder, setDisplayOrder] = useState([]);
 
   // Modal state
   const [showFeatureModal, setShowFeatureModal] = useState(false);
@@ -194,6 +201,15 @@ export default function EditCar({ params }) {
 
     fetchCategories();
   }, []);
+
+  // Effect to initialize display order when images change
+  useEffect(() => {
+    const order = [
+      ...currentImages.map((_, index) => ({ type: 'current', index })),
+      ...selectedFiles.map((_, index) => ({ type: 'new', index }))
+    ];
+    setDisplayOrder(order);
+  }, [currentImages.length, selectedFiles.length]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -350,9 +366,55 @@ export default function EditCar({ params }) {
   };
 
   // Handle marking current image for deletion
-  const handleRemoveCurrentImage = (imageId) => {
-    setCurrentImages(currentImages.filter(img => img._id !== imageId));
-    setImagesToDelete([...imagesToDelete, imageId]);
+  const handleRemoveCurrentImage = (image) => {
+    console.log("Removing image:", image);
+    // Remove from currentImages array
+    setCurrentImages(currentImages.filter(img => img !== image));
+    // Add to imagesToDelete array for backend deletion on submit
+    setImagesToDelete([...imagesToDelete, image]);
+    // Also update displayOrder
+    setDisplayOrder(displayOrder.filter(item => 
+      !(item.type === 'current' && currentImages[item.index] === image)
+    ));
+  };
+
+  // Handle drag start
+  const handleDragStart = (e, index, type) => {
+    e.dataTransfer.setData('index', index);
+    e.dataTransfer.setData('type', type); // 'current' or 'new'
+  };
+
+  // Handle drag over
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  // Handle drop
+  const handleDrop = (e, dropIndex, dropType) => {
+    e.preventDefault();
+    
+    const dragIndex = parseInt(e.dataTransfer.getData('index'));
+    const dragType = e.dataTransfer.getData('type');
+    
+    if (dragIndex === dropIndex && dragType === dropType) return;
+    
+    // Get the position of the dragged item in the display order
+    const dragOrderIndex = displayOrder.findIndex(item => 
+      item.type === dragType && item.index === dragIndex
+    );
+    
+    // Get the position of the drop target in the display order
+    const dropOrderIndex = displayOrder.findIndex(item => 
+      item.type === dropType && item.index === dropIndex
+    );
+    
+    if (dragOrderIndex !== -1 && dropOrderIndex !== -1) {
+      // Create a new display order by moving the dragged item
+      const newOrder = [...displayOrder];
+      const [movedItem] = newOrder.splice(dragOrderIndex, 1);
+      newOrder.splice(dropOrderIndex, 0, movedItem);
+      setDisplayOrder(newOrder);
+    }
   };
 
   // Handle form submission
@@ -378,6 +440,14 @@ export default function EditCar({ params }) {
       if (typeof carDataToSend.price.weekly === 'string') carDataToSend.price.weekly = parseFloat(carDataToSend.price.weekly) || 0;
       if (typeof carDataToSend.price.monthly === 'string') carDataToSend.price.monthly = parseFloat(carDataToSend.price.monthly) || 0;
       
+      // Add image display order information
+      const imageOrder = displayOrder
+        .filter(item => item.type === 'current')
+        .map(item => currentImages[item.index])
+        .filter(img => img); // Filter out any undefined items
+
+      carDataToSend.images = imageOrder;
+      
       // Update car information
       const carResponse = await carsAPI.updateCar(id, carDataToSend);
       
@@ -389,15 +459,21 @@ export default function EditCar({ params }) {
         
         // Upload new images
         if (selectedFiles.length > 0) {
-          for (let i = 0; i < selectedFiles.length; i++) {
-            const file = selectedFiles[i];
+          // Sort new files according to display order
+          const newFilesInOrder = displayOrder
+            .filter(item => item.type === 'new')
+            .map(item => selectedFiles[item.index])
+            .filter(file => file); // Filter out any undefined items
+            
+          for (let i = 0; i < newFilesInOrder.length; i++) {
+            const file = newFilesInOrder[i];
             const formData = new FormData();
             formData.append('image', file);
             
             await carsAPI.uploadImage(id, formData);
             
             // Update upload progress
-            setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
+            setUploadProgress(Math.round(((i + 1) / newFilesInOrder.length) * 100));
           }
         }
         
@@ -460,6 +536,42 @@ export default function EditCar({ params }) {
       ...newFeatureData,
       [name]: value
     });
+  };
+
+  // Get feature category icon
+  const getFeatureCategoryIcon = (category) => {
+    switch (category?.toLowerCase() || 'other') {
+      case 'safety':
+        return <ShieldCheck className="h-5 w-5 text-red-500 dark:text-red-400" />;
+      case 'technology':
+        return <Cpu className="h-5 w-5 text-blue-500 dark:text-blue-400" />;
+      case 'comfort':
+        return <Sofa className="h-5 w-5 text-green-500 dark:text-green-400" />;
+      case 'performance':
+        return <Gauge className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />;
+      case 'convenience':
+        return <Heart className="h-5 w-5 text-purple-500 dark:text-purple-400" />;
+      default:
+        return <ListChecks className="h-5 w-5 text-gray-500 dark:text-gray-400" />;
+    }
+  };
+
+  // Get feature category class
+  const getFeatureCategoryClass = (category) => {
+    switch (category?.toLowerCase() || 'other') {
+      case 'safety':
+        return 'border-red-500 text-red-800 dark:text-red-300';
+      case 'technology':
+        return 'border-blue-500 text-blue-800 dark:text-blue-300';
+      case 'comfort':
+        return 'border-green-500 text-green-800 dark:text-green-300';
+      case 'performance':
+        return 'border-yellow-500 text-yellow-800 dark:text-yellow-300';
+      case 'convenience':
+        return 'border-purple-500 text-purple-800 dark:text-purple-300';
+      default:
+        return 'border-gray-500 text-gray-800 dark:text-gray-300';
+    }
   };
 
   if (pageLoading) {
@@ -759,16 +871,24 @@ export default function EditCar({ params }) {
               {selectedFeatures.length === 0 ? (
                 <span className="text-sm text-gray-500 dark:text-gray-400">No features selected</span>
               ) : (
-                <div className="space-y-4 mt-4">
+                <div className="space-y-6 mt-4">
                   {Object.entries(groupSelectedFeaturesByCategory()).map(([category, features]) => (
-                    <div key={category} className="border-0 border-l-4 border-blue-500 dark:border-blue-600 pl-3">
-                      <h4 className="text-sm font-medium capitalize mb-2 text-blue-600 dark:text-blue-400">
-                        {category}
-                      </h4>
-                      <div className="space-y-1">
+                    <div key={category} className="space-y-3">
+                      <div className="flex items-center">
+                        <span className="flex-shrink-0 w-5">
+                          {getFeatureCategoryIcon(category)}
+                        </span>
+                        <h4 className="ml-2 text-sm font-medium capitalize mb-0 text-gray-800 dark:text-gray-200">
+                          {category}
+                        </h4>
+                      </div>
+                      <div className={`ml-2 border-l-4 pl-4 border-l-solid rounded-sm space-y-2 pt-1 pb-1 ${getFeatureCategoryClass(category)}`}>
                         {features.map(feature => (
                           <div key={feature.id} className="flex items-center justify-between py-1">
-                            <span className="text-sm text-gray-800 dark:text-gray-200">{feature.name}</span>
+                            <div className="flex items-center">
+                              <Check className="h-4 w-4 mr-2 flex-shrink-0" />
+                              <span className="text-sm text-gray-800 dark:text-gray-200">{feature.name}</span>
+                            </div>
                             <button
                               type="button"
                               onClick={() => handleRemoveFeature(feature.id)}
@@ -786,33 +906,6 @@ export default function EditCar({ params }) {
               )}
             </div>
           </div>
-          
-          {/* Current Images */}
-          {currentImages.length > 0 && (
-            <div className="mb-6">
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Current Images</label>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {currentImages.map((image, index) => (
-                  <div key={`current-image-${image._id || index}`} className="relative group">
-                    <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative">
-                      <img
-                        src={image.url}
-                        alt={`Car image ${index + 1}`}
-                        className="object-cover w-full h-20"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCurrentImage(image._id)}
-                        className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 rounded-full p-0.5 text-white hover:bg-red-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
           
           {/* Upload New Images */}
           <div className="mb-6">
@@ -838,32 +931,85 @@ export default function EditCar({ params }) {
               </label>
             </div>
             
-            {/* Selected Images Preview */}
-            {selectedFiles.length > 0 && (
+            {/* All Images (Current + New) */}
+            {(currentImages.length > 0 || selectedFiles.length > 0) && (
               <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">New Selected Images:</h3>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Current Images:</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                  {selectedFiles.map((file, index) => (
-                    <div key={`file-${index}-${file.name}`} className="relative group">
-                      <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`Preview ${index}`}
-                          className="object-cover w-full h-20"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFile(index)}
-                          className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 rounded-full p-0.5 text-white hover:bg-red-600"
+                  {/* Display images based on displayOrder */}
+                  {displayOrder.map((item, orderIndex) => {
+                    if (item.type === 'current') {
+                      const image = currentImages[item.index];
+                      if (!image) return null;
+                      
+                      return (
+                        <div 
+                          key={`current-image-${image._id || item.index}`} 
+                          className="relative group"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, item.index, 'current')}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, item.index, 'current')}
                         >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {file.name}
-                      </p>
-                    </div>
-                  ))}
+                          <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative">
+                            <img
+                              src={image.startsWith('http') 
+                                  ? image 
+                                  : `${process.env.API_BASE_URL}${image}`}
+                              alt={`Car image ${orderIndex + 1}`}
+                              className="object-cover w-full h-20 cursor-move"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCurrentImage(image)}
+                              className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 rounded-full p-0.5 text-white hover:bg-red-600"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-1 left-1 bg-gray-800 bg-opacity-70 rounded-full px-2 py-0.5">
+                              <span className="text-xs text-white">{orderIndex + 1}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    } else if (item.type === 'new') {
+                      const file = selectedFiles[item.index];
+                      if (!file) return null;
+                      
+                      return (
+                        <div 
+                          key={`file-${item.index}-${file.name}`} 
+                          className="relative group"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, item.index, 'new')}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, item.index, 'new')}
+                        >
+                          <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Preview ${orderIndex + 1}`}
+                              className="object-cover w-full h-20 cursor-move"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(item.index)}
+                              className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 rounded-full p-0.5 text-white hover:bg-red-600"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-1 left-1 bg-gray-800 bg-opacity-70 rounded-full px-2 py-0.5">
+                              <span className="text-xs text-white">{orderIndex + 1}</span>
+                            </div>
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {file.name}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
                 </div>
               </div>
             )}
