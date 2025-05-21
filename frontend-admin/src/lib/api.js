@@ -859,6 +859,45 @@ export const featuresAPI = {
 };
 
 /**
+ * General API object for direct HTTP method calls
+ */
+export const api = {
+  get: async (endpoint, params = {}) => {
+    return fetchWithAuth(endpoint, {
+      method: 'GET',
+      params
+    });
+  },
+  
+  post: async (endpoint, data = {}) => {
+    return fetchWithAuth(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+  
+  put: async (endpoint, data = {}) => {
+    return fetchWithAuth(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+  
+  delete: async (endpoint) => {
+    return fetchWithAuth(endpoint, {
+      method: 'DELETE'
+    });
+  },
+  
+  patch: async (endpoint, data = {}) => {
+    return fetchWithAuth(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+};
+
+/**
  * Axios API client (kept from src/lib/api.js for future reference)
  * 
  * Example usage:

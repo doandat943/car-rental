@@ -1,67 +1,62 @@
 const mongoose = require('mongoose');
 
 const SettingSchema = new mongoose.Schema({
-  siteName: {
-    type: String,
-    default: 'Car Rental Service'
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  contactEmail: {
-    type: String,
-    default: 'support@carrental.example.com'
-  },
-  contactPhone: {
-    type: String,
-    default: '+1 (555) 123-4567'
-  },
-  address: {
-    type: String,
-    default: '123 Rental Street, City, Country'
-  },
-  currencySymbol: {
-    type: String,
-    default: '$'
-  },
-  taxRate: {
-    type: Number,
-    default: 10
-  },
-  bookingFee: {
-    type: Number,
-    default: 5
-  },
-  maintenanceFee: {
-    type: Number,
-    default: 25
-  },
-  depositPercentage: {
-    type: Number,
-    default: 15
-  },
-  minimumBookingHours: {
-    type: Number,
-    default: 4
-  },
-  maximumBookingDays: {
-    type: Number,
-    default: 30
-  },
-  cancellationPolicy: {
-    type: String,
-    default: 'Free cancellation up to 24 hours before pickup'
-  },
-  termsAndConditions: {
-    type: String,
-    default: 'Standard terms and conditions for vehicle rental'
-  },
-  privacyPolicy: {
-    type: String,
-    default: 'Privacy policy for user data and booking information'
+  preferences: {
+    language: {
+      type: String,
+      enum: ['en', 'vi', 'fr', 'es', 'de', 'zh'],
+      default: 'en'
+    },
+    theme: {
+      type: String,
+      enum: ['light', 'dark', 'system'],
+      default: 'system'
+    },
+    notifications: {
+      email: {
+        newBookings: { type: Boolean, default: true },
+        bookingUpdates: { type: Boolean, default: true },
+        promotions: { type: Boolean, default: true }
+      },
+      sms: {
+        newBookings: { type: Boolean, default: false },
+        bookingUpdates: { type: Boolean, default: false },
+        promotions: { type: Boolean, default: false }
+      },
+      inApp: {
+        newBookings: { type: Boolean, default: true },
+        bookingUpdates: { type: Boolean, default: true },
+        promotions: { type: Boolean, default: true },
+        systemUpdates: { type: Boolean, default: true }
+      }
+    },
+    displayPreferences: {
+      dateFormat: {
+        type: String,
+        enum: ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'],
+        default: 'MM/DD/YYYY'
+      },
+      timeFormat: {
+        type: String,
+        enum: ['12h', '24h'],
+        default: '12h'
+      },
+      showPricesWithTax: {
+        type: Boolean,
+        default: true
+      }
+    }
   },
   lastUpdated: {
     type: Date,
     default: Date.now
   }
-});
+}, { timestamps: true });
 
 // Middleware to automatically update timestamp when changed
 SettingSchema.pre('save', function(next) {

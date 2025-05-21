@@ -2,9 +2,7 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 /**
- * Combines multiple class names into a single string, merging Tailwind classes efficiently
- * @param {...string} inputs - The class names to combine
- * @returns {string} - The combined class names
+ * Merge multiple class names using clsx and ensure Tailwind classes are properly merged
  */
 export function cn(...inputs) {
   return twMerge(clsx(inputs));

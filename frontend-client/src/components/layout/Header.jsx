@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { websiteAPI } from '@/lib/api';
 
 export default function Header() {
   const router = useRouter();
@@ -10,6 +11,10 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [websiteInfo, setWebsiteInfo] = useState({
+    siteName: 'CarRental',
+    logo: '',
+  });
   
   useEffect(() => {
     // Check if user is logged in
@@ -24,6 +29,23 @@ export default function Header() {
         console.error('Error parsing user data', e);
       }
     }
+
+    // Fetch website info
+    async function fetchWebsiteInfo() {
+      try {
+        const response = await websiteAPI.getInfo();
+        if (response.data && response.data.success) {
+          setWebsiteInfo({
+            siteName: response.data.data.siteName || 'CarRental',
+            logo: response.data.data.logo || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching website info:', error);
+      }
+    }
+
+    fetchWebsiteInfo();
   }, []);
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -43,8 +65,17 @@ export default function Header() {
       <div className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-primary">
-            CarRental
+          <Link href="/" className="text-2xl font-bold text-primary flex items-center">
+            {websiteInfo.logo ? (
+              <img 
+                src={websiteInfo.logo.startsWith('http') ? 
+                  websiteInfo.logo : 
+                  `http://localhost:5000${websiteInfo.logo}`} 
+                alt={websiteInfo.siteName} 
+                className="h-8 mr-2"
+              />
+            ) : null}
+            {websiteInfo.siteName}
           </Link>
           
           {/* Desktop Navigation */}

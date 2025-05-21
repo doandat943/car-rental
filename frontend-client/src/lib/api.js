@@ -272,8 +272,8 @@ export const locationsAPI = {
 
 // Website info API
 export const websiteAPI = {
-  getInfo: () => api.get('/website/info'),
-  getContact: () => api.get('/website/contact'),
+  getInfo: () => api.get('/website-info'),
+  getContact: () => api.get('/website-info'),
   sendContactForm: (data) => api.post('/website/contact', data),
 };
 

@@ -1,11 +1,55 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaYoutube, FaTiktok } from 'react-icons/fa';
+import { websiteAPI } from '@/lib/api';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
+  const [websiteInfo, setWebsiteInfo] = useState({
+    siteName: 'CarRental',
+    description: 'Premium car rental service offering a wide range of vehicles for all your needs.',
+    contactInfo: {
+      email: 'info@carrental.com',
+      phone: '+1 (555) 123-4567',
+      address: '123 Rental Street, Auto City, AC 12345',
+      businessHours: 'Monday - Friday: 8am - 8pm, Saturday: 9am - 6pm, Sunday: 10am - 4pm'
+    },
+    socialLinks: {
+      facebook: '#',
+      twitter: '#',
+      instagram: '#',
+      linkedin: '#',
+      youtube: '#',
+      tiktok: '#'
+    },
+    contentPages: {
+      aboutUs: '',
+      termsAndConditions: '',
+      privacyPolicy: '',
+      cancellationPolicy: ''
+    }
+  });
+
+  useEffect(() => {
+    // Fetch website info
+    async function fetchWebsiteInfo() {
+      try {
+        const response = await websiteAPI.getInfo();
+        if (response.data && response.data.success) {
+          setWebsiteInfo({
+            ...websiteInfo,
+            ...response.data.data,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching website info:', error);
+      }
+    }
+
+    fetchWebsiteInfo();
+  }, []);
 
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
@@ -13,30 +57,55 @@ export default function Footer() {
     setEmail('');
   };
 
+  const formatBusinessHours = (hours) => {
+    if (!hours) return '';
+    // Convert from "Mon-Fri: 9AM-5PM, Sat: 10AM-2PM, Sun: Closed" format to individual lines
+    return hours.split(',').map(day => day.trim());
+  };
+
+  const businessHoursArray = formatBusinessHours(websiteInfo.contactInfo?.businessHours);
+
   return (
     <footer className="bg-dark text-white pt-16 pb-6">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About Company */}
           <div>
-            <h3 className="text-xl font-bold mb-4">CarRental</h3>
+            <h3 className="text-xl font-bold mb-4">{websiteInfo.siteName}</h3>
             <p className="text-gray-300 mb-4">
-              Premium car rental service offering a wide range of vehicles for all your needs.
-              Experience quality service, competitive rates, and hassle-free booking.
+              {websiteInfo.description}
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-300 hover:text-primary transition-colors">
-                <FaFacebook size={20} />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-primary transition-colors">
-                <FaTwitter size={20} />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-primary transition-colors">
-                <FaInstagram size={20} />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-primary transition-colors">
-                <FaLinkedin size={20} />
-              </a>
+              {websiteInfo.socialLinks?.facebook && (
+                <a href={websiteInfo.socialLinks.facebook} className="text-gray-300 hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                  <FaFacebook size={20} />
+                </a>
+              )}
+              {websiteInfo.socialLinks?.twitter && (
+                <a href={websiteInfo.socialLinks.twitter} className="text-gray-300 hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                  <FaTwitter size={20} />
+                </a>
+              )}
+              {websiteInfo.socialLinks?.instagram && (
+                <a href={websiteInfo.socialLinks.instagram} className="text-gray-300 hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                  <FaInstagram size={20} />
+                </a>
+              )}
+              {websiteInfo.socialLinks?.linkedin && (
+                <a href={websiteInfo.socialLinks.linkedin} className="text-gray-300 hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                  <FaLinkedin size={20} />
+                </a>
+              )}
+              {websiteInfo.socialLinks?.youtube && (
+                <a href={websiteInfo.socialLinks.youtube} className="text-gray-300 hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                  <FaYoutube size={20} />
+                </a>
+              )}
+              {websiteInfo.socialLinks?.tiktok && (
+                <a href={websiteInfo.socialLinks.tiktok} className="text-gray-300 hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                  <FaTiktok size={20} />
+                </a>
+              )}
             </div>
           </div>
 
@@ -64,16 +133,20 @@ export default function Footer() {
                   FAQ
                 </Link>
               </li>
-              <li>
-                <Link href="/terms" className="text-gray-300 hover:text-primary transition-colors">
-                  Terms & Conditions
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-gray-300 hover:text-primary transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
+              {websiteInfo.contentPages?.termsAndConditions && (
+                <li>
+                  <Link href="/terms" className="text-gray-300 hover:text-primary transition-colors">
+                    Terms & Conditions
+                  </Link>
+                </li>
+              )}
+              {websiteInfo.contentPages?.privacyPolicy && (
+                <li>
+                  <Link href="/privacy" className="text-gray-300 hover:text-primary transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -81,25 +154,33 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold mb-4">Contact Us</h3>
             <ul className="space-y-3">
-              <li className="flex items-start">
-                <FaMapMarkerAlt className="text-primary mt-1 mr-3 flex-shrink-0" />
-                <span className="text-gray-300">123 Rental Street, Auto City, AC 12345</span>
-              </li>
-              <li className="flex items-center">
-                <FaPhoneAlt className="text-primary mr-3 flex-shrink-0" />
-                <span className="text-gray-300">+1 (555) 123-4567</span>
-              </li>
-              <li className="flex items-center">
-                <FaEnvelope className="text-primary mr-3 flex-shrink-0" />
-                <span className="text-gray-300">info@carrental.com</span>
-              </li>
+              {websiteInfo.contactInfo?.address && (
+                <li className="flex items-start">
+                  <FaMapMarkerAlt className="text-primary mt-1 mr-3 flex-shrink-0" />
+                  <span className="text-gray-300">{websiteInfo.contactInfo.address}</span>
+                </li>
+              )}
+              {websiteInfo.contactInfo?.phone && (
+                <li className="flex items-center">
+                  <FaPhoneAlt className="text-primary mr-3 flex-shrink-0" />
+                  <span className="text-gray-300">{websiteInfo.contactInfo.phone}</span>
+                </li>
+              )}
+              {websiteInfo.contactInfo?.email && (
+                <li className="flex items-center">
+                  <FaEnvelope className="text-primary mr-3 flex-shrink-0" />
+                  <span className="text-gray-300">{websiteInfo.contactInfo.email}</span>
+                </li>
+              )}
             </ul>
-            <div className="mt-4">
-              <h4 className="font-semibold mb-2">Hours of Operation</h4>
-              <p className="text-gray-300">Monday - Friday: 8am - 8pm</p>
-              <p className="text-gray-300">Saturday: 9am - 6pm</p>
-              <p className="text-gray-300">Sunday: 10am - 4pm</p>
-            </div>
+            {businessHoursArray.length > 0 && (
+              <div className="mt-4">
+                <h4 className="font-semibold mb-2">Hours of Operation</h4>
+                {businessHoursArray.map((hours, index) => (
+                  <p key={index} className="text-gray-300">{hours}</p>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Newsletter */}
@@ -133,25 +214,24 @@ export default function Footer() {
         <div className="border-t border-gray-700 mt-12 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} CarRental. All rights reserved.
+              &copy; {new Date().getFullYear()} {websiteInfo.siteName}. All rights reserved.
             </p>
             <div className="mt-4 md:mt-0">
               <ul className="flex space-x-6">
-                <li>
-                  <Link href="/terms" className="text-gray-400 text-sm hover:text-primary transition-colors">
-                    Terms
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/privacy" className="text-gray-400 text-sm hover:text-primary transition-colors">
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/cookies" className="text-gray-400 text-sm hover:text-primary transition-colors">
-                    Cookies
-                  </Link>
-                </li>
+                {websiteInfo.contentPages?.termsAndConditions && (
+                  <li>
+                    <Link href="/terms" className="text-gray-400 text-sm hover:text-primary transition-colors">
+                      Terms
+                    </Link>
+                  </li>
+                )}
+                {websiteInfo.contentPages?.privacyPolicy && (
+                  <li>
+                    <Link href="/privacy" className="text-gray-400 text-sm hover:text-primary transition-colors">
+                      Privacy
+                    </Link>
+                  </li>
+                )}
               </ul>
             </div>
           </div>
