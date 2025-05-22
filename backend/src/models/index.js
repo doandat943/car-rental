@@ -7,11 +7,12 @@ const Setting = require('./setting');
 const Statistic = require('./statistic');
 const Review = require('./review');
 const Notification = require('./notification');
-const Brand = require('./Brand');
-const Transmission = require('./Transmission');
+const Brand = require('./brand');
+const Transmission = require('./transmission');
 const Fuel = require('./fuel');
-const Feature = require('./Feature');
+const Feature = require('./feature');
 const Location = require('./location');
+const Faq = require('./faq');
 
 module.exports = {
   User,
@@ -27,5 +28,6 @@ module.exports = {
   Transmission,
   Fuel,
   Feature,
-  Location
+  Location,
+  Faq
 }; 

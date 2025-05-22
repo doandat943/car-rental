@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-const faqSchema = new mongoose.Schema({
+// Check if model already exists to avoid redefining
+const Faq = mongoose.models.Faq || mongoose.model('Faq', new mongoose.Schema({
   question: {
     type: String,
     required: [true, 'Question is required'],
@@ -23,6 +24,6 @@ const faqSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
-});
+}));
 
-module.exports = mongoose.model('Faq', faqSchema); 
+module.exports = Faq;
