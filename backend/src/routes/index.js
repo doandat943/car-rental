@@ -16,7 +16,7 @@ const transmissionRoutes = require('./transmissions');
 const fuelRoutes = require('./fuels');
 const featureRoutes = require('./features');
 const locationRoutes = require('./locations');
-const chatbotRoutes = require('./chatbotRoutes');
+const chatbotRoutes = require('./chatbot');
 
 /**
  * Initialize all routes
