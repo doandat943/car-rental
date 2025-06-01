@@ -4,12 +4,26 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { carsAPI, API_BASE_URL, locationsAPI, bookingsAPI } from '@/lib/api';
-import { FaStar, FaCheck } from 'react-icons/fa';
+import { FaStar, FaCheck, FaCalendarAlt } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the BookingCalendar to avoid SSR issues with date-fns
+const BookingCalendar = dynamic(() => import('@/components/car/BookingCalendar'), {
+  ssr: false,
+  loading: () => <p>Loading calendar...</p>
+});
 
 // Helper function to format date as YYYY-MM-DD
 const formatDate = (date) => {
-  return date.toISOString().split('T')[0];
+  if (!date) return '';
+  
+  // Ensure we use local time to avoid timezone issues
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
 };
 
 // Helper function to get tomorrow's date
@@ -29,8 +43,10 @@ export default function CarDetailPage({ params }) {
   // Initialize with today and tomorrow dates
   const today = new Date();
   const tomorrow = getTomorrow();
-  const [pickupDate, setPickupDate] = useState(formatDate(today));
-  const [returnDate, setReturnDate] = useState(formatDate(tomorrow));
+  
+  // Start with empty dates to avoid unwanted automatic selection
+  const [pickupDate, setPickupDate] = useState('');
+  const [returnDate, setReturnDate] = useState('');
   
   const [totalDays, setTotalDays] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -45,6 +61,27 @@ export default function CarDetailPage({ params }) {
   // State for pickup locations
   const [locations, setLocations] = useState([]);
   const [loadingLocations, setLoadingLocations] = useState(true);
+  
+  // New state for car availability
+  const [carAvailability, setCarAvailability] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [bookedDates, setBookedDates] = useState([]);
+
+  // New state for calendar
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [dateSelectionMode, setDateSelectionMode] = useState(null); // 'pickup' or 'return'
+  
+  // State to track rendering
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true); // Only used for first load
+  
+  // State to track last check
+  const [lastCheckTimestamp, setLastCheckTimestamp] = useState(0);
+  const [lastCheckedDates, setLastCheckedDates] = useState({ start: '', end: '' });
+  
+  // State to track automatic date finding
+  const [autoFindingDates, setAutoFindingDates] = useState(false);
+  const [hasFoundAvailableDates, setHasFoundAvailableDates] = useState(false);
 
   useEffect(() => {
     // Fetch pickup locations
@@ -73,7 +110,7 @@ export default function CarDetailPage({ params }) {
   useEffect(() => {
     const fetchCarDetails = async () => {
       try {
-        setLoading(true);
+        setInitialLoading(true); // Use initialLoading instead of loading
         console.log('Fetching car details for ID:', id);
         const response = await carsAPI.getCarById(id);
         console.log('Car details response:', response);
@@ -88,6 +125,40 @@ export default function CarDetailPage({ params }) {
           
           // Set initial price calculation with default dates
           setTotalPrice(carData.price || 0);
+          
+          // Get information about booked dates right after getting car info
+          try {
+            // Calculate current date and 90 days later
+            const today = new Date();
+            const in90Days = new Date();
+            in90Days.setDate(today.getDate() + 90);
+            
+            // Get data about booked dates within 90 days
+            console.log('Getting booking data for car:', id);
+            const availabilityResponse = await carsAPI.checkStatus(id, {
+              startDate: formatDate(today),
+              endDate: formatDate(in90Days)
+            });
+            
+            if (availabilityResponse?.bookedDates && Array.isArray(availabilityResponse.bookedDates)) {
+              console.log('Received booking date data:', availabilityResponse.bookedDates);
+              
+              // Ensure bookedDates have the correct format
+              const formattedBookedDates = availabilityResponse.bookedDates.map(booking => ({
+                startDate: new Date(booking.startDate),
+                endDate: new Date(booking.endDate),
+                status: booking.status || 'booked'
+              }));
+              
+              setBookedDates(formattedBookedDates);
+            } else {
+              console.warn('No booking date data received or invalid format');
+              setBookedDates([]);
+            }
+          } catch (error) {
+            console.error('Error checking car availability:', error);
+            setBookedDates([]);
+          }
         } else {
           setError('Car details not found');
         }
@@ -95,7 +166,8 @@ export default function CarDetailPage({ params }) {
         console.error('Error fetching car details:', err);
         setError('Failed to load car details. Please try again later.');
       } finally {
-        setLoading(false);
+        setInitialLoading(false);
+        setIsInitialLoad(false);
       }
     };
 
@@ -138,9 +210,99 @@ export default function CarDetailPage({ params }) {
       setTotalPrice(total);
     }
   }, [pickupDate, returnDate, car, includeDriver, doorstepDelivery]);
+  
+  // Separate availability checking from price calculation useEffect
+  useEffect(() => {
+    // Skip first render to avoid flash
+    if (isInitialLoad) {
+      // Reset isInitialLoad after initial data is loaded
+      if (car && !initialLoading) {
+        setIsInitialLoad(false);
+      }
+      return;
+    }
+    
+    // Only check when both dates have been selected (avoid flash when selecting each date)
+    if (pickupDate && returnDate && car && !checkingAvailability) {
+      // Check if dates have changed since last check
+      if (
+        pickupDate !== lastCheckedDates.start || 
+        returnDate !== lastCheckedDates.end
+      ) {
+        // Use timeout to avoid calling API immediately
+        const timer = setTimeout(() => {
+          checkAvailability(pickupDate, returnDate);
+        }, 500); // Add debounce to avoid too many API calls
+        
+        return () => clearTimeout(timer); // Cleanup function to avoid memory leak
+      }
+    }
+  }, [pickupDate, returnDate, car, isInitialLoad, checkingAvailability, initialLoading, lastCheckedDates]);
+  
+  // Function to check car availability for selected dates
+  const checkAvailability = async (start, end) => {
+    if (!id || !start || !end) return;
+    
+    // If already checking, don't check again
+    if (checkingAvailability) return;
+    
+    // Check if these dates have been checked recently and minimum time has passed
+    const currentTime = Date.now();
+    if (
+      lastCheckedDates.start === start && 
+      lastCheckedDates.end === end && 
+      currentTime - lastCheckTimestamp < 2000 // Only check again after 2 seconds
+    ) {
+      console.log('Skipping availability check, already checked recently');
+      return;
+    }
+    
+    try {
+      setCheckingAvailability(true);
+      console.log('Checking availability for dates:', start, end);
+      
+      // Show lighter loading status instead of full overlay
+      
+      const response = await carsAPI.checkStatus(id, { startDate: start, endDate: end });
+      
+      // Update last check time
+      setLastCheckTimestamp(Date.now());
+      setLastCheckedDates({ start, end });
+      
+      console.log('Car availability response:', response);
+      
+      if (response?.success) {
+        setCarAvailability(response.available);
+        
+        if (response.bookedDates && Array.isArray(response.bookedDates)) {
+          console.log('Booked dates received:', response.bookedDates);
+          // Ensure bookedDates have the correct format
+          const formattedBookedDates = response.bookedDates.map(booking => ({
+            startDate: new Date(booking.startDate),
+            endDate: new Date(booking.endDate),
+            status: booking.status || 'booked'
+          }));
+          setBookedDates(formattedBookedDates);
+        } else {
+          console.warn('No booked dates received or invalid format');
+          setBookedDates([]);
+        }
+      } else {
+        console.error('Error checking car availability:', response?.message);
+      }
+    } catch (error) {
+      console.error('Error checking car availability:', error);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  };
 
   const handleBooking = async (e) => {
+    // Prevent default form behavior
+    if (e) {
     e.preventDefault();
+      e.stopPropagation();
+    }
     
     // Check if user is logged in
     const token = localStorage.getItem('token');
@@ -228,7 +390,258 @@ export default function CarDetailPage({ params }) {
     }
   };
 
-  if (loading) {
+  // Handle date selection from calendar - Fix to avoid page reload and timezone issues
+  const handleDateSelect = (date) => {
+    // Ensure date is a valid Date object
+    if (!(date instanceof Date) || isNaN(date)) {
+      console.error('Invalid date object received:', date);
+      return;
+    }
+    
+    // Prevent automatic date finding when user is selecting
+    setHasFoundAvailableDates(true);
+    
+    // No need to set checkingAvailability here, only when actually calling API
+    // setCheckingAvailability(true);
+    
+    // Handle timezone issue - create an exact copy and preserve the exact day user selected
+    const selectedDate = new Date(date);
+    // Ensure local time
+    selectedDate.setHours(12, 0, 0, 0); // Set time to noon to avoid timezone issues
+    
+    // Convert to YYYY-MM-DD string
+    const formattedDate = formatDate(selectedDate);
+    console.log('User selected date:', formattedDate, 'Original date:', date.toLocaleDateString());
+    
+    // If no date selected yet, set as start date
+    if (!pickupDate && !returnDate) {
+      setPickupDate(formattedDate);
+      return;
+    }
+    
+    // If start date selected but no end date
+    if (pickupDate && !returnDate) {
+      // If selected date is before start date, set as new start date
+      const pickupDateObj = new Date(pickupDate);
+      pickupDateObj.setHours(12, 0, 0, 0); // Same time for accurate comparison
+      
+      if (selectedDate < pickupDateObj) {
+        setPickupDate(formattedDate);
+        return;
+      }
+      
+      // If selected date is after start date, set as end date
+      setReturnDate(formattedDate);
+      return;
+    }
+    
+    // If both start and end dates are selected
+    if (pickupDate && returnDate) {
+      // Start new selection, set as start date and clear end date
+      setPickupDate(formattedDate);
+      setReturnDate('');
+    }
+  };
+
+  // Find available dates when component loads
+  useEffect(() => {
+    // Ensure car data and booking dates are loaded before searching
+    if (!car || !initialLoading) {
+      return;
+    }
+    
+    // Add a waiting period to ensure bookedDates data has been loaded
+    const timerId = setTimeout(() => {
+      // Only find available dates if we have booking data and haven't found dates before
+      if (bookedDates.length > 0 && !hasFoundAvailableDates && !autoFindingDates) {
+        console.log('Starting search for available dates after loading data...');
+        findAvailableDates();
+      }
+    }, 1000); // Wait 1 second after data is loaded
+    
+    // Clean up timer if component unmounts
+    return () => clearTimeout(timerId);
+  }, [car, bookedDates, hasFoundAvailableDates, autoFindingDates, initialLoading]);
+  
+  // Check if a date is booked
+  const isDateBooked = (date) => {
+    // Check input data
+    if (!bookedDates || !bookedDates.length) {
+      return false;
+    }
+    
+    // Ensure date is a valid Date object
+    if (!(date instanceof Date) || isNaN(date)) {
+      console.error('isDateBooked: Invalid date to check:', date);
+      return false;
+    }
+    
+    // Ensure comparison is only by day, month, year
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    const compareTime = compareDate.getTime();
+    
+    for (const booking of bookedDates) {
+      // Check validity of booking
+      if (!booking || !booking.startDate || !booking.endDate) {
+        console.warn('isDateBooked: Invalid booking data:', booking);
+        continue;
+      }
+      
+      try {
+        const start = new Date(booking.startDate);
+        const end = new Date(booking.endDate);
+        
+        // Ensure dates are valid
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+          console.warn('isDateBooked: Invalid dates in booking:', {
+            start: booking.startDate,
+            end: booking.endDate
+          });
+          continue;
+        }
+        
+        // Normalize comparison by day only
+        const compareStart = new Date(start);
+        compareStart.setHours(0, 0, 0, 0);
+        
+        const compareEnd = new Date(end);
+        compareEnd.setHours(0, 0, 0, 0);
+        
+        // Compare timestamps instead of Date objects
+        if (compareTime >= compareStart.getTime() && compareTime <= compareEnd.getTime()) {
+          console.log(`Date ${compareDate.toLocaleDateString()} is within booked range ${compareStart.toLocaleDateString()} - ${compareEnd.toLocaleDateString()}`);
+          return true;
+        }
+      } catch (error) {
+        console.error('isDateBooked: Error checking date:', error);
+      }
+    }
+    
+    return false;
+  };
+
+  // Find the first available date range
+  const findAvailableDates = () => {
+    // If already searching for dates, don't search again
+    if (autoFindingDates) return;
+    
+    setAutoFindingDates(true);
+    console.log('Finding available dates...', bookedDates);
+    
+    // Start from today
+    let checkDate = new Date();
+    let foundStart = false;
+    let startDate = null;
+    
+    // Set maximum time for search
+    const maxSearchDate = new Date();
+    maxSearchDate.setDate(maxSearchDate.getDate() + 60); // Search up to 60 days
+    
+    // Log booked dates for verification
+    console.log('Booked dates:', bookedDates.map(b => ({
+      start: new Date(b.startDate).toLocaleDateString(),
+      end: new Date(b.endDate).toLocaleDateString()
+    })));
+    
+    // Find first available date
+    let currentDate = new Date(checkDate);
+    let consecutiveAvailableDays = 0;
+    let potentialStartDate = null;
+    
+    for (let i = 0; i < 60 && currentDate <= maxSearchDate; i++) {
+      const testDate = new Date(currentDate);
+      
+      // Check if this date is booked
+      if (isDateBooked(testDate)) {
+        console.log(`Date ${testDate.toLocaleDateString()} is booked, skipping`);
+        consecutiveAvailableDays = 0; // Reset count
+        potentialStartDate = null; // Reset potential start date
+      } else {
+        // Date is available
+        if (consecutiveAvailableDays === 0) {
+          potentialStartDate = new Date(testDate); // Mark as potential start date
+          console.log(`Found potential start date: ${potentialStartDate.toLocaleDateString()}`);
+        }
+        consecutiveAvailableDays++;
+        
+        // If we found at least 2 consecutive available days
+        if (consecutiveAvailableDays >= 2) {
+          const endDate = new Date(potentialStartDate);
+          endDate.setDate(potentialStartDate.getDate() + 1); // Default to 1 night
+          
+          console.log(`Found available range: ${potentialStartDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`);
+          
+          // Set dates and end search
+          setPickupDate(formatDate(potentialStartDate));
+          setReturnDate(formatDate(endDate));
+          setHasFoundAvailableDates(true);
+          setAutoFindingDates(false);
+          
+          // Check availability one more time to update UI
+          setTimeout(() => {
+            checkAvailability(formatDate(potentialStartDate), formatDate(endDate));
+          }, 300);
+          
+          return;
+        }
+      }
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    // If no available dates found
+    console.log('No available date ranges found');
+    setAutoFindingDates(false);
+    
+    // Notify user
+    alert("No available dates found within the next 60 days. Please select dates manually.");
+  };
+
+  // Double-check selected dates to ensure they are not booked
+  useEffect(() => {
+    // Only run when both start and end dates are selected
+    if (!pickupDate || !returnDate || !bookedDates.length || checkingAvailability) {
+      return;
+    }
+
+    // Check both selected dates
+    const startDateObj = new Date(pickupDate);
+    const endDateObj = new Date(returnDate);
+    
+    // Log for verification
+    console.log('Checking selected dates:',
+      startDateObj.toLocaleDateString(), 
+      endDateObj.toLocaleDateString()
+    );
+
+    const startIsBooked = isDateBooked(startDateObj);
+    const endIsBooked = isDateBooked(endDateObj);
+
+    // If either date is booked, reset and find again
+    if (startIsBooked || endIsBooked) {
+      console.error('Conflict detected with booked dates!', {
+        startDate: startDateObj.toLocaleDateString(), 
+        isBooked: startIsBooked,
+        endDate: endDateObj.toLocaleDateString(),
+        isBooked: endIsBooked
+      });
+      
+      // Reset selection
+      setPickupDate('');
+      setReturnDate('');
+      
+      // Mark as not having found available dates to search again
+      setHasFoundAvailableDates(false);
+      setAutoFindingDates(false);
+      
+      // Show notification
+      alert("Conflict detected with booked dates. Please select different dates.");
+    }
+  }, [pickupDate, returnDate, bookedDates, checkingAvailability]);
+
+  if (initialLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-xl">Loading car details...</div>
@@ -324,11 +737,17 @@ export default function CarDetailPage({ params }) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <div className="text-gray-600">Brand</div>
-                    <div className="font-semibold">{typeof car.brand === 'object' ? car.brand.name : car.brand?.name || car.brand}</div>
+                    <div className="font-semibold">
+                      {typeof car.brand === 'object' 
+                        ? car.brand.name
+                        : typeof car.brand === 'string'
+                          ? car.brand
+                          : ''}
+                    </div>
                   </div>
                   <div>
                     <div className="text-gray-600">Model</div>
-                    <div className="font-semibold">{typeof car.model === 'object' ? car.model.name : car.model?.name || car.model}</div>
+                    <div className="font-semibold">{typeof car.model === 'object' ? car.model.name : car.model?.name}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Year</div>
@@ -336,19 +755,19 @@ export default function CarDetailPage({ params }) {
                   </div>
                   <div>
                     <div className="text-gray-600">Category</div>
-                    <div className="font-semibold">{typeof car.category === 'object' ? car.category.name : car.category || 'N/A'}</div>
+                    <div className="font-semibold">{typeof car.category === 'object' ? car.category.name : car.category}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Seats</div>
-                    <div className="font-semibold">{car.seats || 'N/A'}</div>
+                    <div className="font-semibold">{car.seats}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Transmission</div>
-                    <div className="font-semibold">{typeof car.transmission === 'object' ? car.transmission.name : car.transmission || 'N/A'}</div>
+                    <div className="font-semibold">{typeof car.transmission === 'object' ? car.transmission.name : car.transmission}</div>
                   </div>
                   <div>
                     <div className="text-gray-600">Fuel</div>
-                    <div className="font-semibold">{typeof car.fuel === 'object' ? car.fuel.name : car.fuel || 'N/A'}</div>
+                    <div className="font-semibold">{typeof car.fuel === 'object' ? car.fuel.name : car.fuel}</div>
                   </div>
                 </div>
               </div>
@@ -383,45 +802,114 @@ export default function CarDetailPage({ params }) {
                 <h3 className="font-semibold mb-2">Rental Prices</h3>
                 <div className="grid grid-cols-2 gap-y-2">
                   <div className="text-gray-600">Daily Rate:</div>
-                  <div className="font-semibold">${car.price || 'N/A'}</div>
+                  <div className="font-semibold">{car.price ? `$${car.price}` : ''}</div>
                 </div>
               </div>
               
               <form onSubmit={handleBooking}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2">Pickup Date</label>
-                  <input 
-                    type="date" 
-                    className="w-full p-2 border rounded" 
-                    value={pickupDate}
-                    onChange={(e) => {
-                      const newPickupDate = e.target.value;
-                      setPickupDate(newPickupDate);
+                  <label className="block text-sm font-medium mb-2">Booking Dates</label>
+                  
+                  {/* Display rental price and car availability after selecting dates */}
+                  {pickupDate && returnDate && !checkingAvailability && (
+                    <div className={`p-3 rounded-lg text-sm mb-4 ${carAvailability === false ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                      <div className="font-medium flex items-center">
+                        {carAvailability === false ? (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Car is unavailable during the selected period
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            Rental duration: {totalDays} {totalDays === 1 ? 'day' : 'days'}
+                          </>
+                        )}
+                      </div>
+                      <div className="mt-1">
+                        From {new Date(pickupDate).toLocaleDateString('en-US')} to {new Date(returnDate).toLocaleDateString('en-US')}
+                      </div>
                       
-                      // If return date is before new pickup date, adjust it
-                      const pickupTime = new Date(newPickupDate).getTime();
-                      const returnTime = new Date(returnDate).getTime();
-                      if (returnTime <= pickupTime) {
-                        const nextDay = new Date(newPickupDate);
-                        nextDay.setDate(nextDay.getDate() + 1);
-                        setReturnDate(formatDate(nextDay));
-                      }
-                    }}
-                    min={formatDate(new Date())}
-                    required
-                  />
+                      {carAvailability === false && (
+                        <div className="mt-2 flex items-center text-xs">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Please select a different time period from the calendar below
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="mt-3 mb-2">
+                    <div className="text-sm text-gray-600 mb-2">
+                      {!pickupDate && !returnDate ? (
+                        <div className="bg-blue-50 p-2 rounded text-blue-700 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                          Select a pickup date
+                        </div>
+                      ) : pickupDate && !returnDate ? (
+                        <div className="bg-blue-50 p-2 rounded text-blue-700 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                          Select a return date
+                        </div>
+                      ) : null}
+                    </div>
+                    
+                    {/* Wrap calendar in div instead of form to avoid submission */}
+                    <div 
+                      onClick={(e) => e.stopPropagation()}
+                      className="calendar-container relative"
+                    >
+                      {/* Use React.memo to avoid unnecessary re-rendering */}
+                      <BookingCalendar
+                        bookedDates={bookedDates}
+                        onDateSelect={handleDateSelect}
+                        selectedStartDate={pickupDate}
+                        selectedEndDate={returnDate}
+                      />
+                      
+                      {/* Replace overlay with compact indicator */}
+                      {checkingAvailability && (
+                        <div className="absolute top-0 right-0 m-2 bg-blue-100 bg-opacity-90 px-2 py-1 rounded-md flex items-center z-20">
+                          <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-1"></div>
+                          <span className="text-xs text-blue-700">Checking...</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
+                      <span>* Booked dates are shown in red and cannot be selected</span>
+                      <button 
+                        type="button" 
+                        className="text-blue-500 hover:underline text-sm px-3 py-1 rounded-md hover:bg-blue-50"
+                        onClick={(e) => {
+                          e.preventDefault(); // Prevent form submission
+                          // Clear selected dates
+                          setPickupDate('');
+                          setReturnDate('');
+                          // Reset state to find available dates
+                          setHasFoundAvailableDates(false);
+                          setAutoFindingDates(false);
+                          // Find available dates after a short delay
+                          setTimeout(() => {
+                            findAvailableDates();
+                          }, 100);
+                        }}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2">Return Date</label>
-                  <input 
-                    type="date" 
-                    className="w-full p-2 border rounded" 
-                    value={returnDate}
-                    onChange={(e) => setReturnDate(e.target.value)}
-                    min={pickupDate}
-                    required
-                  />
-                </div>
+                
                 <div className="mb-6">
                   <label className="block text-sm font-medium mb-2">Pickup Location</label>
                   <select 
@@ -516,10 +1004,27 @@ export default function CarDetailPage({ params }) {
                 
                 <button 
                   type="submit"
-                  className="bg-blue-600 text-white w-full py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition"
-                  disabled={car.status !== 'available'}
+                  className={`w-full py-3 rounded-lg font-semibold text-lg transition ${
+                    checkingAvailability || carAvailability === false || car.status !== 'available' || !pickupDate || !returnDate
+                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                  disabled={checkingAvailability || carAvailability === false || car.status !== 'available' || !pickupDate || !returnDate}
                 >
-                  {car.status === 'available' ? 'Book Now' : 'Currently Unavailable'}
+                  {checkingAvailability ? (
+                    <span className="flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Checking...
+                    </span>
+                  ) : !pickupDate || !returnDate ? (
+                    'Please select dates'
+                  ) : carAvailability === false ? (
+                    'Unavailable for selected dates'
+                  ) : car.status !== 'available' ? (
+                    'Car currently unavailable'
+                  ) : (
+                    'Book Now'
+                  )}
                 </button>
               </form>
             </div>

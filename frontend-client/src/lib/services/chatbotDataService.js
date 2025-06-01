@@ -24,13 +24,13 @@ export const getChatbotData = async () => {
     if (carsResponse?.data?.success) {
       chatbotData.cars = carsResponse.data.data.map(car => ({
         id: car._id,
-        make: car.brand?.name || 'Unknown',
+        make: car.brand?.name,
         model: car.model,
         year: car.year,
-        category: car.category?.name || 'Unknown',
+        category: car.category?.name,
         pricePerDay: car.pricePerDay,
-        transmission: car.transmission?.name || 'Unknown',
-        fuel: car.fuel?.name || 'Unknown',
+        transmission: car.transmission?.name,
+        fuel: car.fuel?.name,
         seats: car.seats,
         isAvailable: car.isAvailable
       }));
@@ -68,10 +68,10 @@ export const getChatbotData = async () => {
       if (popularCarsResponse?.data?.success) {
         chatbotData.popularCars = popularCarsResponse.data.data.map(car => ({
           id: car._id,
-          make: car.brand?.name || 'Unknown',
+          make: car.brand?.name,
           model: car.model,
           pricePerDay: car.pricePerDay,
-          category: car.category?.name || 'Unknown'
+          category: car.category?.name
         }));
       }
     } catch (error) {
@@ -119,10 +119,10 @@ export const searchCars = async (criteria) => {
     if (response?.data?.success) {
       return response.data.data.map(car => ({
         id: car._id,
-        make: car.brand?.name || 'Unknown',
+        make: car.brand?.name,
         model: car.model,
         year: car.year,
-        category: car.category?.name || 'Unknown',
+        category: car.category?.name,
         pricePerDay: car.pricePerDay,
         imageUrl: car.images && car.images.length > 0 ? car.images[0] : null
       }));
@@ -146,16 +146,16 @@ export const getCarDetails = async (carId) => {
       const car = response.data.data;
       return {
         id: car._id,
-        make: car.brand?.name || 'Unknown',
+        make: car.brand?.name,
         model: car.model,
         year: car.year,
         description: car.description,
-        category: car.category?.name || 'Unknown',
+        category: car.category?.name,
         pricePerDay: car.pricePerDay,
-        transmission: car.transmission?.name || 'Unknown',
-        fuel: car.fuel?.name || 'Unknown',
+        transmission: car.transmission?.name,
+        fuel: car.fuel?.name,
         seats: car.seats,
-        features: car.features || [],
+        features: car.features?.map(f => typeof f === 'object' ? f.name : f) || [],
         images: car.images || []
       };
     }

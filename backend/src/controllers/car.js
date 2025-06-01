@@ -335,4 +335,97 @@ exports.deleteImage = async (req, res) => {
       error: error.message
     });
   }
+};
+
+/**
+ * Check car availability for specific dates
+ * @route POST /api/cars/:id/check-status
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.checkCarStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { startDate, endDate } = req.body;
+    
+    // Validate required fields
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Start date and end date are required'
+      });
+    }
+    
+    // Find the car
+    const car = await Car.findById(id);
+    if (!car) {
+      return res.status(404).json({
+        success: false,
+        message: 'Car not found'
+      });
+    }
+    
+    // If car is not in 'available' status (e.g., in maintenance)
+    if (car.status !== 'available' && car.status !== 'reserved' && car.status !== 'rented') {
+      return res.status(200).json({
+        success: true,
+        available: false,
+        message: 'Car is not available for booking',
+        status: car.status
+      });
+    }
+    
+    // Check for overlapping bookings
+    const { Booking } = require('../models');
+    const overlappingBookings = await Booking.find({
+      car: id,
+      status: { $nin: ['cancelled', 'completed'] },
+      $or: [
+        { startDate: { $lte: new Date(endDate), $gte: new Date(startDate) } },
+        { endDate: { $gte: new Date(startDate), $lte: new Date(endDate) } },
+        { 
+          startDate: { $lte: new Date(startDate) },
+          endDate: { $gte: new Date(endDate) }
+        }
+      ]
+    });
+    
+    // Get all bookings for calendar display
+    const allBookings = await Booking.find({
+      car: id,
+      status: { $nin: ['cancelled'] },
+      startDate: { $gte: new Date(new Date().setDate(new Date().getDate() - 30)) }, // Last 30 days
+      endDate: { $lte: new Date(new Date().setDate(new Date().getDate() + 90)) }    // Next 90 days
+    }).select('startDate endDate status');
+    
+    // Format bookings for calendar
+    const bookedDates = allBookings.map(booking => ({
+      startDate: booking.startDate,
+      endDate: booking.endDate,
+      status: booking.status
+    }));
+    
+    if (overlappingBookings.length > 0) {
+      return res.status(200).json({
+        success: true,
+        available: false,
+        message: 'Car is already booked for the selected dates',
+        bookedDates
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      available: true,
+      message: 'Car is available for the selected dates',
+      bookedDates
+    });
+  } catch (error) {
+    console.error('Error checking car status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error checking car availability',
+      error: error.message
+    });
+  }
 }; 

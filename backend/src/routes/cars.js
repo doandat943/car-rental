@@ -53,6 +53,9 @@ router.get('/:id', carController.getCarById);
 router.get('/:carId/reviews', reviewController.getCarReviews);
 router.post('/:carId/reviews', protect, reviewController.createReview);
 
+// Check car availability
+router.post('/:id/check-status', carController.checkCarStatus);
+
 // Protected routes
 router.post('/', protect, authorize('admin'), carController.createCar);
 router.put('/:id', protect, authorize('admin'), carController.updateCar);

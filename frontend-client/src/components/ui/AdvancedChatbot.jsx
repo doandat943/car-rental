@@ -5,10 +5,10 @@ import { FaRobot, FaTimes, FaArrowUp, FaCommentDots, FaSearch, FaHistory, FaCirc
 import Link from 'next/link';
 import axios from 'axios';
 
-// Hằng số cho localStorage
+// Constants for localStorage
 const CHAT_HISTORY_KEY = 'carRental_chatHistory';
 const CHAT_TIMESTAMP_KEY = 'carRental_chatTimestamp';
-const CHAT_HISTORY_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 ngày
+const CHAT_HISTORY_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export default function AdvancedChatbot() {
   // Basic state
@@ -24,22 +24,22 @@ export default function AdvancedChatbot() {
   
   // State for search and display
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('carousel'); // 'carousel' hoặc 'list'
-  const [activeCarIndex, setActiveCarIndex] = useState(0); // Cho chế độ carousel
+  const [viewMode, setViewMode] = useState('carousel'); // 'carousel' or 'list'
+  const [activeCarIndex, setActiveCarIndex] = useState(0); // For carousel mode
   
-  // Refs cho từng tab container
+  // Refs for each tab container
   const chatTabRef = useRef(null);
   const searchTabRef = useRef(null);
   const helpTabRef = useRef(null);
   
-  // Custom CSS cho hiệu ứng đánh máy
+  // Custom CSS for typing effect
   const typingCursorStyle = {
     animation: 'cursor-blink 0.8s step-end infinite',
   };
   
-  // Thêm style global cho animation
+  // Add global style for animation
   useEffect(() => {
-    // Thêm CSS animation cho cursor nháy
+    // Add CSS animation for blinking cursor
     const style = document.createElement('style');
     style.textContent = `
       @keyframes cursor-blink {
@@ -91,12 +91,12 @@ export default function AdvancedChatbot() {
     };
   }, []);
   
-  // Lưu tin nhắn vào localStorage khi messages thay đổi
+  // Save messages to localStorage when messages change
   useEffect(() => {
     if (messages.length === 0) return;
     
     try {
-      // Lưu tin nhắn và thời gian lưu
+      // Save messages and timestamp
       localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages));
       localStorage.setItem(CHAT_TIMESTAMP_KEY, Date.now().toString());
     } catch (error) {
@@ -104,10 +104,10 @@ export default function AdvancedChatbot() {
     }
   }, [messages]);
   
-  // Khôi phục tin nhắn từ localStorage khi component mount
+  // Restore messages from localStorage when component mounts
   useEffect(() => {
     try {
-      // Kiểm tra xem có tin nhắn đã lưu không và thời gian lưu
+      // Check if there are saved messages and timestamp
       const savedMessages = localStorage.getItem(CHAT_HISTORY_KEY);
       const savedTimestamp = localStorage.getItem(CHAT_TIMESTAMP_KEY);
       
@@ -115,23 +115,23 @@ export default function AdvancedChatbot() {
         const timestamp = parseInt(savedTimestamp);
         const now = Date.now();
         
-        // Kiểm tra xem tin nhắn có quá cũ không
+        // Check if messages are too old
         if (now - timestamp <= CHAT_HISTORY_MAX_AGE) {
           const parsedMessages = JSON.parse(savedMessages);
           
-          // Nếu có tin nhắn hợp lệ, cập nhật state
+          // If valid messages exist, update state
           if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
             setMessages(parsedMessages);
-            return; // Không cần thêm tin nhắn chào mừng
+            return; // No need to add welcome message
           }
         } else {
-          // Xóa tin nhắn cũ nếu quá thời hạn
+          // Delete old messages if expired
           localStorage.removeItem(CHAT_HISTORY_KEY);
           localStorage.removeItem(CHAT_TIMESTAMP_KEY);
         }
       }
       
-      // Nếu không có tin nhắn đã lưu hoặc tin nhắn quá cũ, hiển thị tin nhắn chào mừng
+      // If no saved messages or messages are too old, show welcome message
       setMessages([{
         id: Date.now(),
         text: "Hello! I'm the CarRental AI assistant. How can I help you today?",
@@ -142,7 +142,7 @@ export default function AdvancedChatbot() {
     } catch (error) {
       console.error('Error loading chat history from localStorage:', error);
       
-      // Fallback nếu có lỗi
+      // Fallback if error
       setMessages([{
         id: Date.now(),
         text: "Hello! I'm the CarRental AI assistant. How can I help you today?",
@@ -155,12 +155,12 @@ export default function AdvancedChatbot() {
   
   // Initialize welcome message
   useEffect(() => {
-    // Bỏ qua vì chúng ta đã xử lý trong useEffect phục hồi tin nhắn
+    // Skip because we already handled in the restore messages useEffect
   }, [messages.length]);
   
   // Reset active car index when messages change
   useEffect(() => {
-    // Kiểm tra xem tin nhắn cuối cùng có chứa dữ liệu xe không
+    // Check if the last message contains car data
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.data?.cars && lastMessage.data.cars.length > 0) {
       setActiveCarIndex(0);
@@ -181,7 +181,7 @@ export default function AdvancedChatbot() {
     }
   }, [messages, isOpen]);
   
-  // Cuộn xuống khi có tin nhắn mới
+  // Scroll down when new messages arrive
   useEffect(() => {
     if (isOpen && activeTab === 'chat' && messages.length > 0) {
       scrollToBottom();
@@ -194,7 +194,7 @@ export default function AdvancedChatbot() {
     setIsOpen(nextState);
     
     if (nextState && activeTab === 'chat') {
-      // Nếu đang mở chatbot và đang ở tab chat, cuộn xuống
+      // If chatbot is open and on chat tab, scroll down
       setTimeout(() => {
         scrollToBottom();
       }, 100);
@@ -244,13 +244,13 @@ export default function AdvancedChatbot() {
       });
       
       if (response.data && response.data.success) {
-        // Hiệu ứng đánh máy
+        // Typing effect
         if (response.data.message && response.data.message.length > 0) {
           const aiMessage = response.data.message;
           setIsTypingEffect(true);
           setTypingText('');
           
-          // Hiệu ứng từng chữ
+          // Character-by-character effect
           let index = 0;
           const typingInterval = setInterval(() => {
             if (index < aiMessage.length) {
@@ -260,7 +260,7 @@ export default function AdvancedChatbot() {
               clearInterval(typingInterval);
               setIsTypingEffect(false);
               
-              // Tạo tin nhắn bot sau khi đã hiển thị xong hiệu ứng đánh máy
+              // Create bot message after typing effect is complete
               const botMessage = {
                 id: Date.now(),
                 text: aiMessage,
@@ -270,12 +270,12 @@ export default function AdvancedChatbot() {
                 data: response.data.data
               };
               
-              // Thêm tin nhắn bot vào danh sách
+              // Add bot message to the list
               setMessages(prev => [...prev, botMessage]);
             }
-          }, 10); // Tốc độ đánh máy
+          }, 10); // Typing speed
         } else {
-          // Fallback nếu không có tin nhắn
+          // Fallback if no message
           const botMessage = {
             id: Date.now(),
             text: "I understand your request. Let me help you with that.",
@@ -322,15 +322,16 @@ export default function AdvancedChatbot() {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
   
-  // Handle tab change - Giờ chỉ cần đơn giản thay đổi active tab
+  // Handle tab change
   const handleTabChange = (tab) => {
-    setActiveTab(tab);
+    if (tab === activeTab) return;
     
-    // Cuộn xuống cuối nếu là tab chat
-    if (tab === 'chat' && messages.length > 0) {
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
+    setActiveTab(tab);
+    setSearchQuery(''); // Reset search when changing tabs
+    
+    // Scroll to bottom if chat tab
+    if (tab === 'chat') {
+      setTimeout(scrollToBottom, 100);
     }
   };
   
@@ -346,25 +347,29 @@ export default function AdvancedChatbot() {
   
   // Navigate to next car in carousel
   const nextCar = (totalCars) => {
-    if (totalCars <= 1) return; // Không làm gì nếu chỉ có 1 xe hoặc ít hơn
-    setActiveCarIndex(prevIndex => 
-      prevIndex + 1 >= totalCars ? 0 : prevIndex + 1
-    );
+    if (totalCars <= 1) return; // Do nothing if only 1 car or less
+    
+    setActiveCarIndex(prevIndex => {
+      if (prevIndex === totalCars - 1) return 0;
+      return prevIndex + 1;
+    });
   };
   
   // Navigate to previous car in carousel
   const prevCar = (totalCars) => {
-    if (totalCars <= 1) return; // Không làm gì nếu chỉ có 1 xe hoặc ít hơn
-    setActiveCarIndex(prevIndex => 
-      prevIndex - 1 < 0 ? totalCars - 1 : prevIndex - 1
-    );
+    if (totalCars <= 1) return; // Do nothing if only 1 car or less
+    
+    setActiveCarIndex(prevIndex => {
+      if (prevIndex === 0) return totalCars - 1;
+      return prevIndex - 1;
+    });
   };
   
   // Clear chat history
   const handleClearChat = () => {
     const confirmed = window.confirm('Are you sure you want to clear the chat history?');
     if (confirmed) {
-      // Xóa tin nhắn từ localStorage
+      // Remove messages from localStorage
       try {
         localStorage.removeItem(CHAT_HISTORY_KEY);
         localStorage.removeItem(CHAT_TIMESTAMP_KEY);
@@ -521,11 +526,56 @@ export default function AdvancedChatbot() {
     }
   };
   
-  // Hàm cuộn xuống tin nhắn mới nhất với force scroll
+  // Function to scroll to the latest message with force scroll
   const scrollToBottom = (behavior = 'smooth') => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior });
     }
+  };
+  
+  // Set up typing animation
+  useEffect(() => {
+    if (isTypingEffect && typingText.length === 0 && messages.length > 0) {
+      // Set up typing animation for last bot message
+      const lastBotMessage = [...messages].reverse().find(msg => msg.sender === 'bot' && msg.isAI);
+      
+      if (lastBotMessage && lastBotMessage.text) {
+        let i = 0;
+        const text = lastBotMessage.text;
+        
+        const typingInterval = setInterval(() => {
+          if (i <= text.length) {
+            setTypingText(text.substring(0, i));
+            i++;
+          } else {
+            clearInterval(typingInterval);
+            setIsTypingEffect(false);
+          }
+        }, 20); // Adjust typing speed here
+        
+        return () => clearInterval(typingInterval);
+      }
+    }
+  }, [isTypingEffect, messages, typingText]);
+  
+  // Display last message with typing effect or as is
+  const renderLastMessage = () => {
+    // Only show typing indicator when isTyping is true
+    if (!isTyping) {
+      return null;
+    }
+    
+    return (
+      <div className="mb-4">
+        <div className="inline-block rounded-lg px-4 py-2 bg-gray-200 text-gray-800">
+          <div className="flex space-x-1">
+            <div className="typing-dot"></div>
+            <div className="typing-dot"></div>
+            <div className="typing-dot"></div>
+          </div>
+        </div>
+      </div>
+    );
   };
   
   return (
@@ -648,9 +698,9 @@ export default function AdvancedChatbot() {
                                 <div className="relative bg-white rounded-lg overflow-hidden shadow-sm">
                                   {/* Current Car Card */}
                                   <div className="p-4 text-gray-800">
-                                    {/* Đảm bảo xe hiện tại tồn tại */}
+                                    {/* Ensure current car exists */}
                                     {(() => {
-                                      // Kiểm tra an toàn và đảm bảo activeCarIndex hợp lệ
+                                      // Safe check and ensure activeCarIndex is valid
                                       const safeIndex = Math.min(activeCarIndex, message.data.cars.length - 1);
                                       const currentCar = message.data.cars[safeIndex];
                                       
@@ -671,12 +721,12 @@ export default function AdvancedChatbot() {
                                             </span>
                                           </div>
                                           
-                                          {/* Giá xe */}
+                                          {/* Car Price */}
                                           <div className="text-green-600 font-bold text-xl mb-3">
                                             ${currentCar.price?.toLocaleString()}/day
                                           </div>
                                           
-                                          {/* Thông tin chi tiết */}
+                                          {/* Car Details */}
                                           <div className="space-y-2 mb-3">
                                             {currentCar.transmission && (
                                               <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm">
@@ -695,7 +745,7 @@ export default function AdvancedChatbot() {
                                             )}
                                           </div>
                                           
-                                          {/* Tính năng */}
+                                          {/* Features */}
                                           {currentCar.features && currentCar.features.length > 0 && (
                                             <div className="flex flex-wrap gap-1 mb-4">
                                               {currentCar.features.slice(0, 3).map((feature, i) => (
@@ -770,7 +820,7 @@ export default function AdvancedChatbot() {
                                 <div className="space-y-3">
                                   {message.data.cars.map((car, index) => (
                                     <div key={index} className="bg-white rounded-lg p-4 text-gray-800 shadow-sm">
-                                      {/* Header với tên xe và loại */}
+                                      {/* Header with car name and type */}
                                       <div className="flex justify-between items-center mb-2">
                                         <div>
                                           <h4 className="font-semibold text-primary text-lg">
@@ -781,12 +831,12 @@ export default function AdvancedChatbot() {
                                         <span className="text-xs bg-primary text-white rounded-full px-3 py-1">{car.category || 'Car'}</span>
                                       </div>
                                       
-                                      {/* Hiển thị giá với màu nổi bật */}
+                                      {/* Display price with highlight color */}
                                       <div className="text-green-600 font-bold text-xl mb-3">
                                         ${car.price?.toLocaleString()}/day
                                       </div>
                                       
-                                      {/* Thông tin chi tiết */}
+                                      {/* Car Details */}
                                       <div className="flex flex-wrap gap-2 mb-3">
                                         {car.transmission && (
                                           <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm">
@@ -805,7 +855,7 @@ export default function AdvancedChatbot() {
                                         )}
                                       </div>
                                       
-                                      {/* Tính năng */}
+                                      {/* Features */}
                                       {car.features && car.features.length > 0 && (
                                         <div className="flex flex-wrap gap-1 mb-3">
                                           {car.features.slice(0, 3).map((feature, i) => (
@@ -853,31 +903,7 @@ export default function AdvancedChatbot() {
                   </div>
                 ))}
                 
-                {isTyping && !isTypingEffect && (
-                  <div className="mb-4">
-                    <div className="inline-block rounded-lg px-4 py-2 bg-gray-200 text-gray-800">
-                      <div className="flex space-x-1">
-                        <div className="typing-dot"></div>
-                        <div className="typing-dot"></div>
-                        <div className="typing-dot"></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {isTypingEffect && typingText && (
-                  <div className="mb-4">
-                    <div className="inline-block rounded-lg px-4 py-2 bg-indigo-600 text-white">
-                      <div className="flex items-center mb-1">
-                        <div className="flex items-center">
-                          <FaRobot className="text-xs mr-1" />
-                          <span className="text-xs font-medium">Assistant</span>
-                        </div>
-                      </div>
-                      <p className="text-sm">{typingText}<span className="typing-cursor">|</span></p>
-                    </div>
-                  </div>
-                )}
+                {renderLastMessage()}
                 
                 <div ref={messagesEndRef} />
               </div>
