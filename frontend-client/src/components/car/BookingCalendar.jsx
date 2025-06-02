@@ -186,14 +186,7 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
       return; // Prevent selection
     }
     
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (date < today) {
-      console.log(`Cannot select past date: ${format(date, 'MM/dd/yyyy')}`);
-      return; // Don't allow selecting past dates
-    }
-    
+    // Cho phép chọn tất cả các ngày không bị đặt
     if (onDateSelect) {
       console.log(`Selected date: ${format(date, 'MM/dd/yyyy')}`);
       
@@ -311,7 +304,7 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
           return (
             <div 
               key={i} 
-              onClick={(e) => !isBooked && !isPast && isCurrentMonth && handleDateClick(day, e)}
+              onClick={(e) => !isBooked && handleDateClick(day, e)}
               onMouseEnter={(e) => handleMouseEnter(day, e)}
               onMouseLeave={(e) => handleMouseLeave(e)}
               className={`
@@ -322,9 +315,10 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
                 ${isStart ? 'bg-blue-500 text-white z-10' : ''}
                 ${isEnd ? 'bg-blue-500 text-white z-10' : ''}
                 ${isHovering && !isStart && !isBooked ? 'bg-blue-50 text-blue-800' : ''}
-                ${isPast && isCurrentMonth ? 'text-gray-400 cursor-not-allowed' : ''}
+                ${isPast && isCurrentMonth ? 'text-gray-400' : ''}
                 ${isToday && !isSelected && !isBooked ? 'border border-blue-500' : ''}
-                ${!isBooked && !isSelected && !isPast && isCurrentMonth ? 'hover:bg-blue-100 cursor-pointer' : ''}
+                ${!isBooked && isCurrentMonth ? 'hover:bg-blue-100 cursor-pointer' : ''}
+                ${!isCurrentMonth ? 'cursor-pointer' : ''}
                 ${roundedClass}
                 ${hoverEdgeClass}
                 transition-all duration-200

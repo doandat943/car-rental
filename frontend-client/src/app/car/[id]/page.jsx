@@ -74,6 +74,9 @@ export default function CarDetailPage({ params }) {
   // Remove unused state
   const [hasFoundAvailableDates, setHasFoundAvailableDates] = useState(false);
   const [autoFindingDates, setAutoFindingDates] = useState(false);
+  
+  // Add state to track last user action (pickup or return date selection)
+  const [lastActionType, setLastActionType] = useState('pickup'); // 'pickup' or 'return'
 
   useEffect(() => {
     // Fetch pickup locations
@@ -344,21 +347,42 @@ export default function CarDetailPage({ params }) {
     const formattedDate = formatDate(selectedDate);
     console.log('User selected date:', formattedDate, 'Original date:', date.toLocaleDateString());
     
-    // Vì chúng ta luôn có sẵn cả ngày lấy xe và ngày trả xe (được tự động chọn)
-    // nên chỉ cần xử lý trường hợp khi đã có cả hai ngày
+    // Get date objects for current pickup and return dates
     const returnDateObj = new Date(returnDate);
     returnDateObj.setHours(12, 0, 0, 0);
     
-    // Nếu chọn ngày sau ngày trả xe hiện tại -> cập nhật ngày trả xe
-    if (selectedDate > returnDateObj) {
-      console.log('Updating return date to:', formattedDate);
-      setReturnDate(formattedDate);
+    const pickupDateObj = new Date(pickupDate);
+    pickupDateObj.setHours(12, 0, 0, 0);
+    
+    // Case 1: User selected date before current pickup date
+    if (selectedDate < pickupDateObj) {
+      console.log('Updating pickup date to:', formattedDate);
+      setPickupDate(formattedDate);
+      setLastActionType('pickup');
       return;
     }
     
-    // Trường hợp còn lại: cập nhật ngày lấy xe
-    console.log('Updating pickup date to:', formattedDate);
-    setPickupDate(formattedDate);
+    // Case 2: User selected date after current return date
+    if (selectedDate > returnDateObj) {
+      console.log('Updating return date to:', formattedDate);
+      setReturnDate(formattedDate);
+      setLastActionType('return');
+      return;
+    }
+    
+    // Case 3: User selected date between pickup and return dates
+    // Determine what to update based on last action
+    if (lastActionType === 'return') {
+      // Last action was selecting return date, so update pickup date
+      console.log('Updating pickup date to:', formattedDate, '(based on last action)');
+      setPickupDate(formattedDate);
+      setLastActionType('pickup');
+    } else {
+      // Last action was selecting pickup date or initial load, so update return date
+      console.log('Updating return date to:', formattedDate, '(based on last action)');
+      setReturnDate(formattedDate);
+      setLastActionType('return');
+    }
   };
 
   // Find available dates when component loads
@@ -481,6 +505,8 @@ export default function CarDetailPage({ params }) {
       setReturnDate(formatDate(tomorrow));
       setHasFoundAvailableDates(true);
       setAutoFindingDates(false);
+      // Reset lastActionType when automatically selecting dates
+      setLastActionType('pickup');
       return;
     }
     
@@ -517,6 +543,8 @@ export default function CarDetailPage({ params }) {
           setReturnDate(formatDate(endDate));
           setHasFoundAvailableDates(true);
           setAutoFindingDates(false);
+          // Reset lastActionType when automatically selecting dates
+          setLastActionType('pickup');
           
           return;
         }
