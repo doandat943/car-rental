@@ -15,6 +15,63 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
   const [nextMonthDays, setNextMonthDays] = useState([]);
   const [displayMonth, setDisplayMonth] = useState(new Date());
   
+  // Calculate today and max allowed date (today + 30 days)
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  
+  const maxAllowedDate = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + 30);
+    return d;
+  }, [today]);
+  
+  // Check if date is in valid range (today to today+30 days)
+  const isDateInValidRange = useCallback((date) => {
+    if (!date) return false;
+    
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    
+    return compareDate >= today && compareDate <= maxAllowedDate;
+  }, [today, maxAllowedDate]);
+  
+  // Check if month is allowed for navigation (current month or next month)
+  const isMonthAllowed = useCallback((month) => {
+    const currentMonthStart = new Date();
+    currentMonthStart.setDate(1);
+    currentMonthStart.setHours(0, 0, 0, 0);
+    
+    const nextMonthStart = new Date(currentMonthStart);
+    nextMonthStart.setMonth(nextMonthStart.getMonth() + 1);
+    
+    const monthToCheck = new Date(month);
+    monthToCheck.setDate(1);
+    monthToCheck.setHours(0, 0, 0, 0);
+    
+    return (
+      monthToCheck.getMonth() === currentMonthStart.getMonth() && 
+      monthToCheck.getFullYear() === currentMonthStart.getFullYear()
+    ) || (
+      monthToCheck.getMonth() === nextMonthStart.getMonth() && 
+      monthToCheck.getFullYear() === nextMonthStart.getFullYear()
+    );
+  }, []);
+  
+  // Initialize with current month
+  useEffect(() => {
+    // Make sure current month is either this month or next month
+    const now = new Date();
+    now.setDate(1);
+    
+    if (!isMonthAllowed(currentMonth)) {
+      setCurrentMonth(now);
+      setDisplayMonth(now);
+    }
+  }, [isMonthAllowed]);
+  
   // Convert dates from string to Date objects if needed
   const parsedStartDate = useMemo(() => selectedStartDate ? new Date(selectedStartDate) : null, [selectedStartDate]);
   const parsedEndDate = useMemo(() => selectedEndDate ? new Date(selectedEndDate) : null, [selectedEndDate]);
@@ -179,16 +236,23 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
     
     if (isAnimating) return;
     
+    // Check if previous month is allowed
+    const prevMonthDate = subMonths(currentMonth, 1);
+    if (!isMonthAllowed(prevMonthDate)) {
+      // Cannot go back before current month
+      return;
+    }
+    
     // Set animation direction and trigger animation
     setAnimationDirection('up');
     setIsAnimating(true);
     
     // Update display month immediately to show previous month
-    setDisplayMonth(subMonths(currentMonth, 1));
+    setDisplayMonth(prevMonthDate);
     
     // Wait for animation to complete before changing current month
     setTimeout(() => {
-      setCurrentMonth(prev => subMonths(prev, 1));
+      setCurrentMonth(prevMonthDate);
       setIsAnimating(false);
     }, 300);
   };
@@ -202,16 +266,33 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
     
     if (isAnimating) return;
     
+    // Check if next month is allowed
+    const nextMonthDate = addMonths(currentMonth, 1);
+    const currentMonthStart = new Date();
+    currentMonthStart.setDate(1);
+    
+    // Only allow next month if current is current month
+    const nextMonthStart = new Date(currentMonthStart);
+    nextMonthStart.setMonth(nextMonthStart.getMonth() + 1);
+    
+    // If already in the next month, don't allow further navigation
+    if (
+      currentMonth.getMonth() === nextMonthStart.getMonth() &&
+      currentMonth.getFullYear() === nextMonthStart.getFullYear()
+    ) {
+      return;
+    }
+    
     // Set animation direction and trigger animation  
     setAnimationDirection('down');
     setIsAnimating(true);
     
     // Update display month immediately to show next month
-    setDisplayMonth(addMonths(currentMonth, 1));
+    setDisplayMonth(nextMonthDate);
     
     // Wait for animation to complete before changing current month
     setTimeout(() => {
-      setCurrentMonth(prev => addMonths(prev, 1));
+      setCurrentMonth(nextMonthDate);
       setIsAnimating(false);
     }, 300);
   };
@@ -227,6 +308,15 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
     if (e) {
       e.preventDefault();
       e.stopPropagation();
+    }
+    
+    // Debug log
+    console.log('Date clicked:', format(date, 'yyyy-MM-dd'), 'isValid:', isDateInValidRange(date), 'isBooked:', isDateBooked(date));
+    
+    // Check if date is in valid range
+    if (!isDateInValidRange(date)) {
+      console.log('Date not in valid range:', format(date, 'yyyy-MM-dd'));
+      return; // Don't allow selecting dates outside valid range
     }
     
     // Strict check for booked dates
@@ -253,7 +343,7 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
       // Pass timezone-processed date
       onDateSelect(correctedDate);
     }
-  }, [isDateBooked, onDateSelect]);
+  }, [isDateBooked, onDateSelect, isDateInValidRange]);
   
   // Handle mouse enter on date
   const handleMouseEnter = useCallback((date, e) => {
@@ -280,79 +370,122 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
     });
   }, [formatWeekdayShort]);
   
-  // Render days for a specific month
+  // Render days for a specific month - completely rewritten for clarity
   const renderDays = (daysArray, monthToDisplay) => {
     return daysArray.map((day, i) => {
+      // Get all the important states for this day
       const isBooked = isDateBooked(day);
-      const isSelected = isInSelectedRange(day);
-      const isPast = day < new Date();
-      const isToday = isSameDay(day, new Date());
+      const isValidDate = isDateInValidRange(day);
       const isCurrentMonth = isSameMonth(day, monthToDisplay);
+      const isToday = isSameDay(day, new Date());
       const isStart = isStartDate(day);
       const isEnd = isEndDate(day);
+      const isSelected = isInSelectedRange(day);
       const isHovering = isInHoverRange(day);
       
-      // Get day of month
+      // Format day of month number
       const dayOfMonth = format(day, 'd');
       
-      // Determine left and right rounded corners for range selection
-      let roundedClass = '';
-      if (isStart) roundedClass += ' rounded-l-full';
-      if (isEnd) roundedClass += ' rounded-r-full';
+      // Whether this day can be clicked
+      const isClickable = isValidDate && !isBooked;
       
-      // Determine if this is a hovering edge
-      let hoverEdgeClass = '';
-      if (hoverDate && parsedStartDate && !parsedEndDate) {
-        const startDate = parsedStartDate;
-        const hoverDateObj = new Date(hoverDate);
-        
-        if (isSameDay(day, startDate)) {
-          hoverEdgeClass = startDate <= hoverDateObj ? ' rounded-l-full' : ' rounded-r-full';
-        }
-        
-        if (isSameDay(day, hoverDateObj)) {
-          hoverEdgeClass = startDate <= hoverDateObj ? ' rounded-r-full' : ' rounded-l-full';
-        }
+      // Build the class list based on the state
+      let classNames = [
+        'h-10 flex items-center justify-center text-sm relative',
+        'transition-all duration-200 group'
+      ];
+      
+      // Basic styling based on month
+      if (isCurrentMonth) {
+        classNames.push('text-gray-800');
+      } else {
+        classNames.push('text-gray-500');
+      }
+      
+      // Styling for selectable days
+      if (isClickable) {
+        classNames.push('cursor-pointer hover:bg-blue-100');
+      }
+      
+      // Styling for invalid dates
+      if (!isValidDate) {
+        classNames.push('bg-gray-200 text-gray-500 cursor-not-allowed');
+      }
+      
+      // Styling for booked dates
+      if (isBooked) {
+        classNames.push('bg-red-100 text-red-700 cursor-not-allowed rounded-full');
+      }
+      
+      // Styling for selected range
+      if (isSelected && !isStart && !isEnd) {
+        classNames.push('bg-blue-100 text-blue-800');
+      }
+      
+      // Styling for start and end dates
+      if (isStart) {
+        classNames.push('rounded-l-full');
+      }
+      if (isEnd) {
+        classNames.push('rounded-r-full');
+      }
+      if (isStart || isEnd) {
+        classNames.push('bg-blue-500 text-white z-10');
+      }
+      
+      // Styling for hovering effect
+      if (isHovering && !isStart && !isBooked && isValidDate) {
+        classNames.push('bg-blue-50 text-blue-800');
+      }
+      
+      // Styling for today
+      if (isToday && !isSelected && !isBooked) {
+        classNames.push('border border-blue-500');
+      }
+      
+      // Styling for the day number element
+      let dayNumberClassNames = [
+        'flex items-center justify-center w-full h-full'
+      ];
+      
+      if ((isStart || isEnd)) {
+        dayNumberClassNames.push('rounded-full bg-blue-500 text-white z-10');
+      }
+      
+      if (!isValidDate) {
+        dayNumberClassNames.push('opacity-50');
+      }
+      
+      // Log debug info for days 1 and 2
+      if (dayOfMonth === '1' || dayOfMonth === '2') {
+        console.log(`Day ${dayOfMonth}, Month: ${format(day, 'MMMM')}, isValid: ${isValidDate}, isBooked: ${isBooked}, isClickable: ${isClickable}, isCurrentMonth: ${isCurrentMonth}`);
       }
       
       return (
         <div 
-          key={i} 
-          onClick={(e) => !isBooked && handleDateClick(day, e)}
-          onMouseEnter={(e) => handleMouseEnter(day, e)}
+          key={i}
+          onClick={(e) => isClickable && handleDateClick(day, e)}
+          onMouseEnter={(e) => isClickable && handleMouseEnter(day, e)}
           onMouseLeave={(e) => handleMouseLeave(e)}
-          className={`
-            h-10 flex items-center justify-center text-sm relative
-            ${!isCurrentMonth ? 'text-gray-300' : ''}
-            ${isBooked && isCurrentMonth ? 'bg-red-100 text-red-700 cursor-not-allowed rounded-full' : ''}
-            ${isSelected && !isStart && !isEnd ? 'bg-blue-100 text-blue-800' : ''}
-            ${isStart ? 'bg-blue-500 text-white z-10' : ''}
-            ${isEnd ? 'bg-blue-500 text-white z-10' : ''}
-            ${isHovering && !isStart && !isBooked ? 'bg-blue-50 text-blue-800' : ''}
-            ${isPast && isCurrentMonth ? 'text-gray-400' : ''}
-            ${isToday && !isSelected && !isBooked ? 'border border-blue-500' : ''}
-            ${!isBooked && isCurrentMonth ? 'hover:bg-blue-100 cursor-pointer' : ''}
-            ${!isCurrentMonth ? 'cursor-pointer' : ''}
-            ${roundedClass}
-            ${hoverEdgeClass}
-            transition-all duration-200
-            group
-          `}
-          title={isBooked && isCurrentMonth ? "This date is already booked" : ""}
+          className={classNames.join(' ')}
+          data-date={format(day, 'yyyy-MM-dd')}
+          data-selectable={isClickable ? 'true' : 'false'}
         >
-          <div className={`
-            flex items-center justify-center w-full h-full
-            ${(isStart || isEnd) ? 'rounded-full bg-blue-500 text-white z-10' : ''}
-          `}>
+          <div className={dayNumberClassNames.join(' ')}>
             {dayOfMonth}
           </div>
           
-          {/* Tooltip displayed on hover for booked dates */}
-          {isBooked && isCurrentMonth && (
+          {/* Tooltip for invalid dates - shows if date is not in the valid booking range */}
+          {!isValidDate ? (
+            <div className="absolute opacity-0 group-hover:opacity-100 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded pointer-events-none whitespace-nowrap z-20 transition-opacity duration-200">
+              Outside booking range
+            </div>
+          ) : isBooked ? (
+            // Tooltip for booked dates - shows if date is valid AND booked
             <div className="absolute opacity-0 group-hover:opacity-100 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-red-500 text-white text-xs rounded pointer-events-none whitespace-nowrap z-20 transition-opacity duration-200">
               Already booked
             </div>
-          )}
+          ) : null}
         </div>
       );
     });
@@ -402,8 +535,8 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
           }`}
         >
           {renderDays(calendarDays, currentMonth)}
-        </div>
-        
+              </div>
+              
         {/* Animation overlay that shows during transition */}
         <div
           className={`grid grid-cols-7 gap-1 absolute w-full transition-all duration-300 transform ${
@@ -424,8 +557,8 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
             animationDirection === 'up'
               ? renderDays(prevMonthDays, subMonths(currentMonth, 1))
               : renderDays(nextMonthDays, addMonths(currentMonth, 1))
-          )}
-        </div>
+              )}
+            </div>
       </div>
       
       <style dangerouslySetInnerHTML={{__html: `
