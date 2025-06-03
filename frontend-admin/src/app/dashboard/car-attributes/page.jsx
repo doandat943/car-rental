@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Settings, 
   PlusCircle, 
-  Edit, 
+  Edit,
   Trash2,
   Loader2,
   X,
@@ -12,7 +11,8 @@ import {
   Search,
   AlertCircle,
   Plus,
-  Check
+  Check,
+  Cog
 } from 'lucide-react';
 import { brandsAPI, transmissionsAPI, fuelsAPI, featuresAPI, categoriesAPI } from '../../../lib/api';
 import { Button } from '../../../components/ui/Button';
@@ -383,7 +383,7 @@ export default function CarAttributesPage() {
                     : 'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'
                 }`}
               >
-                <Settings className={`w-4 h-4 mr-2 ${
+                <Cog className={`w-4 h-4 mr-2 ${
                   activeTab === tab
                     ? 'text-blue-600 dark:text-blue-500'
                     : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300'
@@ -411,7 +411,7 @@ export default function CarAttributesPage() {
           </div>
         ) : getCurrentItems().length === 0 ? (
           <div className="p-6 text-center">
-            <Settings className="h-10 w-10 mx-auto text-gray-400 dark:text-gray-600" />
+            <Cog className="h-10 w-10 mx-auto text-gray-400 dark:text-gray-600" />
             <p className="mt-2 text-gray-500 dark:text-gray-400">No {activeTab} found</p>
             <Button
               onClick={handleAdd}

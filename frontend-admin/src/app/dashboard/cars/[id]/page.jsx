@@ -9,7 +9,6 @@ import {
   Edit,
   Calendar,
   Users,
-  Settings,
   Star,
   MapPin,
   Car,
@@ -28,7 +27,9 @@ import {
   Gauge,
   Heart,
   ListChecks,
-  Check
+  Check,
+  Package,
+  Cog
 } from 'lucide-react';
 import { carsAPI } from '../../../../lib/api';
 import { Button } from '../../../../components/ui/Button';
@@ -316,7 +317,7 @@ export default function CarDetails({ params }) {
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
-                  <Settings className="h-5 w-5 text-green-500" />
+                  <Cog className="h-5 w-5 text-green-500" />
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">Model</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -339,7 +340,7 @@ export default function CarDetails({ params }) {
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
-                  <Settings className="h-5 w-5 text-red-500" />
+                  <Cog className="h-5 w-5 text-red-500" />
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">Transmission</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">

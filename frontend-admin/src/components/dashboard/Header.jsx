@@ -13,7 +13,6 @@ import {
   Sun, 
   Moon, 
   User,
-  Settings,
   LogOut,
   Check,
   Clock,
@@ -420,15 +419,6 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                       >
                         <User className="w-4 h-4 mr-2" />
                         Profile
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/dashboard/settings"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Settings
                       </Link>
                     </li>
                     <li>

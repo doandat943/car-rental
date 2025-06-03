@@ -7,11 +7,29 @@ import Image from 'next/image';
 
 // Icons
 import { 
-  Home, CheckSquare, Bell,
-  Shield, AlertTriangle, Settings,
-  ChevronDown, ChevronRight,
-  Car, CalendarCheck, Users, BarChart3,
-  Tag
+  Home,
+  Car,
+  Calendar,
+  Users,
+  BarChart3,
+  Package,
+  Shield,
+  AlertTriangle,
+  HelpCircle,
+  User,
+  LogOut,
+  Menu,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Wrench,
+  Palette,
+  MessageSquare,
+  Bell,
+  CalendarCheck,
+  Tag,
+  CheckSquare,
+  Globe
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -51,14 +69,14 @@ const Sidebar = () => {
     { name: 'Car Attributes', icon: <Tag className="h-5 w-5" />, path: '/dashboard/car-attributes' },
     { name: 'Bookings', icon: <CalendarCheck className="h-5 w-5" />, path: '/dashboard/bookings' },
     { name: 'Users', icon: <Users className="h-5 w-5" />, path: '/dashboard/users' },
+    { name: 'Website Info', icon: <Globe className="h-5 w-5" />, path: '/dashboard/website-info' },
     { name: 'Statistics & Reports', icon: <BarChart3 className="h-5 w-5" />, path: '/dashboard/statistics' }
   ];
 
   const pagesItems = [
     { name: 'Tasks', icon: <CheckSquare className="h-5 w-5" />, path: '/dashboard/tasks' },
     { name: 'Authentication', icon: <Shield className="h-5 w-5" />, path: '/dashboard/authentication' },
-    { name: 'Errors', icon: <AlertTriangle className="h-5 w-5" />, path: '/dashboard/errors' },
-    { name: 'Settings', icon: <Settings className="h-5 w-5" />, path: '/dashboard/settings' },
+    { name: 'Errors', icon: <AlertTriangle className="h-5 w-5" />, path: '/dashboard/errors' }
   ];
 
   return (

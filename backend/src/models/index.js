@@ -3,7 +3,6 @@ const Car = require('./car');
 const Booking = require('./booking');
 const Category = require('./category');
 const WebsiteInfo = require('./websiteInfo');
-const Setting = require('./setting');
 const Statistic = require('./statistic');
 const Notification = require('./notification');
 const Brand = require('./brand');
@@ -19,7 +18,6 @@ module.exports = {
   Booking,
   Category,
   WebsiteInfo,
-  Setting,
   Statistic,
   Notification,
   Brand,

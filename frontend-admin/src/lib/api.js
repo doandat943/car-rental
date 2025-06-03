@@ -629,26 +629,6 @@ export const notificationsAPI = {
 };
 
 /**
- * System settings APIs
- */
-export const settingsAPI = {
-  // Get system settings
-  getSettings: async () => {
-    return fetchWithAuth('/settings', {
-      method: 'GET',
-    });
-  },
-
-  // Update system settings
-  updateSettings: async (settingsData) => {
-    return fetchWithAuth('/settings', {
-      method: 'PUT',
-      body: JSON.stringify(settingsData),
-    });
-  },
-};
-
-/**
  * Brand management APIs
  */
 export const brandsAPI = {
@@ -813,6 +793,26 @@ export const featuresAPI = {
   deleteFeature: async (id) => {
     return fetchWithAuth(`/features/${id}`, {
       method: 'DELETE',
+    });
+  },
+};
+
+/**
+ * Website Info management APIs
+ */
+export const websiteInfoAPI = {
+  // Get website information
+  getWebsiteInfo: async () => {
+    return fetchWithAuth('/website-info', {
+      method: 'GET',
+    });
+  },
+
+  // Update website information
+  updateWebsiteInfo: async (websiteInfoData) => {
+    return fetchWithAuth('/website-info', {
+      method: 'PUT',
+      body: JSON.stringify(websiteInfoData),
     });
   },
 };

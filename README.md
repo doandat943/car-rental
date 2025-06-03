@@ -138,7 +138,7 @@ The seed data includes:
 - Car categories
 - Car listings with details and images
 - Sample bookings
-- Website settings
+- Website content and FAQs
 - Statistics for the dashboard
 - Notifications
 

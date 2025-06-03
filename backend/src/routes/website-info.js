@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middlewares/auth');
-const settingsController = require('../controllers/settings');
+const websiteInfoController = require('../controllers/websiteInfo');
 
 // Website Info routes
-router.get('/', settingsController.getWebsiteInfo); // Public route
-router.put('/', protect, authorize('admin'), settingsController.updateWebsiteInfo);
+router.get('/', websiteInfoController.getWebsiteInfo); // Public route
+router.put('/', protect, authorize('admin'), websiteInfoController.updateWebsiteInfo);
 
 module.exports = router; 

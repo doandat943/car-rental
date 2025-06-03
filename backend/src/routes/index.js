@@ -8,7 +8,6 @@ const categoryRoutes = require('./categories');
 const uploadRoutes = require('./upload');
 const notificationRoutes = require('./notification');
 const statisticsRoutes = require('./statistics');
-const settingsRoutes = require('./settings');
 const websiteInfoRoutes = require('./website-info');
 const brandRoutes = require('./brands');
 const transmissionRoutes = require('./transmissions');
@@ -32,7 +31,6 @@ function setRoutes(app) {
   app.use('/api/upload', uploadRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/statistics', statisticsRoutes);
-  app.use('/api/settings', settingsRoutes);
   app.use('/api/website-info', websiteInfoRoutes);
   app.use('/api/brands', brandRoutes);
   app.use('/api/transmissions', transmissionRoutes);
