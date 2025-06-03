@@ -7,7 +7,6 @@ const userRoutes = require('./users');
 const categoryRoutes = require('./categories');
 const uploadRoutes = require('./upload');
 const notificationRoutes = require('./notification');
-const reviewsRoutes = require('./reviews');
 const statisticsRoutes = require('./statistics');
 const settingsRoutes = require('./settings');
 const websiteInfoRoutes = require('./website-info');
@@ -32,7 +31,6 @@ function setRoutes(app) {
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/upload', uploadRoutes);
   app.use('/api/notifications', notificationRoutes);
-  app.use('/api/reviews', reviewsRoutes);
   app.use('/api/statistics', statisticsRoutes);
   app.use('/api/settings', settingsRoutes);
   app.use('/api/website-info', websiteInfoRoutes);

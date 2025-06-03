@@ -76,7 +76,11 @@ export default function SettingsPage() {
       darkMode: false,
       customCSS: ''
     },
-    faqs: []
+    faqs: [],
+    featureSettings: {
+      enableReviews: false,
+      maintenanceMode: false
+    }
   });
   
   // User Settings State
@@ -929,23 +933,6 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="flex items-center space-x-2">
                     <Switch 
-                      id="featureSettings.enableReviews"
-                      checked={websiteInfo.featureSettings?.enableReviews || false}
-                      onCheckedChange={(checked) => 
-                        setWebsiteInfo({
-                          ...websiteInfo,
-                          featureSettings: {
-                            ...websiteInfo.featureSettings,
-                            enableReviews: checked
-                          }
-                        })
-                      }
-                    />
-                    <Label htmlFor="featureSettings.enableReviews">Enable Reviews</Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Switch 
                       id="featureSettings.maintenanceMode"
                       checked={websiteInfo.featureSettings?.maintenanceMode || false}
                       onCheckedChange={(checked) => 
@@ -1076,7 +1063,7 @@ export default function SettingsPage() {
                     {loading ? 'Saving...' : 'Save All FAQs'}
                   </Button>
                 </div>
-        </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1540,8 +1527,8 @@ export default function SettingsPage() {
                   >
                     {loading ? 'Saving...' : 'Save User Settings'}
                   </Button>
-        </div>
-      </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

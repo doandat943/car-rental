@@ -109,7 +109,6 @@ npm run build
 - Car browsing and filtering
 - Booking system
 - User registration and profile management
-- Reviews and ratings
 - Responsive design for all devices
 
 ## API Routes
@@ -139,7 +138,6 @@ The seed data includes:
 - Car categories
 - Car listings with details and images
 - Sample bookings
-- Reviews and ratings
 - Website settings
 - Statistics for the dashboard
 - Notifications

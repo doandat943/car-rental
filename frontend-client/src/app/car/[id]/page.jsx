@@ -684,16 +684,6 @@ export default function CarDetailPage({ params }) {
             {/* Car Details */}
             <div className="bg-white p-6 rounded-lg shadow-md mb-8">
               <h1 className="text-3xl font-bold mb-2">{car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`}</h1>
-              {car.rating && (
-                <div className="flex items-center mb-4">
-                  <div className="text-yellow-400 flex mr-2">
-                    {[...Array(5)].map((_, i) => (
-                      <FaStar key={i} className={i < Math.floor(car.rating) ? "text-yellow-400" : "text-gray-300"} />
-                    ))}
-                  </div>
-                  <span className="text-gray-600">{car.rating} ({car.reviewCount || 0} reviews)</span>
-                </div>
-              )}
               
               <div className="border-t border-b py-4 my-4">
                 <h2 className="text-xl font-semibold mb-4">Specifications</h2>

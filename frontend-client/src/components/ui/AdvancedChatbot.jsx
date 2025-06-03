@@ -959,23 +959,6 @@ export default function AdvancedChatbot() {
                 />
               </div>
               
-              {/* Rate our assistant */}
-              <div className="bg-indigo-50 rounded-lg p-4 mb-6">
-                <h4 className="font-medium text-indigo-700 mb-2">How was your experience?</h4>
-                <p className="text-sm text-indigo-600 mb-3">Your feedback helps us improve our assistant</p>
-                <div className="flex justify-center space-x-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button 
-                      key={star}
-                      className="text-2xl text-yellow-400 hover:scale-110 transition-transform"
-                      aria-label={`Rate ${star} stars`}
-                    >
-                      <FaStar />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
               <h3 className="font-medium text-gray-800 mb-4 text-xl">Frequently Asked Questions</h3>
               
               <div className="space-y-3 mb-6">

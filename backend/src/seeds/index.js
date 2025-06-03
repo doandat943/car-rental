@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { connectDB } = require('../db');
 
 // Import all seed modules with error handling
-let seedUsers, seedBrands, seedTransmissions, seedFuels, seedFeatures, seedCategories, seedCars, seedBookings, seedReviews, seedNotifications, seedSettings, seedWebsiteInfo, seedStatistics, seedLocations, seedFaqs;
+let seedUsers, seedBrands, seedTransmissions, seedFuels, seedFeatures, seedCategories, seedCars, seedBookings, seedNotifications, seedSettings, seedWebsiteInfo, seedStatistics, seedLocations, seedFaqs;
 
 try {
   seedUsers = require('./users');
@@ -73,15 +73,6 @@ try {
   console.warn('Bookings seed module not found:', error.message);
   seedBookings = async () => {
     console.log('Skipping bookings seed (module not available)');
-  };
-}
-
-try {
-  seedReviews = require('./reviews');
-} catch (error) {
-  console.warn('Reviews seed module not found:', error.message);
-  seedReviews = async () => {
-    console.log('Skipping reviews seed (module not available)');
   };
 }
 
@@ -167,18 +158,15 @@ const seedAll = async () => {
     // 5. Seed bookings 
     await seedBookings();
     
-    // 6. Seed reviews
-    await seedReviews();
-    
-    // 7. Seed notifications
+    // 6. Seed notifications
     await seedNotifications();
     
-    // 8. Seed settings and website info
+    // 7. Seed settings and website info
     await seedSettings();
     await seedWebsiteInfo();
     await seedFaqs();
     
-    // 9. Seed statistics (should run last to get accurate counts)
+    // 8. Seed statistics (should run last to get accurate counts)
     await seedStatistics();
     
     console.log('Seed process completed successfully');

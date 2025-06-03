@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middlewares/auth');
 const carController = require('../controllers/car');
-const reviewController = require('../controllers/review');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -48,10 +47,6 @@ const upload = multer({
 // Public routes
 router.get('/', carController.getCars);
 router.get('/:id', carController.getCarById);
-
-// Add these routes for car reviews
-router.get('/:carId/reviews', reviewController.getCarReviews);
-router.post('/:carId/reviews', protect, reviewController.createReview);
 
 // Check car availability
 router.post('/:id/check-status', carController.checkCarStatus);

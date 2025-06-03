@@ -5,7 +5,6 @@ const Category = require('./category');
 const WebsiteInfo = require('./websiteInfo');
 const Setting = require('./setting');
 const Statistic = require('./statistic');
-const Review = require('./review');
 const Notification = require('./notification');
 const Brand = require('./brand');
 const Transmission = require('./transmission');
@@ -22,7 +21,6 @@ module.exports = {
   WebsiteInfo,
   Setting,
   Statistic,
-  Review,
   Notification,
   Brand,
   Transmission,

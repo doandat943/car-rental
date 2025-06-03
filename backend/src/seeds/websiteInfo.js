@@ -76,7 +76,6 @@ const seedWebsiteInfo = async () => {
         }
       ],
       featureSettings: {
-        enableReviews: true,
         maintenanceMode: false
       }
     });

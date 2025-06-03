@@ -149,7 +149,6 @@ export default function DashboardPage() {
               name: car.name || (car.brand && car.model ? `${car.brand} ${car.model}` : 'Unknown car'),
               bookings: car.bookingsCount || car.bookingCount || 0,
               revenue: `$${(car.totalRevenue || car.revenue || 0).toLocaleString()}`,
-              rating: car.averageRating || car.rating || 0,
             }))
           : [];
         
@@ -224,7 +223,6 @@ export default function DashboardPage() {
             name: 'Tesla Model 3',
             bookings: 24,
             revenue: '$4,800',
-            rating: 4.8,
           },
           // Additional sample data would be here
         ]);

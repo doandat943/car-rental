@@ -19,8 +19,6 @@ const Car = mongoose.models.Car || mongoose.model('Car', new mongoose.Schema({
     enum: ['available', 'maintenance', 'rented', 'reserved'],
     default: 'available'
   },
-  rating: { type: Number, default: 0 },
-  reviewCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 }));
 

@@ -69,16 +69,6 @@ const CarCard = ({ car }) => {
           <span className="text-primary text-xl font-bold">
             ${car.price || 0} <span className="text-sm font-normal text-gray-500">/day</span>
           </span>
-          
-          {car.rating && (
-            <div className="flex items-center text-yellow-500">
-              <FaStar className="mr-1" />
-              <span>{car.rating}</span>
-              {car.reviewCount && (
-                <span className="text-xs text-gray-500 ml-1">({car.reviewCount})</span>
-              )}
-            </div>
-          )}
         </div>
         
         <div className="flex justify-between text-sm text-gray-500 mb-6">

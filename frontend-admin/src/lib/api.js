@@ -649,47 +649,6 @@ export const settingsAPI = {
 };
 
 /**
- * Review management APIs
- */
-export const reviewsAPI = {
-  // Get reviews by car ID
-  getReviewsByCarId: async (carId, params = {}) => {
-    const queryParams = new URLSearchParams();
-    
-    if (params.page) queryParams.append('page', params.page);
-    if (params.limit) queryParams.append('limit', params.limit);
-    
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    
-    return fetchWithAuth(`/cars/${carId}/reviews${queryString}`, {
-      method: 'GET',
-    });
-  },
-
-  // Get all reviews
-  getAllReviews: async (params = {}) => {
-    const queryParams = new URLSearchParams();
-    
-    if (params.page) queryParams.append('page', params.page);
-    if (params.limit) queryParams.append('limit', params.limit);
-    if (params.rating) queryParams.append('rating', params.rating);
-    
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    
-    return fetchWithAuth(`/reviews${queryString}`, {
-      method: 'GET',
-    });
-  },
-
-  // Delete review
-  deleteReview: async (id) => {
-    return fetchWithAuth(`/reviews/${id}`, {
-      method: 'DELETE',
-    });
-  },
-};
-
-/**
  * Brand management APIs
  */
 export const brandsAPI = {

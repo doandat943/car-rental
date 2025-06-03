@@ -287,8 +287,7 @@ exports.getTopCars = async (req, res) => {
           _id: 1,
           name: '$carDetails.name',
           bookingsCount: 1,
-          totalRevenue: 1,
-          averageRating: '$carDetails.rating'
+          totalRevenue: 1
         }
       }
     ]);
@@ -377,8 +376,7 @@ exports.getStatistics = async (req, res) => {
             _id: 1,
             name: '$carDetails.name',
             bookingsCount: 1,
-            totalRevenue: 1,
-            averageRating: '$carDetails.rating'
+            totalRevenue: 1
           }
         }
       ])
