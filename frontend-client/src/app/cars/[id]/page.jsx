@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 // Dynamically import the BookingCalendar to avoid SSR issues with date-fns
-const BookingCalendar = dynamic(() => import('@/components/car/BookingCalendar'), {
+const BookingCalendar = dynamic(() => import('@/components/BookingCalendar'), {
   ssr: false,
   loading: () => <p>Loading calendar...</p>
 });

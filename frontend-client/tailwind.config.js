@@ -25,7 +25,6 @@ module.exports = {
         secondary: '#64748b',
         dark: '#1e293b',
         light: '#f8fafc',
-        gray: '#cbd5e1',
         success: '#22c55e',
         warning: '#f59e0b',
         danger: '#ef4444',

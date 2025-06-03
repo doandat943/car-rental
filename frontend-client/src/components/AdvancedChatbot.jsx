@@ -763,7 +763,7 @@ export default function AdvancedChatbot() {
                                           
                                           {/* View details button */}
                                           <div className="text-center mt-3">
-                                            <Link href={`/car/${currentCar.id}`} className="inline-block text-sm bg-primary text-white px-6 py-1.5 rounded-full hover:bg-primary-dark transition-colors font-medium">
+                                            <Link href={`/cars/${currentCar.id}`} className="inline-block text-sm bg-primary text-white px-6 py-1.5 rounded-full hover:bg-primary-dark transition-colors font-medium">
                                               View details
                                             </Link>
                                           </div>
@@ -873,7 +873,7 @@ export default function AdvancedChatbot() {
                                       
                                       {/* View details button */}
                                       <div className="text-right">
-                                        <Link href={`/car/${car.id}`} className="inline-block text-sm bg-primary text-white px-4 py-1 rounded-full hover:bg-primary-dark transition-colors">
+                                        <Link href={`/cars/${car.id}`} className="inline-block text-sm bg-primary text-white px-4 py-1 rounded-full hover:bg-primary-dark transition-colors">
                                           View details
                                         </Link>
                                       </div>

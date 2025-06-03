@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
+import { 
   ArrowLeft,
   Edit,
   Calendar,
@@ -208,7 +208,7 @@ export default function CarDetails({ params }) {
       </div>
     );
   }
-
+  
   if (error) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -239,14 +239,14 @@ export default function CarDetails({ params }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button
+            <Button 
             variant="outline"
             onClick={() => router.push('/dashboard/cars')}
             className="px-3 py-2"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Cars
-          </Button>
+            </Button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {carData.name || `${carData.brand?.name || carData.brand} ${carData.model?.name || carData.model}`}
@@ -363,13 +363,13 @@ export default function CarDetails({ params }) {
 
           {/* Features */}
           {carData.features && carData.features.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Features</h2>
-              </div>
-              <div className="p-4">
-                {Object.keys(groupedFeatures).length > 0 ? (
-                  <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Features</h2>
+            </div>
+            <div className="p-4">
+              {Object.keys(groupedFeatures).length > 0 ? (
+                <div className="space-y-6">
                     {Object.entries(groupedFeatures).map(([categoryName, features]) => (
                       <div key={categoryName}>
                         <div className="flex items-center mb-3">
@@ -379,29 +379,29 @@ export default function CarDetails({ params }) {
                           </h3>
                           <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                             ({features.length})
-                          </span>
-                        </div>
+                        </span>
+                      </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {features.map((feature, index) => (
-                            <div 
+                          <div 
                               key={feature._id || index}
                               className={`flex items-center p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 ${getFeatureCategoryClass(categoryName)}`}
-                            >
-                              <Check className="h-4 w-4 mr-2 flex-shrink-0" />
-                              <span className="text-sm">{feature.name}</span>
-                            </div>
-                          ))}
-                        </div>
+                          >
+                            <Check className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span className="text-sm">{feature.name}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
+                    </div>
+                  ))}
+                </div>
+              ) : (
                   <div className="flex h-32 items-center justify-center border-2 border-dashed border-gray-200 rounded-lg dark:border-gray-700">
                     <div className="text-center">
                       <ListChecks className="h-8 w-8 text-gray-400 mx-auto" />
                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">No features listed</p>
-                    </div>
-                  </div>
+            </div>
+          </div>
                 )}
               </div>
             </div>
@@ -412,12 +412,12 @@ export default function CarDetails({ params }) {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white">Description</h2>
-              </div>
+                    </div>
               <div className="p-4">
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{carData.description}</p>
-              </div>
-            </div>
-          )}
+                  </div>
+                </div>
+              )}
         </div>
 
         {/* Right Column - Car Status & Actions */}

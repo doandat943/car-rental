@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   PlusCircle, 
-  Edit,
+  Edit, 
   Trash2,
   Loader2,
   X,

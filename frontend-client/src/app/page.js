@@ -6,7 +6,19 @@ import CarList from '@/components/CarList';
 import CategoryFilter from '@/components/CategoryFilter';
 import { carsAPI, categoriesAPI } from '@/lib/api';
 import { motion } from 'framer-motion';
-import { FaRoute, FaCalendarCheck, FaCarSide } from 'react-icons/fa';
+import { 
+  FaRoute, 
+  FaCalendarCheck, 
+  FaCarSide, 
+  FaSearch,
+  FaHandshake,
+  FaKey,
+  FaQuoteLeft,
+  FaStar,
+  FaArrowRight,
+  FaPhone,
+  FaEnvelope
+} from 'react-icons/fa';
 import { MdSecurity, MdSupport, MdLocationOn } from 'react-icons/md';
 
 export default function Home() {
@@ -116,7 +128,29 @@ export default function Home() {
 
   // Animation variants
   const sectionVariants = {
-    hidden: { opacity: 0, y: 50 },
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.8,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const staggerContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
@@ -124,19 +158,49 @@ export default function Home() {
     }
   };
 
+  // Sample testimonials data
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Business Traveler",
+      content: "Excellent service and amazing cars! The booking process was seamless and the car was spotless.",
+      rating: 5,
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b02c?ixlib=rb-4.0.3&w=150"
+    },
+    {
+      name: "Michael Chen",
+      role: "Family Vacation",
+      content: "Perfect for our family trip. The SUV was spacious and comfortable. Highly recommend!",
+      rating: 5,
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&w=150"
+    },
+    {
+      name: "Emma Davis",
+      role: "Weekend Getaway",
+      content: "Great selection of vehicles and competitive prices. Will definitely use again!",
+      rating: 5,
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&w=150"
+    }
+  ];
+
   if (loading && cars.length === 0) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 border-t-4 border-primary border-solid rounded-full animate-spin"></div>
-          <p className="mt-4 text-xl text-gray-700">Loading amazing cars for you...</p>
-        </div>
+      <div className="flex h-screen items-center justify-center bg-gradient-light">
+        <motion.div 
+          className="flex flex-col items-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="spinner-xl mb-6"></div>
+          <p className="text-heading-sm text-gray-700">Loading amazing cars for you...</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-light">
       <Banner />
       
       <CategoryFilter 
@@ -145,26 +209,41 @@ export default function Home() {
         onSelectCategory={handleSelectCategory}
       />
       
-      <section className="py-16 px-6">
-        <div className="container mx-auto">
+      {/* Featured Cars Section */}
+      <section className="section bg-white">
+        <div className="container">
       <CarList 
         cars={cars} 
             title={selectedCategory ? "Filtered Cars" : "Featured Cars"}
       />
           
       {error && (
-            <div className="mt-8">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
+            <motion.div 
+              className="mt-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-6 rounded-lg">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-heading-sm">Something went wrong</h3>
+                    <p className="mt-1">{error}</p>
+                  </div>
           </div>
         </div>
+            </motion.div>
       )}
         </div>
       </section>
       
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-16 bg-gray-50">
-        <div className="container mx-auto px-6">
+      <section id="how-it-works" className="section bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="container">
           <motion.div 
             className="text-center mb-16"
             initial="hidden"
@@ -172,67 +251,70 @@ export default function Home() {
             viewport={{ once: true }}
             variants={sectionVariants}
           >
-            <h2 className="text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <h2 className="text-display-sm mb-6">How It Works</h2>
+            <p className="text-body-lg text-gray-600 max-w-3xl mx-auto">
               Renting a car with us is quick and easy. Follow these simple steps to get on the road in no time.
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainerVariants}
+          >
             <motion.div 
-              className="bg-white p-8 rounded-lg shadow-md text-center"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
+              className="card card-hover text-center"
+              variants={itemVariants}
             >
-              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center text-primary mb-6 mx-auto">
-                <MdLocationOn size={28} />
+              <div className="card-body">
+                <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center text-white mb-6 mx-auto shadow-lg">
+                  <FaSearch size={32} />
+                </div>
+                <h3 className="text-heading-md mb-4">Choose Your Car</h3>
+                <p className="text-body-md text-gray-600 leading-relaxed">
+                  Browse our selection of vehicles and choose the perfect car for your needs and budget.
+                </p>
               </div>
-              <h3 className="text-xl font-bold mb-4">Choose Your Car</h3>
-              <p className="text-gray-600">
-                Browse our selection of vehicles and choose the perfect car for your needs and budget.
-              </p>
             </motion.div>
             
             <motion.div 
-              className="bg-white p-8 rounded-lg shadow-md text-center"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
+              className="card card-hover text-center"
+              variants={itemVariants}
             >
-              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center text-primary mb-6 mx-auto">
-                <FaCalendarCheck size={28} />
+              <div className="card-body">
+                <div className="w-20 h-20 bg-gradient-secondary rounded-2xl flex items-center justify-center text-white mb-6 mx-auto shadow-lg">
+                  <FaCalendarCheck size={32} />
+                </div>
+                <h3 className="text-heading-md mb-4">Book & Pay</h3>
+                <p className="text-body-md text-gray-600 leading-relaxed">
+                  Select your dates, complete the booking process, and make secure payment online.
+                </p>
               </div>
-              <h3 className="text-xl font-bold mb-4">Make a Reservation</h3>
-              <p className="text-gray-600">
-                Select your pickup and return dates, add any additional services, and confirm your booking.
-              </p>
             </motion.div>
             
             <motion.div 
-              className="bg-white p-8 rounded-lg shadow-md text-center"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5 }}
+              className="card card-hover text-center"
+              variants={itemVariants}
             >
-              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center text-primary mb-6 mx-auto">
-                <FaCarSide size={28} />
+              <div className="card-body">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white mb-6 mx-auto shadow-lg">
+                  <FaKey size={32} />
+                </div>
+                <h3 className="text-heading-md mb-4">Pick Up & Drive</h3>
+                <p className="text-body-md text-gray-600 leading-relaxed">
+                  Pick up your car at the designated location and enjoy your journey with confidence.
+                </p>
               </div>
-              <h3 className="text-xl font-bold mb-4">Enjoy Your Ride</h3>
-              <p className="text-gray-600">
-                Pick up your car at the designated location and enjoy your journey with our well-maintained vehicles.
-              </p>
             </motion.div>
-          </div>
+          </motion.div>
         </div>
       </section>
       
-      {/* Features Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-6">
+      {/* Why Choose Us Section */}
+      <section className="section bg-white">
+        <div className="container">
           <motion.div 
             className="text-center mb-16"
             initial="hidden"
@@ -240,153 +322,153 @@ export default function Home() {
             viewport={{ once: true }}
             variants={sectionVariants}
           >
-            <h2 className="text-4xl font-bold mb-4">Why Choose Us</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              We pride ourselves on providing exceptional service and value for our customers.
+            <h2 className="text-display-sm mb-6">Why Choose Us</h2>
+            <p className="text-body-lg text-gray-600 max-w-3xl mx-auto">
+              We're committed to providing the best car rental experience with premium service and unmatched reliability.
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainerVariants}
+          >
             <motion.div 
-              className="flex items-start gap-4"
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
+              className="text-center group"
+              variants={itemVariants}
             >
-              <div className="bg-primary/10 p-3 rounded-full text-primary flex-shrink-0">
-                <FaRoute size={24} />
+              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-4 mx-auto group-hover:scale-110 transition-transform duration-300">
+                <MdSecurity size={28} />
               </div>
-              <div>
-                <h3 className="text-xl font-bold mb-2">Flexible Rental Options</h3>
-                <p className="text-gray-600">
-                  Choose from daily, weekly, or monthly rental options to suit your travel needs and budget.
-                </p>
-              </div>
+              <h3 className="text-heading-sm mb-3">Secure & Safe</h3>
+              <p className="text-body-sm text-gray-600">All vehicles are thoroughly inspected and insured for your safety.</p>
             </motion.div>
             
             <motion.div 
-              className="flex items-start gap-4"
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
+              className="text-center group"
+              variants={itemVariants}
             >
-              <div className="bg-primary/10 p-3 rounded-full text-primary flex-shrink-0">
-                <MdSecurity size={24} />
+              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 mb-4 mx-auto group-hover:scale-110 transition-transform duration-300">
+                <MdSupport size={28} />
               </div>
-              <div>
-                <h3 className="text-xl font-bold mb-2">Well-Maintained Vehicles</h3>
-                <p className="text-gray-600">
-                  All of our cars undergo regular maintenance and thorough cleaning for your safety and comfort.
-                </p>
-              </div>
+              <h3 className="text-heading-sm mb-3">24/7 Support</h3>
+              <p className="text-body-sm text-gray-600">Round-the-clock customer support for any assistance you need.</p>
             </motion.div>
             
             <motion.div 
-              className="flex items-start gap-4"
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
+              className="text-center group"
+              variants={itemVariants}
             >
-              <div className="bg-primary/10 p-3 rounded-full text-primary flex-shrink-0">
-                <MdSupport size={24} />
+              <div className="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center text-yellow-600 mb-4 mx-auto group-hover:scale-110 transition-transform duration-300">
+                <FaHandshake size={28} />
               </div>
-              <div>
-                <h3 className="text-xl font-bold mb-2">24/7 Customer Support</h3>
-                <p className="text-gray-600">
-                  Our customer service team is available around the clock to assist you with any questions or concerns.
-                </p>
-              </div>
+              <h3 className="text-heading-sm mb-3">Best Prices</h3>
+              <p className="text-body-sm text-gray-600">Competitive rates with no hidden fees or surprise charges.</p>
             </motion.div>
             
             <motion.div 
-              className="flex items-start gap-4"
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
+              className="text-center group"
+              variants={itemVariants}
             >
-              <div className="bg-primary/10 p-3 rounded-full text-primary flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 mb-4 mx-auto group-hover:scale-110 transition-transform duration-300">
+                <FaCarSide size={28} />
               </div>
-              <div>
-                <h3 className="text-xl font-bold mb-2">Transparent Pricing</h3>
-                <p className="text-gray-600">
-                  No hidden fees or surprises. Our pricing is straightforward and competitive.
-                </p>
-              </div>
+              <h3 className="text-heading-sm mb-3">Premium Fleet</h3>
+              <p className="text-body-sm text-gray-600">Wide selection of well-maintained, modern vehicles.</p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+            
+      {/* Testimonials Section */}
+      <section className="section bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="container">
+            <motion.div 
+            className="text-center mb-16"
+            initial="hidden"
+            whileInView="visible"
+              viewport={{ once: true }}
+            variants={sectionVariants}
+          >
+            <h2 className="text-display-sm mb-6">What Our Customers Say</h2>
+            <p className="text-body-lg text-gray-600 max-w-3xl mx-auto">
+              Don't just take our word for it. Here's what our satisfied customers have to say about their experience.
+            </p>
             </motion.div>
             
             <motion.div 
-              className="flex items-start gap-4"
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            initial="hidden"
+            whileInView="visible"
               viewport={{ once: true }}
-              transition={{ delay: 0.5 }}
-            >
-              <div className="bg-primary/10 p-3 rounded-full text-primary flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            variants={staggerContainerVariants}
+          >
+            {testimonials.map((testimonial, index) => (
+              <motion.div 
+                key={index}
+                className="card card-hover"
+                variants={itemVariants}
+              >
+                <div className="card-body">
+                  <div className="flex items-center mb-4">
+                    <FaQuoteLeft className="text-blue-500 text-xl mr-3" />
+                    <div className="flex text-yellow-400">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <FaStar key={i} />
+                      ))}
+                    </div>
               </div>
+                  <p className="text-body-md text-gray-700 mb-6 italic leading-relaxed">
+                    "{testimonial.content}"
+                  </p>
+                  <div className="flex items-center">
+                    <img 
+                      src={testimonial.avatar} 
+                      alt={testimonial.name}
+                      className="w-12 h-12 rounded-full object-cover mr-4"
+                    />
               <div>
-                <h3 className="text-xl font-bold mb-2">Easy Booking Process</h3>
-                <p className="text-gray-600">
-                  Our user-friendly platform makes booking a car quick and hassle-free.
-                </p>
+                      <h4 className="text-heading-sm">{testimonial.name}</h4>
+                      <p className="text-body-sm text-gray-500">{testimonial.role}</p>
+                    </div>
+                  </div>
               </div>
             </motion.div>
-            
-            <motion.div 
-              className="flex items-start gap-4"
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.6 }}
-            >
-              <div className="bg-primary/10 p-3 rounded-full text-primary flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold mb-2">Convenient Locations</h3>
-                <p className="text-gray-600">
-                  Multiple pickup and drop-off locations across the city for your convenience.
-                </p>
-              </div>
-            </motion.div>
-          </div>
+            ))}
+          </motion.div>
         </div>
       </section>
       
       {/* CTA Section */}
-      <section className="py-16 bg-primary">
-        <div className="container mx-auto px-6 text-center">
+      <section className="section bg-gradient-primary text-white">
+        <div className="container">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-4xl mx-auto"
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            variants={sectionVariants}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Hit the Road?</h2>
-            <p className="text-white/90 max-w-2xl mx-auto mb-8">
-              Browse our collection of premium vehicles and find the perfect car for your next adventure.
+            <h2 className="text-display-sm mb-6">Ready to Hit the Road?</h2>
+            <p className="text-body-lg mb-8 text-blue-100">
+              Join thousands of satisfied customers and experience the best car rental service. 
+              Book your perfect ride today and start your adventure!
             </p>
-            <a 
-              href="/cars" 
-              className="inline-block bg-white text-primary font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              Explore All Cars
-            </a>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button className="btn btn-lg bg-white text-blue-600 hover:bg-gray-100 group">
+                <span>Browse All Cars</span>
+                <FaArrowRight className="ml-2 transition-transform group-hover:translate-x-1" />
+              </button>
+              <button className="btn btn-outline btn-lg border-white text-white hover:bg-white hover:text-blue-600">
+                <FaPhone className="mr-2" />
+                Call Us Now
+              </button>
+            </div>
           </motion.div>
         </div>
       </section>
-    </>
+    </div>
   );
 } 
