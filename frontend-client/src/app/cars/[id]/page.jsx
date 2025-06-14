@@ -7,31 +7,13 @@ import { carsAPI, API_BASE_URL, locationsAPI, bookingsAPI } from '@/lib/api';
 import { FaStar, FaCheck, FaCalendarAlt } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { formatDate, getTomorrow, normalizeDate, hasBookedDatesBetween, findMaxValidEndDate } from '@/utils/dateUtils';
 
 // Dynamically import the BookingCalendar to avoid SSR issues with date-fns
 const BookingCalendar = dynamic(() => import('@/components/BookingCalendar'), {
   ssr: false,
   loading: () => <p>Loading calendar...</p>
 });
-
-// Helper function to format date as YYYY-MM-DD
-const formatDate = (date) => {
-  if (!date) return '';
-  
-  // Ensure we use local time to avoid timezone issues
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}`;
-};
-
-// Helper function to get tomorrow's date
-const getTomorrow = () => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow;
-};
 
 export default function CarDetailPage({ params }) {
   const router = useRouter();
@@ -77,6 +59,53 @@ export default function CarDetailPage({ params }) {
   
   // Add state to track last user action (pickup or return date selection)
   const [lastActionType, setLastActionType] = useState('pickup'); // 'pickup' or 'return'
+  
+  // State for refresh indicator
+  const [isRefreshingCalendar, setIsRefreshingCalendar] = useState(false);
+
+  // Function to refresh calendar data
+  const refreshCalendarData = async () => {
+    try {
+      setIsRefreshingCalendar(true);
+      
+      // Calculate current date and 90 days later
+      const today = new Date();
+      const in90Days = new Date();
+      in90Days.setDate(today.getDate() + 90);
+      
+      // Get updated booking data
+      const availabilityResponse = await carsAPI.checkStatus(id, {
+        startDate: formatDate(today),
+        endDate: formatDate(in90Days)
+      });
+      
+      if (availabilityResponse?.bookedDates && Array.isArray(availabilityResponse.bookedDates)) {
+        // Format booked dates
+        const formattedBookedDates = availabilityResponse.bookedDates.map(booking => ({
+          startDate: new Date(booking.startDate),
+          endDate: new Date(booking.endDate),
+          status: booking.status || 'booked'
+        }));
+        
+        setBookedDates(formattedBookedDates);
+        
+        // Reset date selection to avoid conflicts
+        setPickupDate('');
+        setReturnDate('');
+        setHasFoundAvailableDates(false);
+        setAutoFindingDates(false);
+        
+        console.log('Calendar data refreshed successfully');
+      } else {
+        console.warn('No booking date data received during refresh');
+        setBookedDates([]);
+      }
+    } catch (error) {
+      console.error('Error refreshing calendar data:', error);
+    } finally {
+      setIsRefreshingCalendar(false);
+    }
+  };
 
   useEffect(() => {
     // Fetch pickup locations
@@ -269,7 +298,15 @@ export default function CarDetailPage({ params }) {
         // Navigate to booking confirmation page
         router.push(`/booking/confirmation/${response.data.data._id}`);
       } else {
-        alert('Booking failed: ' + (response?.data?.message || 'Unknown error'));
+        const errorMessage = response?.data?.message || 'Unknown error';
+        
+        // If it's a date conflict error, refresh calendar and show specific message
+        if (errorMessage.includes('already booked') || errorMessage.includes('not available')) {
+          alert('Booking failed: ' + errorMessage + '\n\nThe calendar will be updated with the latest availability.');
+          await refreshCalendarData();
+        } else {
+          alert('Booking failed: ' + errorMessage);
+        }
       }
     } catch (err) {
       console.error('Booking error:', err);
@@ -282,19 +319,35 @@ export default function CarDetailPage({ params }) {
         router.push('/login');
       } else if (err.status === 400) {
         // Validation error
-        alert('Booking error: ' + (err.message || 'Please check your booking details'));
+        const errorMessage = err.message || 'Please check your booking details';
+        
+        // If it's a date conflict error, refresh calendar and show specific message
+        if (errorMessage.includes('already booked') || errorMessage.includes('not available')) {
+          alert('Booking error: ' + errorMessage + '\n\nThe calendar will be updated with the latest availability.');
+          await refreshCalendarData();
+        } else {
+          alert('Booking error: ' + errorMessage);
+        }
       } else if (err.status === 404) {
         // Car not found
         alert('Sorry, this car is no longer available.');
         router.push('/cars');
       } else {
         // General error
-        alert('Sorry, we couldn\'t complete your booking: ' + (err.message || 'Please try again later'));
+        const errorMessage = err.message || 'Please try again later';
+        
+        // For general errors that might be date conflicts, also refresh
+        if (errorMessage.includes('already booked') || errorMessage.includes('not available')) {
+          alert('Sorry, we couldn\'t complete your booking: ' + errorMessage + '\n\nThe calendar will be updated with the latest availability.');
+          await refreshCalendarData();
+        } else {
+          alert('Sorry, we couldn\'t complete your booking: ' + errorMessage);
+        }
       }
     }
   };
 
-  // Handle date selection from calendar - Fix to avoid page reload and timezone issues
+  // Handle date selection from calendar - Enhanced with blocked date handling
   const handleDateSelect = (date) => {
     // Ensure date is a valid Date object
     if (!(date instanceof Date) || isNaN(date)) {
@@ -305,45 +358,59 @@ export default function CarDetailPage({ params }) {
     // Prevent automatic date finding when user is selecting
     setHasFoundAvailableDates(true);
     
-    // Handle timezone issue - create an exact copy and preserve the exact day user selected
-    const selectedDate = new Date(date);
-    // Ensure local time
-    selectedDate.setHours(12, 0, 0, 0); // Set time to noon to avoid timezone issues
+    // Normalize the date using utility function
+    const selectedDate = normalizeDate(date);
+    if (!selectedDate) return;
     
     // Convert to YYYY-MM-DD string
     const formattedDate = formatDate(selectedDate);
     
-    // Get date objects for current pickup and return dates
-    const returnDateObj = new Date(returnDate);
-    returnDateObj.setHours(12, 0, 0, 0);
+    // Get normalized date objects for current pickup and return dates
+    const returnDateObj = returnDate ? normalizeDate(new Date(returnDate)) : null;
+    const pickupDateObj = pickupDate ? normalizeDate(new Date(pickupDate)) : null;
     
-    const pickupDateObj = new Date(pickupDate);
-    pickupDateObj.setHours(12, 0, 0, 0);
-    
-    // Case 1: User selected date before current pickup date
-    if (selectedDate < pickupDateObj) {
+    // If no dates are selected yet, set as pickup date
+    if (!pickupDate && !returnDate) {
       setPickupDate(formattedDate);
       setLastActionType('pickup');
       return;
     }
     
-    // Case 2: User selected date after current return date
-    if (selectedDate > returnDateObj) {
+    // If only pickup date is selected
+    if (pickupDate && !returnDate) {
+      // If user clicks the same date, do nothing
+      if (selectedDate.getTime() === pickupDateObj.getTime()) {
+        return;
+      }
+      
+      // If selected date is before pickup, update pickup
+      if (selectedDate < pickupDateObj) {
+        setPickupDate(formattedDate);
+        setLastActionType('pickup');
+        return;
+      }
+      
+      // Check if there are booked dates between pickup and selected date
+      if (hasBookedDatesBetween(pickupDateObj, selectedDate, isDateBooked)) {
+        // User clicked on a "blocked" date - start new selection with this date
+        setPickupDate(formattedDate);
+        setReturnDate('');
+        setLastActionType('pickup');
+        return;
+      }
+      
+      // Valid range, set as return date
       setReturnDate(formattedDate);
       setLastActionType('return');
       return;
     }
     
-    // Case 3: User selected date between pickup and return dates
-    // Determine what to update based on last action
-    if (lastActionType === 'return') {
-      // Last action was selecting return date, so update pickup date
+    // If both dates are selected, start fresh with the new date as pickup
+    if (pickupDate && returnDate) {
       setPickupDate(formattedDate);
+      setReturnDate('');
       setLastActionType('pickup');
-    } else {
-      // Last action was selecting pickup date or initial load, so update return date
-      setReturnDate(formattedDate);
-      setLastActionType('return');
+      return;
     }
   };
 
@@ -737,6 +804,16 @@ export default function CarDetailPage({ params }) {
                       onClick={(e) => e.stopPropagation()}
                       className="relative calendar-container"
                     >
+                      {/* Refresh indicator overlay */}
+                      {isRefreshingCalendar && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-90 rounded-lg">
+                          <div className="flex flex-col items-center">
+                            <div className="w-8 h-8 border-4 border-blue-200 border-solid rounded-full border-t-blue-600 animate-spin"></div>
+                            <p className="mt-2 text-sm text-gray-600">Updating calendar...</p>
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Use React.memo to avoid unnecessary re-rendering */}
                       <BookingCalendar
                         bookedDates={bookedDates}

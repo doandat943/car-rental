@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isWithinInterval, startOfWeek, addDays, isAfter, isBefore, parseISO } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'; // Import arrow icons
+import { hasBookedDatesBetween, findMaxValidEndDate, normalizeDate } from '../utils/dateUtils';
 
 const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selectedEndDate }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -301,59 +302,46 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
   const formatWeekdayShort = useCallback((day) => {
     return format(day, 'EEEEE', { locale: enUS });
   }, []);
-  
-  // Handle date click
-  const handleDateClick = useCallback((date, e) => {
-    // Prevent default behavior to avoid page reload
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
 
+  // Create curried versions of utility functions with isDateBooked closure
+  const hasBookedBetween = useCallback((startDate, endDate) => 
+    hasBookedDatesBetween(startDate, endDate, isDateBooked), [isDateBooked]);
+  
+  const findMaxValidEnd = useCallback((startDate) => 
+    findMaxValidEndDate(startDate, isDateBooked, isDateInValidRange), [isDateBooked, isDateInValidRange]);
+  
+  // Handle date click with enhanced logic for blocked dates
+  const handleDateClick = useCallback((date, e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     
-    // Check if date is in valid range
-    if (!isDateInValidRange(date)) {
-      return; // Don't allow selecting dates outside valid range
+    // Only prevent clicks on invalid dates or booked dates
+    if (!isDateInValidRange(date) || isDateBooked(date)) {
+      return;
     }
     
-    // Strict check for booked dates
-    if (isDateBooked(date)) {
-      return; // Prevent selection
-    }
-    
-    // Cho phép chọn tất cả các ngày không bị đặt
     if (onDateSelect) {
-      // Fix timezone issues: Create an exact copy with appropriate time
-      const selectedDate = new Date(date);
-      
-      // Save info about day, month, year from the selected date
-      const year = selectedDate.getFullYear();
-      const month = selectedDate.getMonth();
-      const day = selectedDate.getDate();
-      
-      // Recreate date with clear info, set time to noon to avoid timezone issues
-      const correctedDate = new Date(year, month, day, 12, 0, 0, 0);
-      
-      // Pass timezone-processed date
-      onDateSelect(correctedDate);
+      const normalizedDate = normalizeDate(date);
+      if (normalizedDate) {
+        onDateSelect(normalizedDate);
+      }
     }
   }, [isDateBooked, onDateSelect, isDateInValidRange]);
   
   // Handle mouse enter on date
   const handleMouseEnter = useCallback((date, e) => {
-    if (e) {
-      e.stopPropagation();
+    e?.stopPropagation();
+    
+    if (!parsedStartDate || parsedEndDate || isDateBooked(date) || hasBookedBetween(parsedStartDate, date)) {
+      return;
     }
-    if (!parsedStartDate || parsedEndDate || isDateBooked(date)) return;
+    
     setHoverDate(date);
-  }, [parsedStartDate, parsedEndDate, isDateBooked]);
+  }, [parsedStartDate, parsedEndDate, isDateBooked, hasBookedBetween]);
   
   // Handle mouse leave
   const handleMouseLeave = useCallback((e) => {
-    if (e) {
-      e.stopPropagation();
-    }
+    e?.stopPropagation();
     setHoverDate(null);
   }, []);
   
@@ -365,116 +353,83 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
     });
   }, [formatWeekdayShort]);
   
-  // Render days for a specific month - completely rewritten for clarity
+  // Helper to get CSS classes for a day
+  const getDayClasses = useCallback((day, monthToDisplay) => {
+    const states = {
+      isBooked: isDateBooked(day),
+      isValidDate: isDateInValidRange(day),
+      isCurrentMonth: isSameMonth(day, monthToDisplay),
+      isStart: isStartDate(day),
+      isEnd: isEndDate(day),
+      isSelected: isInSelectedRange(day),
+      isHovering: isInHoverRange(day)
+    };
+    
+    // Updated logic: all valid non-booked dates are clickable
+    const isClickable = states.isValidDate && !states.isBooked;
+    const isBlocked = states.isValidDate && !states.isBooked && 
+      parsedStartDate && !parsedEndDate && hasBookedBetween(parsedStartDate, day);
+    
+    const baseClasses = 'h-10 flex items-center justify-center text-sm relative transition-all duration-200 group';
+    
+    const conditionalClasses = [
+      states.isCurrentMonth ? 'text-gray-800' : 'text-gray-500',
+      isClickable && 'cursor-pointer hover:bg-blue-100',
+      !states.isValidDate && 'bg-gray-200 text-gray-500 cursor-not-allowed',
+      states.isBooked && 'bg-red-100 text-red-700 cursor-not-allowed rounded-full',
+      isBlocked && 'bg-orange-100 text-orange-700 cursor-pointer hover:bg-orange-200',
+      states.isSelected && !states.isStart && !states.isEnd && 'bg-blue-100 text-blue-800',
+      states.isStart && 'rounded-l-full',
+      states.isEnd && 'rounded-r-full',
+      (states.isStart || states.isEnd) && 'bg-blue-500 text-white z-10',
+      states.isHovering && !states.isSelected && 'bg-blue-50'
+    ].filter(Boolean);
+    
+    return `${baseClasses} ${conditionalClasses.join(' ')}`;
+  }, [isDateBooked, isDateInValidRange, isSameMonth, isStartDate, isEndDate, isInSelectedRange, isInHoverRange, parsedStartDate, parsedEndDate, hasBookedBetween]);
+
+  // Render days for a specific month - simplified
   const renderDays = (daysArray, monthToDisplay) => {
     return daysArray.map((day, i) => {
-      // Get all the important states for this day
-      const isBooked = isDateBooked(day);
-      const isValidDate = isDateInValidRange(day);
-      const isCurrentMonth = isSameMonth(day, monthToDisplay);
-      const isToday = isSameDay(day, new Date());
-      const isStart = isStartDate(day);
-      const isEnd = isEndDate(day);
-      const isSelected = isInSelectedRange(day);
-      const isHovering = isInHoverRange(day);
+      const states = {
+        isBooked: isDateBooked(day),
+        isValidDate: isDateInValidRange(day),
+        isStart: isStartDate(day),
+        isEnd: isEndDate(day)
+      };
       
-      // Format day of month number
       const dayOfMonth = format(day, 'd');
-      
-      // Whether this day can be clicked
-      const isClickable = isValidDate && !isBooked;
-      
-      // Build the class list based on the state
-      let classNames = [
-        'h-10 flex items-center justify-center text-sm relative',
-        'transition-all duration-200 group'
-      ];
-      
-      // Basic styling based on month
-      if (isCurrentMonth) {
-        classNames.push('text-gray-800');
-      } else {
-        classNames.push('text-gray-500');
-      }
-      
-      // Styling for selectable days
-      if (isClickable) {
-        classNames.push('cursor-pointer hover:bg-blue-100');
-      }
-      
-      // Styling for invalid dates
-      if (!isValidDate) {
-        classNames.push('bg-gray-200 text-gray-500 cursor-not-allowed');
-      }
-      
-      // Styling for booked dates
-      if (isBooked) {
-        classNames.push('bg-red-100 text-red-700 cursor-not-allowed rounded-full');
-      }
-      
-      // Styling for selected range
-      if (isSelected && !isStart && !isEnd) {
-        classNames.push('bg-blue-100 text-blue-800');
-      }
-      
-      // Styling for start and end dates
-      if (isStart) {
-        classNames.push('rounded-l-full');
-      }
-      if (isEnd) {
-        classNames.push('rounded-r-full');
-      }
-      if (isStart || isEnd) {
-        classNames.push('bg-blue-500 text-white z-10');
-      }
-      
-      // Styling for hovering effect
-      if (isHovering && !isStart && !isBooked && isValidDate) {
-        classNames.push('bg-blue-50 text-blue-800');
-      }
-      
-      // Styling for today
-      if (isToday && !isSelected && !isBooked) {
-        classNames.push('border border-blue-500');
-      }
-      
-      // Styling for the day number element
-      let dayNumberClassNames = [
-        'flex items-center justify-center w-full h-full'
-      ];
-      
-      if ((isStart || isEnd)) {
-        dayNumberClassNames.push('rounded-full bg-blue-500 text-white z-10');
-      }
-      
-      if (!isValidDate) {
-        dayNumberClassNames.push('opacity-50');
-      }
-
+      // All valid non-booked dates are clickable now
+      const isClickable = states.isValidDate && !states.isBooked;
+      const isBlocked = states.isValidDate && !states.isBooked && 
+        parsedStartDate && !parsedEndDate && hasBookedBetween(parsedStartDate, day);
       
       return (
         <div 
           key={i}
           onClick={(e) => isClickable && handleDateClick(day, e)}
-          onMouseEnter={(e) => isClickable && handleMouseEnter(day, e)}
+          onMouseEnter={(e) => (isClickable && !isBlocked) && handleMouseEnter(day, e)}
           onMouseLeave={(e) => handleMouseLeave(e)}
-          className={classNames.join(' ')}
+          className={getDayClasses(day, monthToDisplay)}
           data-date={format(day, 'yyyy-MM-dd')}
           data-selectable={isClickable ? 'true' : 'false'}
         >
-          <div className={dayNumberClassNames.join(' ')}>
+          <div className="flex items-center justify-center w-full h-full">
             {dayOfMonth}
           </div>
           
-          {/* Tooltip for invalid dates - shows if date is not in the valid booking range */}
-          {!isValidDate ? (
+          {/* Simplified tooltips */}
+          {!states.isValidDate ? (
             <div className="absolute z-20 px-2 py-1 mb-2 text-xs text-white transition-opacity duration-200 transform -translate-x-1/2 bg-black rounded opacity-0 pointer-events-none group-hover:opacity-100 bottom-full left-1/2 whitespace-nowrap">
               Outside booking range
             </div>
-          ) : isBooked ? (
-            // Tooltip for booked dates - shows if date is valid AND booked
+          ) : states.isBooked ? (
             <div className="absolute z-20 px-2 py-1 mb-2 text-xs text-white transition-opacity duration-200 transform -translate-x-1/2 bg-red-500 rounded opacity-0 pointer-events-none group-hover:opacity-100 bottom-full left-1/2 whitespace-nowrap">
               Already booked
+            </div>
+          ) : isBlocked ? (
+            <div className="absolute z-20 px-2 py-1 mb-2 text-xs text-white transition-opacity duration-200 transform -translate-x-1/2 bg-orange-500 rounded opacity-0 pointer-events-none group-hover:opacity-100 bottom-full left-1/2 whitespace-nowrap">
+              Click to start new selection
             </div>
           ) : null}
         </div>
@@ -564,20 +519,24 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
         }
       `}} />
       
-      <div className="flex gap-4 mt-4 text-xs">
-        <div className="flex items-center">
-          <div className="w-4 h-4 mr-2 bg-red-100 border border-red-400 rounded-full"></div>
-          <span>Booked</span>
+              <div className="flex flex-wrap gap-4 mt-4 text-xs">
+          <div className="flex items-center">
+            <div className="w-4 h-4 mr-2 bg-red-100 border border-red-400 rounded-full"></div>
+            <span>Booked</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 mr-2 bg-orange-100 border border-orange-400 rounded-full"></div>
+            <span>Click to start new</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 mr-2 bg-blue-500 rounded-full"></div>
+            <span>Selected</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 mr-2 bg-blue-100 border border-blue-300 rounded-full"></div>
+            <span>Selected range</span>
+          </div>
         </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 mr-2 bg-blue-500 rounded-full"></div>
-          <span>Selected</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 mr-2 bg-blue-100 border border-blue-300 rounded-full"></div>
-          <span>Selected range</span>
-        </div>
-      </div>
     </div>
   );
 };
