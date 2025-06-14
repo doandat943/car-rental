@@ -113,9 +113,6 @@ exports.getBookingById = async (req, res) => {
  */
 exports.createBooking = async (req, res) => {
   try {
-    console.log('Creating booking with data:', req.body);
-    console.log('User in request:', req.user);
-    
     if (!req.user || !req.user.id) {
       return res.status(401).json({
         success: false,
@@ -158,11 +155,15 @@ exports.createBooking = async (req, res) => {
       });
     }
     
-    // Check if car is available
-    if (car.status !== 'available') {
+    // Check if car is in a state that prevents booking (maintenance, overdue return)
+    if (car.status === 'maintenance' || car.status === 'overdue_return') {
+      const statusMessage = car.status === 'maintenance' 
+        ? 'Car is currently under maintenance'
+        : 'Car has overdue return and cannot be booked';
+      
       return res.status(400).json({
         success: false,
-        message: 'Car is not available for booking'
+        message: statusMessage
       });
     }
     
@@ -228,9 +229,6 @@ exports.createBooking = async (req, res) => {
       
       await booking.save();
       
-      // Update car status to 'reserved'
-      await Car.findByIdAndUpdate(carId, { status: 'reserved' });
-      
       res.status(201).json({
         success: true,
         message: 'Booking created successfully',
@@ -290,33 +288,7 @@ exports.updateBookingStatus = async (req, res) => {
     }
     
     await booking.save();
-    
-    // Update car status based on booking status
-    if (status) {
-      const car = await Car.findById(booking.car);
-      if (car) {
-        let carStatus = 'available';
-        
-        switch (status) {
-          case 'pending':
-            carStatus = 'available';
-            break;
-          case 'confirmed':
-            carStatus = 'reserved';
-            break;
-          case 'ongoing':
-            carStatus = 'rented';
-            break;
-          case 'completed':
-          case 'cancelled':
-            carStatus = 'available';
-            break;
-        }
-        
-        await Car.findByIdAndUpdate(booking.car, { status: carStatus });
-      }
-    }
-    
+
     res.status(200).json({
       success: true,
       message: 'Booking status updated successfully',
@@ -356,10 +328,7 @@ exports.deleteBooking = async (req, res) => {
     }
     
     await Booking.findByIdAndDelete(req.params.id);
-    
-    // Set car status back to available
-    await Car.findByIdAndUpdate(booking.car, { status: 'available' });
-    
+
     res.status(200).json({
       success: true,
       message: 'Booking deleted successfully'

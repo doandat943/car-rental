@@ -37,7 +37,7 @@ export default function CarDetailPage({ params }) {
   const router = useRouter();
   const { id } = use(params);
   const [car, setCar] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
   // Initialize with today and tomorrow dates
@@ -106,9 +106,7 @@ export default function CarDetailPage({ params }) {
     const fetchCarDetails = async () => {
       try {
         setInitialLoading(true); // Use initialLoading instead of loading
-        console.log('Fetching car details for ID:', id);
         const response = await carsAPI.getCarById(id);
-        console.log('Car details response:', response);
         
         // Check if data exists and set car state
         if (response?.data?.data) {
@@ -129,14 +127,12 @@ export default function CarDetailPage({ params }) {
             in90Days.setDate(today.getDate() + 90);
             
             // Get data about booked dates within 90 days
-            console.log('Getting booking data for car:', id);
             const availabilityResponse = await carsAPI.checkStatus(id, {
               startDate: formatDate(today),
               endDate: formatDate(in90Days)
             });
             
             if (availabilityResponse?.bookedDates && Array.isArray(availabilityResponse.bookedDates)) {
-              console.log('Received booking date data:', availabilityResponse.bookedDates);
               
               // Ensure bookedDates have the correct format
               const formattedBookedDates = availabilityResponse.bookedDates.map(booking => ({
@@ -252,35 +248,12 @@ export default function CarDetailPage({ params }) {
       return;
     }
     
-    // Check availability before proceeding with booking
+    // Proceed with booking directly since calendar already shows availability
     try {
-      setLoading(true); // Show loading state
-      
-      // Check availability first
-      const availabilityResponse = await carsAPI.checkStatus(id, { 
-        startDate: pickupDate, 
-        endDate: returnDate 
-      });
-      
-      if (!availabilityResponse?.available) {
-        setLoading(false);
-        alert('Sorry, this car is not available for the selected dates.');
-        setCarAvailability(false);
-        return;
-      }
-      
-      // Car is available, proceed with booking
-      setCarAvailability(true);
     
-      console.log('Booking car with ID:', id);
-      console.log('Pickup date:', pickupDate);
-      console.log('Return date:', returnDate);
-      console.log('Pickup location:', pickupLocation);
-      console.log('Additional services:', {
         includeDriver,
         doorstepDelivery
       });
-      console.log('Total price:', totalPrice);
       
       // Prepare booking data
       const bookingData = {
@@ -322,8 +295,6 @@ export default function CarDetailPage({ params }) {
         // General error
         alert('Sorry, we couldn\'t complete your booking: ' + (err.message || 'Please try again later'));
       }
-    } finally {
-      setLoading(false); // Hide loading state
     }
   };
 
@@ -345,7 +316,6 @@ export default function CarDetailPage({ params }) {
     
     // Convert to YYYY-MM-DD string
     const formattedDate = formatDate(selectedDate);
-    console.log('User selected date:', formattedDate, 'Original date:', date.toLocaleDateString());
     
     // Get date objects for current pickup and return dates
     const returnDateObj = new Date(returnDate);
@@ -356,7 +326,6 @@ export default function CarDetailPage({ params }) {
     
     // Case 1: User selected date before current pickup date
     if (selectedDate < pickupDateObj) {
-      console.log('Updating pickup date to:', formattedDate);
       setPickupDate(formattedDate);
       setLastActionType('pickup');
       return;
@@ -364,7 +333,6 @@ export default function CarDetailPage({ params }) {
     
     // Case 2: User selected date after current return date
     if (selectedDate > returnDateObj) {
-      console.log('Updating return date to:', formattedDate);
       setReturnDate(formattedDate);
       setLastActionType('return');
       return;
@@ -374,12 +342,10 @@ export default function CarDetailPage({ params }) {
     // Determine what to update based on last action
     if (lastActionType === 'return') {
       // Last action was selecting return date, so update pickup date
-      console.log('Updating pickup date to:', formattedDate, '(based on last action)');
       setPickupDate(formattedDate);
       setLastActionType('pickup');
     } else {
       // Last action was selecting pickup date or initial load, so update return date
-      console.log('Updating return date to:', formattedDate, '(based on last action)');
       setReturnDate(formattedDate);
       setLastActionType('return');
     }
@@ -396,10 +362,8 @@ export default function CarDetailPage({ params }) {
     const timerId = setTimeout(() => {
       // Only find available dates if we have booking data and haven't found dates before
       if (bookedDates.length > 0 && !hasFoundAvailableDates && !autoFindingDates) {
-        console.log('Starting search for available dates after loading data...');
         findAvailableDates();
       } else if (bookedDates.length === 0) {
-        console.log('No booked dates available, finding available dates anyway...');
         // If no booked dates, we can still find available dates (all dates are available)
         findAvailableDates();
       }
@@ -456,7 +420,6 @@ export default function CarDetailPage({ params }) {
         
         // Compare timestamps instead of Date objects
         if (compareTime >= compareStart.getTime() && compareTime <= compareEnd.getTime()) {
-          console.log(`Date ${compareDate.toLocaleDateString()} is within booked range ${compareStart.toLocaleDateString()} - ${compareEnd.toLocaleDateString()}`);
           return true;
         }
       } catch (error) {
@@ -473,7 +436,6 @@ export default function CarDetailPage({ params }) {
     if (autoFindingDates) return;
     
     setAutoFindingDates(true);
-    console.log('Finding available dates...', bookedDates);
     
     // Start from today
     let checkDate = new Date();
@@ -485,7 +447,6 @@ export default function CarDetailPage({ params }) {
     maxSearchDate.setDate(maxSearchDate.getDate() + 60); // Search up to 60 days
     
     // Log booked dates for verification
-    console.log('Booked dates:', bookedDates.length 
       ? bookedDates.map(b => ({
           start: new Date(b.startDate).toLocaleDateString(),
           end: new Date(b.endDate).toLocaleDateString()
@@ -499,7 +460,6 @@ export default function CarDetailPage({ params }) {
       const tomorrow = new Date();
       tomorrow.setDate(today.getDate() + 1);
       
-      console.log(`No booked dates, selecting today and tomorrow: ${today.toLocaleDateString()} - ${tomorrow.toLocaleDateString()}`);
       
       setPickupDate(formatDate(today));
       setReturnDate(formatDate(tomorrow));
@@ -520,14 +480,12 @@ export default function CarDetailPage({ params }) {
       
       // Check if this date is booked
       if (isDateBooked(testDate)) {
-        console.log(`Date ${testDate.toLocaleDateString()} is booked, skipping`);
         consecutiveAvailableDays = 0; // Reset count
         potentialStartDate = null; // Reset potential start date
       } else {
         // Date is available
         if (consecutiveAvailableDays === 0) {
           potentialStartDate = new Date(testDate); // Mark as potential start date
-          console.log(`Found potential start date: ${potentialStartDate.toLocaleDateString()}`);
         }
         consecutiveAvailableDays++;
         
@@ -536,7 +494,6 @@ export default function CarDetailPage({ params }) {
           const endDate = new Date(potentialStartDate);
           endDate.setDate(potentialStartDate.getDate() + 1); // Default to 1 night
           
-          console.log(`Found available range: ${potentialStartDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`);
           
           // Set dates and end search
           setPickupDate(formatDate(potentialStartDate));
@@ -555,7 +512,6 @@ export default function CarDetailPage({ params }) {
     }
     
     // If no available dates found
-    console.log('No available date ranges found');
     setAutoFindingDates(false);
     
     // Notify user
@@ -574,7 +530,6 @@ export default function CarDetailPage({ params }) {
     const endDateObj = new Date(returnDate);
     
     // Log for verification
-    console.log('Checking selected dates:',
       startDateObj.toLocaleDateString(), 
       endDateObj.toLocaleDateString()
     );
@@ -606,16 +561,16 @@ export default function CarDetailPage({ params }) {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-xl">Loading car details...</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl animate-pulse">Loading car details...</div>
       </div>
     );
   }
 
   if (error || !car) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="px-4 py-3 text-red-700 bg-red-100 border border-red-400 rounded">
           {error || 'Car not found'}
         </div>
       </div>
@@ -623,8 +578,8 @@ export default function CarDetailPage({ params }) {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto px-6">
+    <main className="min-h-screen py-12 bg-gray-50">
+      <div className="container px-6 mx-auto">
         {/* Breadcrumb */}
         <div className="mb-6">
           <Link href="/" className="text-blue-600 hover:text-blue-800">Home</Link>
@@ -634,12 +589,12 @@ export default function CarDetailPage({ params }) {
           <span className="text-gray-600">{car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Car Images and Details */}
           <div className="lg:col-span-2">
             {/* Car Images */}
-            <div className="bg-white p-4 rounded-lg shadow-md mb-8">
-              <div className="bg-gray-200 h-80 relative mb-4 rounded-lg overflow-hidden">
+            <div className="p-4 mb-8 bg-white rounded-lg shadow-md">
+              <div className="relative mb-4 overflow-hidden bg-gray-200 rounded-lg h-80">
                 {car.images && Array.isArray(car.images) && car.images.length > 0 ? (
                   <Image 
                     src={
@@ -654,15 +609,15 @@ export default function CarDetailPage({ params }) {
                     className="object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full flex items-center justify-center">
-                    <span className="text-gray-500 text-xl">No Image Available</span>
+                  <div className="flex items-center justify-center w-full h-full">
+                    <span className="text-xl text-gray-500">No Image Available</span>
                   </div>
                 )}
               </div>
               {car.images && Array.isArray(car.images) && car.images.length > 1 && (
                 <div className="grid grid-cols-3 gap-4">
                   {car.images.slice(1).map((image, index) => (
-                    <div key={index} className="bg-gray-200 h-24 relative rounded-lg overflow-hidden">
+                    <div key={index} className="relative h-24 overflow-hidden bg-gray-200 rounded-lg">
                       <Image 
                         src={
                           typeof image === 'object' && image.url 
@@ -682,12 +637,12 @@ export default function CarDetailPage({ params }) {
             </div>
 
             {/* Car Details */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-              <h1 className="text-3xl font-bold mb-2">{car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`}</h1>
+            <div className="p-6 mb-8 bg-white rounded-lg shadow-md">
+              <h1 className="mb-2 text-3xl font-bold">{car.name || `${car.brand?.name || car.brand} ${car.model?.name || car.model}`}</h1>
               
-              <div className="border-t border-b py-4 my-4">
-                <h2 className="text-xl font-semibold mb-4">Specifications</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="py-4 my-4 border-t border-b">
+                <h2 className="mb-4 text-xl font-semibold">Specifications</h2>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   <div>
                     <div className="text-gray-600">Brand</div>
                     <div className="font-semibold">
@@ -726,17 +681,17 @@ export default function CarDetailPage({ params }) {
               </div>
               
               <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-2">Description</h2>
+                <h2 className="mb-2 text-xl font-semibold">Description</h2>
                 <p className="text-gray-700">{car.description}</p>
               </div>
               
               {car.features && car.features.length > 0 && (
                 <div>
-                  <h2 className="text-xl font-semibold mb-3">Features</h2>
+                  <h2 className="mb-3 text-xl font-semibold">Features</h2>
                   <ul className="grid grid-cols-2 gap-2">
                     {Array.isArray(car.features) && car.features.map((feature, index) => (
                       <li key={index} className="flex items-center">
-                        <span className="bg-blue-100 text-blue-600 p-1 rounded-full mr-2"><FaCheck size={12} /></span>
+                        <span className="p-1 mr-2 text-blue-600 bg-blue-100 rounded-full"><FaCheck size={12} /></span>
                         <span>{typeof feature === 'object' ? feature.name : feature}</span>
                       </li>
                     ))}
@@ -748,11 +703,11 @@ export default function CarDetailPage({ params }) {
           
           {/* Booking Form */}
           <div>
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6 sticky top-4">
-              <h2 className="text-xl font-semibold mb-4">Book This Car</h2>
+            <div className="sticky p-6 mb-6 bg-white rounded-lg shadow-md top-4">
+              <h2 className="mb-4 text-xl font-semibold">Book This Car</h2>
               
               <div className="mb-6">
-                <h3 className="font-semibold mb-2">Rental Prices</h3>
+                <h3 className="mb-2 font-semibold">Rental Prices</h3>
                 <div className="grid grid-cols-2 gap-y-2">
                   <div className="text-gray-600">Daily Rate:</div>
                   <div className="font-semibold">{car.price ? `$${car.price}` : ''}</div>
@@ -761,13 +716,13 @@ export default function CarDetailPage({ params }) {
               
               <form onSubmit={handleBooking}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2">Booking Dates</label>
+                  <label className="block mb-2 text-sm font-medium">Booking Dates</label>
                   
                   {/* Display rental price and car availability after selecting dates */}
                   {pickupDate && returnDate && (
-                    <div className="p-3 rounded-lg text-sm mb-4 bg-green-50 text-green-700">
-                      <div className="font-medium flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <div className="p-3 mb-4 text-sm text-green-700 rounded-lg bg-green-50">
+                      <div className="flex items-center font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                         Rental duration: {totalDays} {totalDays === 1 ? 'day' : 'days'}
@@ -779,17 +734,17 @@ export default function CarDetailPage({ params }) {
                   )}
                   
                   <div className="mt-3 mb-2">
-                    <div className="text-sm text-gray-600 mb-2">
+                    <div className="mb-2 text-sm text-gray-600">
                       {!pickupDate && !returnDate ? (
-                        <div className="bg-blue-50 p-2 rounded text-blue-700 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <div className="flex items-center p-2 text-blue-700 rounded bg-blue-50">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                           </svg>
                           Select a pickup date
                         </div>
                       ) : pickupDate && !returnDate ? (
-                        <div className="bg-blue-50 p-2 rounded text-blue-700 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <div className="flex items-center p-2 text-blue-700 rounded bg-blue-50">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                           </svg>
                           Select a return date
@@ -800,7 +755,7 @@ export default function CarDetailPage({ params }) {
                     {/* Wrap calendar in div instead of form to avoid submission */}
                     <div 
                       onClick={(e) => e.stopPropagation()}
-                      className="calendar-container relative"
+                      className="relative calendar-container"
                     >
                       {/* Use React.memo to avoid unnecessary re-rendering */}
                       <BookingCalendar
@@ -810,11 +765,11 @@ export default function CarDetailPage({ params }) {
                         selectedEndDate={returnDate}
                       />
                     </div>
-                    <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
+                    <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
                       <span>* Booked dates are shown in red and cannot be selected</span>
                       <button 
                         type="button" 
-                        className="text-blue-500 hover:underline text-sm px-3 py-1 rounded-md hover:bg-blue-50"
+                        className="px-3 py-1 text-sm text-blue-500 rounded-md hover:underline hover:bg-blue-50"
                         onClick={(e) => {
                           e.preventDefault(); // Prevent form submission
                           // Clear selected dates
@@ -836,7 +791,7 @@ export default function CarDetailPage({ params }) {
                 </div>
                 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">Pickup Location</label>
+                  <label className="block mb-2 text-sm font-medium">Pickup Location</label>
                   <select 
                     className="w-full p-2 border rounded" 
                     value={pickupLocation}
@@ -859,15 +814,15 @@ export default function CarDetailPage({ params }) {
                 
                 {/* Additional Services Section */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-700 mb-3">Additional Services</h3>
+                  <h3 className="mb-3 font-semibold text-gray-700">Additional Services</h3>
                   
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded mb-2">
+                  <div className="flex items-center justify-between p-3 mb-2 rounded bg-gray-50">
                     <div>
                       <div className="font-medium">Include Driver</div>
                       <div className="text-sm text-gray-500">Professional driver for your journey</div>
                     </div>
                     <div className="flex items-center">
-                      <span className="text-gray-600 mr-3">${30}/day</span>
+                      <span className="mr-3 text-gray-600">${30}/day</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -880,13 +835,13 @@ export default function CarDetailPage({ params }) {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                  <div className="flex items-center justify-between p-3 rounded bg-gray-50">
                     <div>
                       <div className="font-medium">Doorstep Delivery</div>
                       <div className="text-sm text-gray-500">We'll deliver the car to your location</div>
                     </div>
                     <div className="flex items-center">
-                      <span className="text-gray-600 mr-3">$25</span>
+                      <span className="mr-3 text-gray-600">$25</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -900,7 +855,7 @@ export default function CarDetailPage({ params }) {
                   </div>
                 </div>
                 
-                <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <div className="p-4 mb-6 rounded-lg bg-gray-50">
                   <div className="flex justify-between mb-2">
                     <span>Daily Rate:</span>
                     <span>${car.price || 0}</span>
@@ -921,7 +876,7 @@ export default function CarDetailPage({ params }) {
                       <span>${deliveryFee}</span>
                     </div>
                   )}
-                  <div className="flex justify-between font-bold text-lg border-t border-gray-300 pt-2 mt-2">
+                  <div className="flex justify-between pt-2 mt-2 text-lg font-bold border-t border-gray-300">
                     <span>Total:</span>
                     <span>${totalPrice}</span>
                   </div>
@@ -930,21 +885,14 @@ export default function CarDetailPage({ params }) {
                 <button 
                   type="submit"
                   className={`w-full py-3 rounded-lg font-semibold text-lg transition ${
-                    loading || car.status !== 'available' || !pickupDate || !returnDate
+                    !pickupDate || !returnDate
                     ? 'bg-gray-400 text-white cursor-not-allowed' 
                     : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
-                  disabled={loading || car.status !== 'available' || !pickupDate || !returnDate}
+                  disabled={!pickupDate || !returnDate}
                 >
-                  {loading ? (
-                    <span className="flex items-center justify-center">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Checking...
-                    </span>
-                  ) : !pickupDate || !returnDate ? (
+                  {!pickupDate || !returnDate ? (
                     'Please select dates'
-                  ) : car.status !== 'available' ? (
-                    'Car currently unavailable'
                   ) : (
                     'Book Now'
                   )}

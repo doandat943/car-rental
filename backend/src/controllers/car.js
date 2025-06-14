@@ -365,12 +365,16 @@ exports.checkCarStatus = async (req, res) => {
       });
     }
     
-    // If car is not in 'available' status (e.g., in maintenance)
-    if (car.status !== 'available' && car.status !== 'reserved' && car.status !== 'rented') {
+    // Check if car is in a state that prevents booking (maintenance, overdue return)
+    if (car.status === 'maintenance' || car.status === 'overdue_return') {
+      const statusMessage = car.status === 'maintenance' 
+        ? 'Car is currently under maintenance'
+        : 'Car has overdue return and cannot be booked';
+      
       return res.status(200).json({
         success: true,
         available: false,
-        message: 'Car is not available for booking',
+        message: statusMessage,
         status: car.status
       });
     }

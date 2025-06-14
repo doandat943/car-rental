@@ -16,8 +16,8 @@ const Car = mongoose.models.Car || mongoose.model('Car', new mongoose.Schema({
   fuel: { type: mongoose.Schema.Types.ObjectId, ref: 'Fuel' },
   status: { 
     type: String, 
-    enum: ['available', 'maintenance', 'rented', 'reserved'],
-    default: 'available'
+    enum: ['active', 'maintenance', 'overdue_return'],
+    default: 'active'
   },
   createdAt: { type: Date, default: Date.now }
 }));
