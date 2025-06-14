@@ -250,10 +250,6 @@ export default function CarDetailPage({ params }) {
     
     // Proceed with booking directly since calendar already shows availability
     try {
-    
-        includeDriver,
-        doorstepDelivery
-      });
       
       // Prepare booking data
       const bookingData = {
@@ -446,14 +442,6 @@ export default function CarDetailPage({ params }) {
     const maxSearchDate = new Date();
     maxSearchDate.setDate(maxSearchDate.getDate() + 60); // Search up to 60 days
     
-    // Log booked dates for verification
-      ? bookedDates.map(b => ({
-          start: new Date(b.startDate).toLocaleDateString(),
-          end: new Date(b.endDate).toLocaleDateString()
-        })) 
-      : 'No booked dates'
-    );
-    
     // If no booked dates, just select today and tomorrow
     if (!bookedDates.length) {
       const today = new Date();
@@ -465,7 +453,6 @@ export default function CarDetailPage({ params }) {
       setReturnDate(formatDate(tomorrow));
       setHasFoundAvailableDates(true);
       setAutoFindingDates(false);
-      // Reset lastActionType when automatically selecting dates
       setLastActionType('pickup');
       return;
     }
@@ -494,13 +481,11 @@ export default function CarDetailPage({ params }) {
           const endDate = new Date(potentialStartDate);
           endDate.setDate(potentialStartDate.getDate() + 1); // Default to 1 night
           
-          
           // Set dates and end search
           setPickupDate(formatDate(potentialStartDate));
           setReturnDate(formatDate(endDate));
           setHasFoundAvailableDates(true);
           setAutoFindingDates(false);
-          // Reset lastActionType when automatically selecting dates
           setLastActionType('pickup');
           
           return;
@@ -514,7 +499,6 @@ export default function CarDetailPage({ params }) {
     // If no available dates found
     setAutoFindingDates(false);
     
-    // Notify user
     alert("No available dates found within the next 60 days. Please select dates manually.");
   };
 
@@ -529,11 +513,7 @@ export default function CarDetailPage({ params }) {
     const startDateObj = new Date(pickupDate);
     const endDateObj = new Date(returnDate);
     
-    // Log for verification
-      startDateObj.toLocaleDateString(), 
-      endDateObj.toLocaleDateString()
-    );
-
+    // Check selected dates
     const startIsBooked = isDateBooked(startDateObj);
     const endIsBooked = isDateBooked(endDateObj);
 

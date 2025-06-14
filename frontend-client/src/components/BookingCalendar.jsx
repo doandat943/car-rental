@@ -310,25 +310,20 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
       e.stopPropagation();
     }
     
-    // Debug log
-    console.log('Date clicked:', format(date, 'yyyy-MM-dd'), 'isValid:', isDateInValidRange(date), 'isBooked:', isDateBooked(date));
+
     
     // Check if date is in valid range
     if (!isDateInValidRange(date)) {
-      console.log('Date not in valid range:', format(date, 'yyyy-MM-dd'));
       return; // Don't allow selecting dates outside valid range
     }
     
     // Strict check for booked dates
     if (isDateBooked(date)) {
-      console.log(`Cannot select date ${format(date, 'MM/dd/yyyy')} as it is already booked`);
       return; // Prevent selection
     }
     
     // Cho phép chọn tất cả các ngày không bị đặt
     if (onDateSelect) {
-      console.log(`Selected date: ${format(date, 'MM/dd/yyyy')}`);
-      
       // Fix timezone issues: Create an exact copy with appropriate time
       const selectedDate = new Date(date);
       
@@ -455,11 +450,7 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
       if (!isValidDate) {
         dayNumberClassNames.push('opacity-50');
       }
-      
-      // Log debug info for days 1 and 2
-      if (dayOfMonth === '1' || dayOfMonth === '2') {
-        console.log(`Day ${dayOfMonth}, Month: ${format(day, 'MMMM')}, isValid: ${isValidDate}, isBooked: ${isBooked}, isClickable: ${isClickable}, isCurrentMonth: ${isCurrentMonth}`);
-      }
+
       
       return (
         <div 
@@ -477,12 +468,12 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
           
           {/* Tooltip for invalid dates - shows if date is not in the valid booking range */}
           {!isValidDate ? (
-            <div className="absolute opacity-0 group-hover:opacity-100 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded pointer-events-none whitespace-nowrap z-20 transition-opacity duration-200">
+            <div className="absolute z-20 px-2 py-1 mb-2 text-xs text-white transition-opacity duration-200 transform -translate-x-1/2 bg-black rounded opacity-0 pointer-events-none group-hover:opacity-100 bottom-full left-1/2 whitespace-nowrap">
               Outside booking range
             </div>
           ) : isBooked ? (
             // Tooltip for booked dates - shows if date is valid AND booked
-            <div className="absolute opacity-0 group-hover:opacity-100 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-red-500 text-white text-xs rounded pointer-events-none whitespace-nowrap z-20 transition-opacity duration-200">
+            <div className="absolute z-20 px-2 py-1 mb-2 text-xs text-white transition-opacity duration-200 transform -translate-x-1/2 bg-red-500 rounded opacity-0 pointer-events-none group-hover:opacity-100 bottom-full left-1/2 whitespace-nowrap">
               Already booked
             </div>
           ) : null}
@@ -493,15 +484,15 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
   
   return (
     <div 
-      className="booking-calendar bg-white rounded-lg shadow p-4" 
+      className="p-4 bg-white rounded-lg shadow booking-calendar" 
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex items-center justify-between mb-4">
         {/* Previous month button */}
         <button 
           type="button"
           onClick={(e) => prevMonth(e)}
-          className="p-2 rounded-full hover:bg-gray-100 text-gray-600"
+          className="p-2 text-gray-600 rounded-full hover:bg-gray-100"
         >
           <IoIosArrowUp size={20} />
         </button>
@@ -512,7 +503,7 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
         <button 
           type="button"
           onClick={(e) => nextMonth(e)}
-          className="p-2 rounded-full hover:bg-gray-100 text-gray-600"
+          className="p-2 text-gray-600 rounded-full hover:bg-gray-100"
         >
           <IoIosArrowDown size={20} />
         </button>
@@ -520,14 +511,14 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
       
       <div className="grid grid-cols-7 gap-1 mb-2">
         {weekdayShort.map((day, i) => (
-          <div key={i} className="text-center text-sm font-medium text-gray-600 py-1">
+          <div key={i} className="py-1 text-sm font-medium text-center text-gray-600">
             {day}
           </div>
         ))}
       </div>
       
       {/* Optimized animation wrapper */}
-      <div className="overflow-hidden relative" style={{ height: '270px' }}>
+      <div className="relative overflow-hidden" style={{ height: '270px' }}>
         {/* Main calendar display */}
         <div
           className={`grid grid-cols-7 gap-1 absolute w-full transition-all duration-300 ${
@@ -573,17 +564,17 @@ const BookingCalendar = ({ bookedDates, onDateSelect, selectedStartDate, selecte
         }
       `}} />
       
-      <div className="mt-4 text-xs flex gap-4">
+      <div className="flex gap-4 mt-4 text-xs">
         <div className="flex items-center">
-          <div className="w-4 h-4 bg-red-100 border border-red-400 rounded-full mr-2"></div>
+          <div className="w-4 h-4 mr-2 bg-red-100 border border-red-400 rounded-full"></div>
           <span>Booked</span>
         </div>
         <div className="flex items-center">
-          <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
+          <div className="w-4 h-4 mr-2 bg-blue-500 rounded-full"></div>
           <span>Selected</span>
         </div>
         <div className="flex items-center">
-          <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded-full mr-2"></div>
+          <div className="w-4 h-4 mr-2 bg-blue-100 border border-blue-300 rounded-full"></div>
           <span>Selected range</span>
         </div>
       </div>
