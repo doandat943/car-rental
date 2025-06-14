@@ -806,7 +806,7 @@ export default function CarDetailPage({ params }) {
                     >
                       {/* Refresh indicator overlay */}
                       {isRefreshingCalendar && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-90 rounded-lg">
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white rounded-lg bg-opacity-90">
                           <div className="flex flex-col items-center">
                             <div className="w-8 h-8 border-4 border-blue-200 border-solid rounded-full border-t-blue-600 animate-spin"></div>
                             <p className="mt-2 text-sm text-gray-600">Updating calendar...</p>

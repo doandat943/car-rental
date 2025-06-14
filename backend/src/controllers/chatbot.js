@@ -48,7 +48,7 @@ const fetchDatabaseData = async () => {
       transmission: car.transmission ? car.transmission.name : 'Unknown',
       fuel: car.fuel ? car.fuel.name : 'Unknown',
       status: car.status,
-      isAvailable: car.status === 'available',
+      isAvailable: car.status === 'active',
       images: car.images
     }));
     

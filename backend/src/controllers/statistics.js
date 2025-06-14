@@ -12,7 +12,7 @@ exports.getStatistics = async (req, res) => {
       const totalCars = await Car.countDocuments();
       const totalBookings = await Booking.countDocuments();
       const pendingBookings = await Booking.countDocuments({ status: 'pending' });
-      const availableCars = await Car.countDocuments({ status: 'available' });
+      const availableCars = await Car.countDocuments({ status: 'active' });
       
       // Calculate total revenue from bookings
       const bookings = await Booking.find();
@@ -47,7 +47,7 @@ exports.getStatistics = async (req, res) => {
       
       // Car status
       const carStatus = [
-        { status: 'available', count: availableCars, label: 'Available' },
+        { status: 'active', count: availableCars, label: 'Active' },
         { status: 'maintenance', count: Math.floor(Math.random() * 10), label: 'Maintenance' },
         { status: 'rented', count: Math.floor(Math.random() * 15), label: 'Rented' }
       ];

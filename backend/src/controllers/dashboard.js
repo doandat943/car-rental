@@ -391,7 +391,7 @@ exports.getStatistics = async (req, res) => {
     }, 0);
 
     // Calculate current status of cars
-    const availableCars = await Car.countDocuments({ status: 'available' });
+    const availableCars = await Car.countDocuments({ status: 'active' });
     const maintenanceCars = await Car.countDocuments({ status: 'maintenance' });
     const rentedCars = await Car.countDocuments({ status: 'rented' });
 
@@ -500,7 +500,7 @@ exports.getStatistics = async (req, res) => {
     }));
 
     const carStatusData = [
-      { status: 'available', count: availableCars, label: 'Available' },
+      { status: 'active', count: availableCars, label: 'Active' },
       { status: 'rented', count: rentedCars, label: 'Rented' },
       { status: 'maintenance', count: maintenanceCars, label: 'Maintenance' }
     ];
@@ -599,7 +599,7 @@ exports.getCarsByStatus = async (req, res) => {
     
     // Format for response
     const statusData = [
-      { status: 'available', count: 0 },
+      { status: 'active', count: 0 },
       { status: 'maintenance', count: 0 },
       { status: 'rented', count: 0 },
       { status: 'reserved', count: 0 }

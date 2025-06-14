@@ -73,7 +73,7 @@ const seedCars = async () => {
           featureMap['Keyless Entry']
         ],
         images: [],
-        status: 'available',
+        status: 'active',
         rating: 4.3,
         reviewCount: 19,
         category: categoryMap['Sedan']
@@ -96,7 +96,7 @@ const seedCars = async () => {
           featureMap['Lane Departure Warning']
         ],
         images: [],
-        status: 'available',
+        status: 'active',
         rating: 4.5,
         reviewCount: 15,
         category: categoryMap['Compact']
@@ -119,7 +119,7 @@ const seedCars = async () => {
           featureMap['Heated Seats']
         ],
         images: [],
-        status: 'available',
+        status: 'active',
         rating: 4.8,
         reviewCount: 28,
         category: categoryMap['Electric']
@@ -142,7 +142,7 @@ const seedCars = async () => {
           featureMap['Touchscreen Navigation']
         ],
         images: [],
-        status: 'available',
+        status: 'active',
         rating: 4.6,
         reviewCount: 22,
         category: categoryMap['SUV']
@@ -165,7 +165,7 @@ const seedCars = async () => {
           featureMap['Touchscreen Navigation']
         ],
         images: [],
-        status: 'available',
+        status: 'active',
         rating: 4.5,
         reviewCount: 12,
         category: categoryMap['Sports Car']
@@ -188,7 +188,7 @@ const seedCars = async () => {
           featureMap['Blind Spot Monitor']
         ],
         images: [],
-        status: 'available',
+        status: 'active',
         rating: 4.7,
         reviewCount: 18,
         category: categoryMap['Luxury']
@@ -211,7 +211,7 @@ const seedCars = async () => {
           featureMap['Apple CarPlay']
         ],
         images: [],
-        status: 'available',
+        status: 'active',
         rating: 4.4,
         reviewCount: 14,
         category: categoryMap['Hybrid']
