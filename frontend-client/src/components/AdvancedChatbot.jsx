@@ -19,8 +19,7 @@ export default function AdvancedChatbot() {
   const [isTyping, setIsTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef(null);
-  const [typingText, setTypingText] = useState('');
-  const [isTypingEffect, setIsTypingEffect] = useState(false);
+
   
   // State for search and display
   const [searchQuery, setSearchQuery] = useState('');
@@ -184,7 +183,8 @@ export default function AdvancedChatbot() {
   // Scroll down when new messages arrive
   useEffect(() => {
     if (isOpen && activeTab === 'chat' && messages.length > 0) {
-      scrollToBottom();
+      // Use immediate scroll for better UX
+      setTimeout(() => scrollToBottom('auto'), 0);
     }
   }, [messages, isOpen, activeTab]);
   
@@ -244,49 +244,18 @@ export default function AdvancedChatbot() {
       });
       
       if (response.data && response.data.success) {
-        // Typing effect
-        if (response.data.message && response.data.message.length > 0) {
-          const aiMessage = response.data.message;
-          setIsTypingEffect(true);
-          setTypingText('');
-          
-          // Character-by-character effect
-          let index = 0;
-          const typingInterval = setInterval(() => {
-            if (index < aiMessage.length) {
-              setTypingText(prev => prev + aiMessage.charAt(index));
-              index++;
-            } else {
-              clearInterval(typingInterval);
-              setIsTypingEffect(false);
-              
-              // Create bot message after typing effect is complete
-              const botMessage = {
-                id: Date.now(),
-                text: aiMessage,
-                sender: 'bot',
-                timestamp: new Date(),
-                isAI: true,
-                data: response.data.data
-              };
-              
-              // Add bot message to the list
-              setMessages(prev => [...prev, botMessage]);
-            }
-          }, 10); // Typing speed
-        } else {
-          // Fallback if no message
-          const botMessage = {
-            id: Date.now(),
-            text: "I understand your request. Let me help you with that.",
-            sender: 'bot',
-            timestamp: new Date(),
-            isAI: true,
-            data: response.data.data
-          };
-          
-          setMessages(prev => [...prev, botMessage]);
-        }
+        // Create bot message immediately without typing effect
+        const botMessage = {
+          id: Date.now(),
+          text: response.data.message || "I understand your request. Let me help you with that.",
+          sender: 'bot',
+          timestamp: new Date(),
+          isAI: true,
+          data: response.data.data
+        };
+        
+        // Add bot message to the list immediately
+        setMessages(prev => [...prev, botMessage]);
       } else {
         throw new Error('Invalid AI response');
       }
@@ -527,36 +496,13 @@ export default function AdvancedChatbot() {
   };
   
   // Function to scroll to the latest message with force scroll
-  const scrollToBottom = (behavior = 'smooth') => {
+  const scrollToBottom = (behavior = 'auto') => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior });
     }
   };
   
-  // Set up typing animation
-  useEffect(() => {
-    if (isTypingEffect && typingText.length === 0 && messages.length > 0) {
-      // Set up typing animation for last bot message
-      const lastBotMessage = [...messages].reverse().find(msg => msg.sender === 'bot' && msg.isAI);
-      
-      if (lastBotMessage && lastBotMessage.text) {
-        let i = 0;
-        const text = lastBotMessage.text;
-        
-        const typingInterval = setInterval(() => {
-          if (i <= text.length) {
-            setTypingText(text.substring(0, i));
-            i++;
-          } else {
-            clearInterval(typingInterval);
-            setIsTypingEffect(false);
-          }
-        }, 20); // Adjust typing speed here
-        
-        return () => clearInterval(typingInterval);
-      }
-    }
-  }, [isTypingEffect, messages, typingText]);
+
   
   // Display last message with typing effect or as is
   const renderLastMessage = () => {
