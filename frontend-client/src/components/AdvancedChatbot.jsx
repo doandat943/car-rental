@@ -287,6 +287,59 @@ export default function AdvancedChatbot() {
     const form = document.getElementById('chatbot-form');
     if (form) form.dispatchEvent(new Event('submit', { cancelable: true }));
   };
+
+  // Handle view calendar for specific car
+  const handleViewCalendar = async (carId, carBrand, carModel) => {
+    const question = `Show me the booking calendar for ${carBrand} ${carModel}`;
+    
+    // Add user message
+    const userMessage = {
+      id: Date.now(),
+      text: question,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+    
+    try {
+      // Call AI API to get calendar
+      const response = await axios.post('/api/chatbot/ai-message', {
+        message: question,
+        sessionData: {
+          chatHistory: messages.slice(-5)
+        }
+      });
+      
+      if (response.data && response.data.success) {
+        const botMessage = {
+          id: Date.now(),
+          text: response.data.message || `Here's the booking calendar for ${carBrand} ${carModel}:`,
+          sender: 'bot',
+          timestamp: new Date(),
+          isAI: true,
+          data: response.data.data
+        };
+        
+        setMessages(prev => [...prev, botMessage]);
+      }
+    } catch (error) {
+      console.error('Error getting calendar:', error);
+      
+      const fallbackMessage = {
+        id: Date.now(),
+        text: "Sorry, I couldn't load the calendar right now. Please try again later.",
+        sender: 'bot',
+        timestamp: new Date(),
+        isAI: true
+      };
+      
+      setMessages(prev => [...prev, fallbackMessage]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
   
   // Format time
   const formatTime = (timestamp) => {
@@ -744,13 +797,13 @@ export default function AdvancedChatbot() {
                                   </div>
                                 )}
                                 
-                                {/* Book this car button */}
+                                {/* View detail button */}
                                 <div className="text-center">
                                   <Link 
                                     href={`/cars/${message.data.car.id}`} 
                                     className="inline-block px-6 py-2 text-sm font-medium text-white transition-colors rounded-full bg-primary hover:bg-primary-dark"
                                   >
-                                    View Calendar & Book This Car
+                                    View Detail
                                   </Link>
                                 </div>
                               </div>
@@ -845,12 +898,20 @@ export default function AdvancedChatbot() {
                                             </div>
                                           )}
                                           
-                                          {/* View details button */}
-                                          <div className="mt-3 text-center">
-                                            <Link href={`/cars/${currentCar.id}`} className="inline-block text-sm bg-primary text-white px-6 py-1.5 rounded-full hover:bg-primary-dark transition-colors font-medium">
-                                              View details
-                                            </Link>
-                                          </div>
+                                                                                      {/* Action buttons */}
+                                            <div className="mt-3 text-center space-y-2">
+                                              <div className="flex gap-2 justify-center">
+                                                <Link href={`/cars/${currentCar.id}`} className="inline-block text-xs bg-primary text-white px-4 py-1.5 rounded-full hover:bg-primary-dark transition-colors font-medium">
+                                                  View Detail
+                                                </Link>
+                                                <button 
+                                                  onClick={() => handleViewCalendar(currentCar.id, currentCar.make || currentCar.brand, currentCar.model)}
+                                                  className="inline-block text-xs bg-green-600 text-white px-4 py-1.5 rounded-full hover:bg-green-700 transition-colors font-medium"
+                                                >
+                                                  View Calendar
+                                                </button>
+                                              </div>
+                                            </div>
                                         </>
                                       );
                                     })()}
@@ -955,12 +1016,20 @@ export default function AdvancedChatbot() {
                                         </div>
                                       )}
                                       
-                                      {/* View details button */}
-                                      <div className="text-right">
-                                        <Link href={`/cars/${car.id}`} className="inline-block px-4 py-1 text-sm text-white transition-colors rounded-full bg-primary hover:bg-primary-dark">
-                                          View details
-                                        </Link>
-                                      </div>
+                                                                              {/* Action buttons */}
+                                        <div className="text-right">
+                                          <div className="flex gap-2 justify-end">
+                                            <Link href={`/cars/${car.id}`} className="inline-block px-3 py-1 text-xs text-white transition-colors rounded-full bg-primary hover:bg-primary-dark">
+                                              View Detail
+                                            </Link>
+                                            <button 
+                                              onClick={() => handleViewCalendar(car.id, car.make || car.brand, car.model)}
+                                              className="inline-block px-3 py-1 text-xs text-white transition-colors rounded-full bg-green-600 hover:bg-green-700"
+                                            >
+                                              View Calendar
+                                            </button>
+                                          </div>
+                                        </div>
                                     </div>
                                   ))}
                                 </div>
