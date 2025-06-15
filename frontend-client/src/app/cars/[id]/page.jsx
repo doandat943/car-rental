@@ -286,6 +286,7 @@ function CarDetailPageContent({ params }) {
         dropoffLocation: pickupLocation,
         includeDriver,
         doorstepDelivery,
+        totalAmount: totalPrice,
         returnUrl: window.location.pathname
       }));
       
@@ -303,72 +304,17 @@ function CarDetailPageContent({ params }) {
       return;
     }
     
-    // Proceed with booking directly since calendar already shows availability
-    try {
-      
-      // Prepare booking data
-      const bookingData = {
-        carId: id,
-        startDate: pickupDate,
-        endDate: returnDate,
-        includeDriver,
-        doorstepDelivery,
-        totalAmount: totalPrice
-      };
-      
-      const response = await bookingsAPI.createBooking(bookingData);
-      
-      if (response?.data?.success) {
-        // Navigate to booking confirmation page
-        router.push(`/booking/confirmation/${response.data.data._id}`);
-      } else {
-        const errorMessage = response?.data?.message || 'Unknown error';
-        
-        // If it's a date conflict error, refresh calendar and show specific message
-        if (errorMessage.includes('already booked') || errorMessage.includes('not available')) {
-          alert('Booking failed: ' + errorMessage + '\n\nThe calendar will be updated with the latest availability.');
-          await refreshCalendarData();
-        } else {
-          alert('Booking failed: ' + errorMessage);
-        }
-      }
-    } catch (err) {
-      console.error('Booking error:', err);
-      
-      if (err.status === 401) {
-        // Authentication error
-        alert('Your session has expired. Please log in again.');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        router.push('/login');
-      } else if (err.status === 400) {
-        // Validation error
-        const errorMessage = err.message || 'Please check your booking details';
-        
-        // If it's a date conflict error, refresh calendar and show specific message
-        if (errorMessage.includes('already booked') || errorMessage.includes('not available')) {
-          alert('Booking error: ' + errorMessage + '\n\nThe calendar will be updated with the latest availability.');
-          await refreshCalendarData();
-        } else {
-          alert('Booking error: ' + errorMessage);
-        }
-      } else if (err.status === 404) {
-        // Car not found
-        alert('Sorry, this car is no longer available.');
-        router.push('/cars');
-      } else {
-        // General error
-        const errorMessage = err.message || 'Please try again later';
-        
-        // For general errors that might be date conflicts, also refresh
-        if (errorMessage.includes('already booked') || errorMessage.includes('not available')) {
-          alert('Sorry, we couldn\'t complete your booking: ' + errorMessage + '\n\nThe calendar will be updated with the latest availability.');
-          await refreshCalendarData();
-        } else {
-          alert('Sorry, we couldn\'t complete your booking: ' + errorMessage);
-        }
-      }
-    }
+    // Redirect to checkout page with booking data
+    const checkoutParams = new URLSearchParams({
+      carId: id,
+      startDate: pickupDate,
+      endDate: returnDate,
+      includeDriver: includeDriver.toString(),
+      doorstepDelivery: doorstepDelivery.toString(),
+      totalAmount: totalPrice.toString()
+    });
+    
+    router.push(`/checkout?${checkoutParams.toString()}`);
   };
 
   // Handle date selection from calendar - Enhanced with blocked date handling

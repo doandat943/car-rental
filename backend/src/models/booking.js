@@ -18,6 +18,25 @@ const Booking = mongoose.models.Booking || mongoose.model('Booking', new mongoos
     default: 'pending'
   },
   
+  // Payment information
+  paymentMethod: {
+    type: String,
+    enum: ['paypal', 'credit_card', 'bank_transfer', 'cash'],
+    default: 'cash'
+  },
+  paymentType: {
+    type: String,
+    enum: ['full', 'deposit'],
+    default: 'full'
+  },
+  depositAmount: { type: Number, default: 0 },
+  remainingAmount: { type: Number, default: 0 },
+  paymentTransactionId: { type: String },
+  
+  // Terms acceptance
+  termsAccepted: { type: Boolean, default: false },
+  termsAcceptedAt: { type: Date },
+  
   // Additional fields for premium services
   includeDriver: { type: Boolean, default: false },
   doorstepDelivery: { type: Boolean, default: false },

@@ -40,9 +40,19 @@ export default function LoginPage() {
         localStorage.setItem('user', JSON.stringify(response.data.user || {}));
         
         // Check for pending booking
-        if (pendingBooking && pendingBooking.returnUrl) {
+        if (pendingBooking) {
+          // Redirect to checkout with booking data
+          const checkoutParams = new URLSearchParams({
+            carId: pendingBooking.carId,
+            startDate: pendingBooking.startDate,
+            endDate: pendingBooking.endDate,
+            includeDriver: (pendingBooking.includeDriver || false).toString(),
+            doorstepDelivery: (pendingBooking.doorstepDelivery || false).toString(),
+            totalAmount: (pendingBooking.totalAmount || 0).toString()
+          });
+          
           localStorage.removeItem('pendingBooking');
-          router.push(pendingBooking.returnUrl);
+          router.push(`/checkout?${checkoutParams.toString()}`);
           return;
         }
         

@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { bookingsAPI, API_BASE_URL } from '@/lib/api';
-import { FaCheckCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaCheckCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt, FaCreditCard } from 'react-icons/fa';
 
 // Format date for display
 const formatDisplayDate = (dateString) => {
@@ -65,7 +65,7 @@ export default function BookingConfirmationPage({ params }) {
     );
   }
 
-  const carName = booking.car?.name || `${booking.car?.brand} ${booking.car?.model}`;
+  const carName = booking.car?.name || `${booking.car?.brand?.name || booking.car?.brand} ${booking.car?.model}`;
   const bookingCode = `BK-${booking._id.substr(-6).toUpperCase()}`;
   
   return (
@@ -109,16 +109,16 @@ export default function BookingConfirmationPage({ params }) {
                 <h3 className="text-lg font-semibold">{carName}</h3>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-gray-500">Category:</span> {booking.car?.category || 'N/A'}
+                    <span className="text-gray-500">Category:</span> {booking.car?.category?.name || 'N/A'}
                   </div>
                   <div>
                     <span className="text-gray-500">Year:</span> {booking.car?.year || 'N/A'}
                   </div>
                   <div>
-                    <span className="text-gray-500">Transmission:</span> {booking.car?.transmission || 'N/A'}
+                    <span className="text-gray-500">Transmission:</span> {booking.car?.transmission?.name || 'N/A'}
                   </div>
                   <div>
-                    <span className="text-gray-500">Fuel:</span> {booking.car?.fuel || 'N/A'}
+                    <span className="text-gray-500">Fuel:</span> {booking.car?.fuel?.name || 'N/A'}
                   </div>
                 </div>
               </div>
@@ -171,6 +171,33 @@ export default function BookingConfirmationPage({ params }) {
           {/* Payment Summary */}
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold mb-4">Payment Summary</h2>
+            
+            {/* Payment Method and Type */}
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center">
+                <FaCreditCard className="text-blue-500 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-600">Payment Method</p>
+                  <p className="font-medium">
+                    {booking.paymentMethod === 'paypal' && 'PayPal'}
+                    {booking.paymentMethod === 'credit_card' && 'Credit Card'}
+                    {booking.paymentMethod === 'bank_transfer' && 'Bank Transfer'}
+                    {booking.paymentMethod === 'cash' && 'Cash on Pickup'}
+                    {!booking.paymentMethod && 'Cash on Pickup'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <FaCheckCircle className="text-green-500 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-600">Payment Type</p>
+                  <p className="font-medium">
+                    {booking.paymentType === 'deposit' ? 'Deposit Payment' : 'Full Payment'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between mb-2">
                 <span>Base Rental Fee:</span>
@@ -192,8 +219,26 @@ export default function BookingConfirmationPage({ params }) {
                 <span>Total Amount:</span>
                 <span>${booking.totalAmount}</span>
               </div>
+              
+              {/* Payment breakdown for deposit payments */}
+              {booking.paymentType === 'deposit' && booking.depositAmount > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-green-600">✓ Paid (Deposit):</span>
+                    <span className="font-medium text-green-600">${booking.depositAmount}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-orange-600">Remaining (Pay on pickup):</span>
+                    <span className="font-medium text-orange-600">${booking.remainingAmount || 0}</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="mt-3 text-center text-sm text-gray-500">
                 <p>Payment Status: {booking.paymentStatus || 'Pending'}</p>
+                {booking.termsAccepted && (
+                  <p className="text-green-600 mt-1">✓ Terms & Conditions Accepted</p>
+                )}
               </div>
             </div>
           </div>

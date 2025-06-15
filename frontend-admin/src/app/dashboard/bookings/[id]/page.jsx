@@ -387,15 +387,55 @@ export default function BookingDetailsPage({ params }) {
             {/* Payment Information */}
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-3">Payment Information</h2>
-              <div className="flex mb-2">
-                <div className="mr-3 bg-green-100 text-green-600 p-2 rounded-md">
-                  <CreditCard className="h-5 w-5" />
+              
+              {/* Payment Method and Type */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="flex">
+                  <div className="mr-3 bg-green-100 text-green-600 p-2 rounded-md">
+                    <CreditCard className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Payment Method</p>
+                    <p className="font-medium">
+                      {booking.paymentMethod === 'paypal' && 'PayPal'}
+                      {booking.paymentMethod === 'credit_card' && 'Credit Card'}
+                      {booking.paymentMethod === 'bank_transfer' && 'Bank Transfer'}
+                      {booking.paymentMethod === 'cash' && 'Cash on Pickup'}
+                      {!booking.paymentMethod && 'Cash on Pickup'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Payment Method</p>
-                  <p className="font-medium">{booking.paymentMethod || 'Cash on pickup'}</p>
+                
+                <div className="flex">
+                  <div className="mr-3 bg-blue-100 text-blue-600 p-2 rounded-md">
+                    <DollarSign className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Payment Type</p>
+                    <p className="font-medium">
+                      {booking.paymentType === 'deposit' ? 'Deposit Payment' : 'Full Payment'}
+                    </p>
+                  </div>
                 </div>
               </div>
+              
+              {/* Terms Acceptance */}
+              {booking.termsAccepted && (
+                <div className="flex mb-4">
+                  <div className="mr-3 bg-green-100 text-green-600 p-2 rounded-md">
+                    <CheckCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Terms & Conditions</p>
+                    <p className="font-medium text-green-600">Accepted</p>
+                    {booking.termsAcceptedAt && (
+                      <p className="text-xs text-gray-500">
+                        {formatDate(booking.termsAcceptedAt)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <div className="bg-gray-50 p-4 rounded-md mt-3">
                 <div className="flex justify-between mb-2">
@@ -406,9 +446,50 @@ export default function BookingDetailsPage({ params }) {
                   <p className="text-gray-600">Rental Days:</p>
                   <p>{booking.totalDays || 3} days</p>
                 </div>
+                
+                {/* Additional Services */}
+                {booking.includeDriver && (
+                  <div className="flex justify-between mb-2">
+                    <p className="text-gray-600">Driver Service:</p>
+                    <p>{formatCurrency(booking.driverFee || 0)}</p>
+                  </div>
+                )}
+                {booking.doorstepDelivery && (
+                  <div className="flex justify-between mb-2">
+                    <p className="text-gray-600">Doorstep Delivery:</p>
+                    <p>{formatCurrency(booking.deliveryFee || 0)}</p>
+                  </div>
+                )}
+                
                 <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
                   <p className="font-semibold">Total:</p>
                   <p className="font-bold text-lg">{formatCurrency(booking.totalAmount)}</p>
+                </div>
+                
+                {/* Payment breakdown for deposit payments */}
+                {booking.paymentType === 'deposit' && booking.depositAmount > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-green-600">✓ Paid (Deposit):</span>
+                      <span className="font-medium text-green-600">{formatCurrency(booking.depositAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-orange-600">Remaining (Pay on pickup):</span>
+                      <span className="font-medium text-orange-600">{formatCurrency(booking.remainingAmount || 0)}</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-3 text-center">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    booking.paymentStatus === 'paid' 
+                      ? 'bg-green-100 text-green-800'
+                      : booking.paymentStatus === 'refunded'
+                      ? 'bg-gray-100 text-gray-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    Payment: {booking.paymentStatus || 'Pending'}
+                  </span>
                 </div>
               </div>
             </div>

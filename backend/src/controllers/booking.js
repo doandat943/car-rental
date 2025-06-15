@@ -41,7 +41,16 @@ exports.getBookings = async (req, res) => {
     // Execute query with pagination
     const bookings = await Booking.find(filter)
       .populate('customer', 'name firstName lastName email phone phoneNumber')
-      .populate('car', 'name brand model year images')
+      .populate({
+        path: 'car',
+        select: 'name brand model year images price category transmission fuel seats',
+        populate: [
+          { path: 'brand', select: 'name' },
+          { path: 'category', select: 'name' },
+          { path: 'transmission', select: 'name' },
+          { path: 'fuel', select: 'name' }
+        ]
+      })
       .sort(sort)
       .limit(Number(limit))
       .skip((Number(page) - 1) * Number(limit));
@@ -76,7 +85,16 @@ exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate('customer', 'name firstName lastName email phone phoneNumber')
-      .populate('car', 'name brand model year images price');
+      .populate({
+        path: 'car',
+        select: 'name brand model year images price category transmission fuel seats',
+        populate: [
+          { path: 'brand', select: 'name' },
+          { path: 'category', select: 'name' },
+          { path: 'transmission', select: 'name' },
+          { path: 'fuel', select: 'name' }
+        ]
+      });
     
     if (!booking) {
       return res.status(404).json({
@@ -113,35 +131,56 @@ exports.getBookingById = async (req, res) => {
  */
 exports.createBooking = async (req, res) => {
   try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({
-        success: false,
-        message: 'User authentication failed. Please log in again.',
-        error: 'UNAUTHORIZED'
-      });
-    }
-    
     const { 
       carId, 
       startDate, 
       endDate, 
-      includeDriver = false,
-      doorstepDelivery = false 
+      totalAmount: requestTotalAmount,
+      includeDriver = false, 
+      doorstepDelivery = false,
+      paymentMethod = 'cash',
+      paymentType = 'full',
+      depositAmount = 0,
+      remainingAmount = 0,
+      termsAccepted = false,
+      termsAcceptedAt,
+      specialRequests
     } = req.body;
-    
+
     // Validate required fields
     if (!carId || !startDate || !endDate) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required booking information',
-        missingFields: {
-          carId: !carId,
-          startDate: !startDate,
-          endDate: !endDate
-        }
+        message: 'Car ID, start date, and end date are required'
       });
     }
-    
+
+    // Validate terms acceptance
+    if (!termsAccepted) {
+      return res.status(400).json({
+        success: false,
+        message: 'Terms and conditions must be accepted'
+      });
+    }
+
+    // Validate payment method
+    const validPaymentMethods = ['paypal', 'credit_card', 'bank_transfer', 'cash'];
+    if (!validPaymentMethods.includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment method'
+      });
+    }
+
+    // Validate payment type
+    const validPaymentTypes = ['full', 'deposit'];
+    if (!validPaymentTypes.includes(paymentType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment type'
+      });
+    }
+
     // Check if car exists
     const car = await Car.findById(carId);
     if (!car) {
@@ -150,29 +189,23 @@ exports.createBooking = async (req, res) => {
         message: 'Car not found'
       });
     }
-    
-    // Check if car is in a state that prevents booking (maintenance, overdue return)
-    if (car.status === 'maintenance' || car.status === 'overdue_return') {
-      const statusMessage = car.status === 'maintenance' 
-        ? 'Car is currently under maintenance'
-        : 'Car has overdue return and cannot be booked';
-      
-      return res.status(400).json({
-        success: false,
-        message: statusMessage
-      });
-    }
-    
-    // Check for overlapping bookings
+
+    // Check if car is available for the selected dates
     const overlappingBookings = await Booking.find({
       car: carId,
-      status: { $nin: ['cancelled', 'completed'] },
+      status: { $in: ['confirmed', 'ongoing'] },
       $or: [
-        { startDate: { $lte: new Date(endDate), $gte: new Date(startDate) } },
-        { endDate: { $gte: new Date(startDate), $lte: new Date(endDate) } },
-        { 
+        {
           startDate: { $lte: new Date(startDate) },
+          endDate: { $gt: new Date(startDate) }
+        },
+        {
+          startDate: { $lt: new Date(endDate) },
           endDate: { $gte: new Date(endDate) }
+        },
+        {
+          startDate: { $gte: new Date(startDate) },
+          endDate: { $lte: new Date(endDate) }
         }
       ]
     });
@@ -202,10 +235,32 @@ exports.createBooking = async (req, res) => {
       const driverFee = includeDriver ? 30 * durationInDays : 0; // $30 per day
       const deliveryFee = doorstepDelivery ? 25 : 0; // Fixed $25 fee
       
-      // Calculate total amount based on daily price
-      const dailyPrice = car.price && car.price.daily ? car.price.daily : 0;
-      const rentalAmount = dailyPrice * durationInDays;
-      const totalAmount = rentalAmount + driverFee + deliveryFee;
+      // Use totalAmount from request if provided, otherwise calculate
+      let totalAmount;
+      if (requestTotalAmount && requestTotalAmount > 0) {
+        totalAmount = requestTotalAmount;
+      } else {
+        // Calculate total amount based on daily price
+        const dailyPrice = car.price || 0;
+        const rentalAmount = dailyPrice * durationInDays;
+        totalAmount = rentalAmount + driverFee + deliveryFee;
+      }
+
+      // Validate deposit amounts if payment type is deposit
+      if (paymentType === 'deposit') {
+        if (depositAmount <= 0 || remainingAmount <= 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid deposit or remaining amount'
+          });
+        }
+        if (depositAmount + remainingAmount !== totalAmount) {
+          return res.status(400).json({
+            success: false,
+            message: 'Deposit and remaining amount must equal total amount'
+          });
+        }
+      }
       
       // Create new booking
       const booking = new Booking({
@@ -218,7 +273,14 @@ exports.createBooking = async (req, res) => {
         doorstepDelivery,
         driverFee,
         deliveryFee,
-        totalDays: durationInDays
+        totalDays: durationInDays,
+        paymentMethod,
+        paymentType,
+        depositAmount: paymentType === 'deposit' ? depositAmount : 0,
+        remainingAmount: paymentType === 'deposit' ? remainingAmount : 0,
+        termsAccepted,
+        termsAcceptedAt: termsAcceptedAt || new Date(),
+        specialRequests
       });
       
       await booking.save();
@@ -324,7 +386,16 @@ exports.getUserBookings = async (req, res) => {
     // Execute query
     const bookings = await Booking.find(filter)
       .populate('customer', 'name firstName lastName email phone phoneNumber')
-      .populate('car', 'name brand model year images price')
+      .populate({
+        path: 'car',
+        select: 'name brand model year images price category transmission fuel seats',
+        populate: [
+          { path: 'brand', select: 'name' },
+          { path: 'category', select: 'name' },
+          { path: 'transmission', select: 'name' },
+          { path: 'fuel', select: 'name' }
+        ]
+      })
       .sort(sort);
     
     res.status(200).json({

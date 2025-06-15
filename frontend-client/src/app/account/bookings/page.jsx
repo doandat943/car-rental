@@ -296,11 +296,39 @@ export default function UserBookingsPage() {
                               <span className="ml-1">({booking.totalDays || 1} days)</span>
                             </div>
                             <div className="text-gray-600">
-                              <span className="font-medium">Booked:</span> {formatDateTime(booking.createdAt)}
+                              <span className="font-medium">Payment Method:</span> 
+                              <span className="ml-1">
+                                {booking.paymentMethod === 'paypal' && 'PayPal'}
+                                {booking.paymentMethod === 'credit_card' && 'Credit Card'}
+                                {booking.paymentMethod === 'bank_transfer' && 'Bank Transfer'}
+                                {booking.paymentMethod === 'cash' && 'Cash on Pickup'}
+                                {!booking.paymentMethod && 'Cash on Pickup'}
+                              </span>
                             </div>
                             <div className="text-gray-600">
-                              <span className="font-medium">Payment:</span> {booking.paymentStatus || 'Pending'}
+                              <span className="font-medium">Payment:</span> 
+                              <span className={`ml-1 ${
+                                booking.paymentStatus === 'paid' 
+                                  ? 'text-green-600'
+                                  : booking.paymentStatus === 'refunded'
+                                  ? 'text-gray-600'
+                                  : 'text-yellow-600'
+                              }`}>
+                                {booking.paymentStatus || 'Pending'}
+                              </span>
+                              {booking.paymentType === 'deposit' && (
+                                <span className="ml-1 text-blue-600">(Deposit)</span>
+                              )}
                             </div>
+                            <div className="text-gray-600">
+                              <span className="font-medium">Booked:</span> {formatDateTime(booking.createdAt)}
+                            </div>
+                            {booking.paymentType === 'deposit' && booking.depositAmount > 0 && (
+                              <div className="text-gray-600">
+                                <span className="font-medium">Remaining:</span> 
+                                <span className="ml-1 text-orange-600">${booking.remainingAmount || 0}</span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Additional Services */}

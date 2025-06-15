@@ -389,6 +389,7 @@ export default function BookingsManagement() {
                 <th scope="col" className="px-6 py-3">CUSTOMER</th>
                 <th scope="col" className="px-6 py-3">CAR</th>
                 <th scope="col" className="px-6 py-3">RENTAL DATE</th>
+                <th scope="col" className="px-6 py-3">PAYMENT</th>
                 <th scope="col" className="px-6 py-3">TOTAL AMOUNT</th>
                 <th scope="col" className="px-6 py-3">STATUS</th>
                 <th scope="col" className="px-6 py-3 text-right">ACTION</th>
@@ -397,7 +398,7 @@ export default function BookingsManagement() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center">
+                  <td colSpan="8" className="px-6 py-4 text-center">
                     <div className="flex justify-center">
                       <div className="w-6 h-6 border-2 border-t-blue-500 border-b-blue-500 border-l-transparent border-r-transparent rounded-full animate-spin"></div>
                     </div>
@@ -406,7 +407,7 @@ export default function BookingsManagement() {
                 </tr>
               ) : bookings.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan="8" className="px-6 py-4 text-center text-sm text-gray-500">
                     No bookings found
                   </td>
                 </tr>
@@ -436,6 +437,27 @@ export default function BookingsManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       <div>From: {formatDate(booking.startDate)}</div>
                       <div>To: {formatDate(booking.endDate)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-xs">
+                        {booking.paymentMethod === 'paypal' && 'PayPal'}
+                        {booking.paymentMethod === 'credit_card' && 'Credit Card'}
+                        {booking.paymentMethod === 'bank_transfer' && 'Bank Transfer'}
+                        {booking.paymentMethod === 'cash' && 'Cash'}
+                        {!booking.paymentMethod && 'Cash'}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {booking.paymentType === 'deposit' ? 'Deposit' : 'Full'}
+                      </div>
+                      <div className={`text-xs ${
+                        booking.paymentStatus === 'paid' 
+                          ? 'text-green-600'
+                          : booking.paymentStatus === 'refunded'
+                          ? 'text-gray-600'
+                          : 'text-yellow-600'
+                      }`}>
+                        {booking.paymentStatus || 'Pending'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">
                       {formatAmount(booking.totalAmount)}
