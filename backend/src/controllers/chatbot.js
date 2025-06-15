@@ -120,8 +120,7 @@ const fetchDatabaseData = async () => {
       totalAmount: booking.totalAmount,
       status: booking.status,
       paymentStatus: booking.paymentStatus,
-      pickupLocation: booking.pickupLocation,
-      dropoffLocation: booking.dropoffLocation,
+
       includeDriver: booking.includeDriver,
       doorstepDelivery: booking.doorstepDelivery,
       driverFee: booking.driverFee,

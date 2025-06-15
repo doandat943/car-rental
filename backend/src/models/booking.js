@@ -17,8 +17,6 @@ const Booking = mongoose.models.Booking || mongoose.model('Booking', new mongoos
     enum: ['pending', 'paid', 'refunded'],
     default: 'pending'
   },
-  pickupLocation: { type: String, required: true },
-  dropoffLocation: { type: String, required: true },
   
   // Additional fields for premium services
   includeDriver: { type: Boolean, default: false },

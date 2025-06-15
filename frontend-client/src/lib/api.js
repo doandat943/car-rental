@@ -243,33 +243,6 @@ export const bookingsAPI = {
   cancelBooking: (id) => api.patch(`/bookings/${id}/cancel`),
 };
 
-// Locations API
-export const locationsAPI = {
-  getPickupLocations: async () => {
-    try {
-      console.log('Fetching pickup locations');
-      const response = await api.get('/locations/pickup-locations');
-      console.log('Raw pickup locations API response:', response);
-      return response;
-    } catch (error) {
-      console.error('Error fetching pickup locations:', error);
-      throw error;
-    }
-  },
-
-  getLocationById: async (id) => {
-    try {
-      console.log('Fetching location with ID:', id);
-      const response = await api.get(`/locations/${id}`);
-      console.log('Raw location details API response:', response);
-      return response;
-    } catch (error) {
-      console.error('Error fetching location details:', error);
-      throw error;
-    }
-  },
-};
-
 // Website info API
 export const websiteAPI = {
   getInfo: () => api.get('/website-info'),

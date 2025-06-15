@@ -143,20 +143,7 @@ export default function BookingConfirmationPage({ params }) {
                   <p>{formatDisplayDate(booking.endDate)}</p>
                 </div>
               </div>
-              <div className="flex items-start">
-                <FaMapMarkerAlt className="text-blue-500 mt-1 mr-3" />
-                <div>
-                  <h4 className="font-medium">Pickup Location</h4>
-                  <p>{booking.pickupLocation}</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <FaMapMarkerAlt className="text-blue-500 mt-1 mr-3" />
-                <div>
-                  <h4 className="font-medium">Return Location</h4>
-                  <p>{booking.dropoffLocation || booking.pickupLocation}</p>
-                </div>
-              </div>
+
             </div>
             
             {/* Additional Services */}

@@ -125,23 +125,19 @@ exports.createBooking = async (req, res) => {
       carId, 
       startDate, 
       endDate, 
-      pickupLocation, 
-      dropoffLocation,
       includeDriver = false,
       doorstepDelivery = false 
     } = req.body;
     
     // Validate required fields
-    if (!carId || !startDate || !endDate || !pickupLocation || !dropoffLocation) {
+    if (!carId || !startDate || !endDate) {
       return res.status(400).json({
         success: false,
         message: 'Missing required booking information',
         missingFields: {
           carId: !carId,
           startDate: !startDate,
-          endDate: !endDate,
-          pickupLocation: !pickupLocation,
-          dropoffLocation: !dropoffLocation
+          endDate: !endDate
         }
       });
     }
@@ -218,8 +214,6 @@ exports.createBooking = async (req, res) => {
         startDate,
         endDate,
         totalAmount,
-        pickupLocation,
-        dropoffLocation,
         includeDriver,
         doorstepDelivery,
         driverFee,

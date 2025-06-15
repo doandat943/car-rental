@@ -17,7 +17,9 @@ import {
   FaCheckCircle,
   FaHandshake,
   FaStar,
-  FaHeart
+  FaHeart,
+  FaHeadset,
+  FaCalendar
 } from 'react-icons/fa';
 
 export default function AboutPage() {
@@ -93,16 +95,16 @@ export default function AboutPage() {
       description: "No hidden fees. What you see is what you pay, with clear and upfront pricing."
     },
     {
-      icon: <FaMapMarkerAlt className="w-8 h-8 text-primary" />,
-      title: "Multiple Locations",
-      description: "Convenient pickup and drop-off locations throughout the city for your convenience."
+      icon: <FaCalendar className="w-8 h-8 text-primary" />,
+      title: "Easy Booking",
+      description: "Simple online booking process with instant confirmation and secure payments."
     }
   ];
 
   const stats = [
     { number: "10,000+", label: "Happy Customers", icon: <FaUsers className="w-6 h-6" /> },
     { number: "500+", label: "Vehicles Available", icon: <FaCar className="w-6 h-6" /> },
-    { number: "50+", label: "Pickup Locations", icon: <FaMapMarkerAlt className="w-6 h-6" /> },
+    { number: "24/7", label: "Customer Support", icon: <FaHeadset className="w-6 h-6" /> },
     { number: "5", label: "Years Experience", icon: <FaAward className="w-6 h-6" /> }
   ];
 

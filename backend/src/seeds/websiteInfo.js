@@ -79,8 +79,8 @@ const seedWebsiteInfo = async () => {
           answer: 'Our standard policy is \'full-to-full\'. You\'ll receive the car with a full tank and should return it with a full tank. Otherwise, a refueling fee will apply.'
         },
         {
-          question: 'Do you offer airport pickup?',
-          answer: 'Yes, we offer pickup and drop-off at major airports. Select your preferred airport location during the booking process.'
+          question: 'Do you offer car delivery service?',
+          answer: 'Yes, we offer doorstep delivery service for an additional fee. You can select this option during the booking process for convenient car delivery to your location.'
         },
         {
           question: 'What happens if I return the car late?',

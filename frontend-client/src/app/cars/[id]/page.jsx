@@ -3,7 +3,7 @@
 import { useState, useEffect, use, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { carsAPI, API_BASE_URL, locationsAPI, bookingsAPI } from '@/lib/api';
+import { carsAPI, API_BASE_URL, bookingsAPI } from '@/lib/api';
 import { FaStar, FaCheck, FaCalendarAlt } from 'react-icons/fa';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -35,15 +35,10 @@ function CarDetailPageContent({ params }) {
   const [totalPrice, setTotalPrice] = useState(0);
   
   // Additional state for new features
-  const [pickupLocation, setPickupLocation] = useState('airport');
   const [includeDriver, setIncludeDriver] = useState(false);
   const [doorstepDelivery, setDoorstepDelivery] = useState(false);
   const [driverFee, setDriverFee] = useState(0);
   const [deliveryFee, setDeliveryFee] = useState(0);
-  
-  // State for pickup locations
-  const [locations, setLocations] = useState([]);
-  const [loadingLocations, setLoadingLocations] = useState(true);
   
   // Car availability only for Book Now button
   const [carAvailability, setCarAvailability] = useState(null);
@@ -138,29 +133,7 @@ function CarDetailPageContent({ params }) {
     setHasProcessedUrlDates(true);
   }, [searchParams]);
 
-  useEffect(() => {
-    // Fetch pickup locations
-    const fetchLocations = async () => {
-      try {
-        setLoadingLocations(true);
-        const response = await locationsAPI.getPickupLocations();
-        if (response?.data?.data) {
-          setLocations(response.data.data);
-          
-          // Set default location if locations are available
-          if (response.data.data.length > 0) {
-            setPickupLocation(response.data.data[0].code);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching pickup locations:', err);
-      } finally {
-        setLoadingLocations(false);
-      }
-    };
-    
-    fetchLocations();
-  }, []);
+
 
   useEffect(() => {
     const fetchCarDetails = async () => {
@@ -338,8 +311,6 @@ function CarDetailPageContent({ params }) {
         carId: id,
         startDate: pickupDate,
         endDate: returnDate,
-        pickupLocation,
-        dropoffLocation: pickupLocation, // Same as pickup for now
         includeDriver,
         doorstepDelivery,
         totalAmount: totalPrice
@@ -902,27 +873,7 @@ function CarDetailPageContent({ params }) {
                   </div>
                 </div>
                 
-                <div className="mb-6">
-                  <label className="block mb-2 text-sm font-medium">Pickup Location</label>
-                  <select 
-                    className="w-full p-2 border rounded" 
-                    value={pickupLocation}
-                    onChange={(e) => setPickupLocation(e.target.value)}
-                    required
-                  >
-                    {loadingLocations ? (
-                      <option value="">Loading locations...</option>
-                    ) : locations.length === 0 ? (
-                      <option value="">No locations available</option>
-                    ) : (
-                      locations.map(location => (
-                        <option key={location._id} value={location.code}>
-                          {location.name} - {location.address}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
+
                 
                 {/* Additional Services Section */}
                 <div className="mb-6">

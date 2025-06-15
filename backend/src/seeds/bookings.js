@@ -80,8 +80,7 @@ const seedBookings = async () => {
         status,
         totalAmount: finalTotalAmount, // Updated to include premium service fees
         paymentStatus, // Changed from isPaid to paymentStatus
-        pickupLocation: 'Main Office, San Francisco',
-        dropoffLocation: 'Main Office, San Francisco',
+
         totalDays: duration, // Add required totalDays field
         includeDriver,
         doorstepDelivery,
