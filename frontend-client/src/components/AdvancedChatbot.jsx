@@ -183,8 +183,10 @@ export default function AdvancedChatbot() {
   // Scroll down when new messages arrive
   useEffect(() => {
     if (isOpen && activeTab === 'chat' && messages.length > 0) {
-      // Use immediate scroll for better UX
-      setTimeout(() => scrollToBottom('auto'), 0);
+      // Use requestAnimationFrame for optimal performance
+      requestAnimationFrame(() => {
+        scrollToBottom('smooth');
+      });
     }
   }, [messages, isOpen, activeTab]);
   
@@ -195,9 +197,9 @@ export default function AdvancedChatbot() {
     
     if (nextState && activeTab === 'chat') {
       // If chatbot is open and on chat tab, scroll down
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
+      requestAnimationFrame(() => {
+        scrollToBottom('smooth');
+      });
     } else if (!nextState) {
       // Remove old car results display when closing chatbot
       const oldResults = document.getElementById('immediate-car-results');
@@ -496,9 +498,13 @@ export default function AdvancedChatbot() {
   };
   
   // Function to scroll to the latest message with force scroll
-  const scrollToBottom = (behavior = 'auto') => {
+  const scrollToBottom = (behavior = 'smooth') => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior });
+      messagesEndRef.current.scrollIntoView({ 
+        behavior,
+        block: 'end',
+        inline: 'nearest'
+      });
     }
   };
   
@@ -525,7 +531,39 @@ export default function AdvancedChatbot() {
   };
   
   return (
-    <div className="fixed z-50 bottom-6 right-6 chatbot-container">
+    <>
+      <style jsx>{`
+        .chatbot-messages {
+          scroll-behavior: smooth;
+          scroll-padding-bottom: 20px;
+        }
+        
+        @media (prefers-reduced-motion: no-preference) {
+          .chatbot-messages {
+            scroll-behavior: smooth;
+          }
+        }
+        
+        /* Faster scroll animation */
+        .chatbot-messages::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .chatbot-messages::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 3px;
+        }
+        
+        .chatbot-messages::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 3px;
+        }
+        
+        .chatbot-messages::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+      `}</style>
+      <div className="fixed z-50 bottom-6 right-6 chatbot-container">
       {/* Chatbot button */}
       <button
         onClick={toggleChat}
@@ -1272,6 +1310,7 @@ export default function AdvancedChatbot() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 } 
