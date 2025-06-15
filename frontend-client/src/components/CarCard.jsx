@@ -12,11 +12,13 @@ import {
   FaCalendarAlt,
   FaTag
 } from 'react-icons/fa';
+import { useCalendarModal } from '@/contexts/CalendarModalContext';
 
 export default function CarCard({ car, viewMode = 'grid' }) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const { openModal } = useCalendarModal();
   
   // Properly handle images from API
   const displayImage = car.images && car.images.length > 0 
@@ -164,8 +166,12 @@ export default function CarCard({ car, viewMode = 'grid' }) {
               >
                 View Details
               </Link>
-              <button className="px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all font-medium">
-                Quick Book
+              <button 
+                onClick={() => openModal(car)}
+                className="px-6 py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all font-medium flex items-center justify-center gap-2"
+              >
+                <FaCalendarAlt />
+                View Calendar
               </button>
             </div>
           </div>
@@ -296,8 +302,12 @@ export default function CarCard({ car, viewMode = 'grid' }) {
           >
             View Details
           </Link>
-          <button className="w-full py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-all font-medium">
-            Quick Book
+          <button 
+            onClick={() => openModal(car)}
+            className="w-full py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-all font-medium flex items-center justify-center gap-2"
+          >
+            <FaCalendarAlt />
+            View Calendar
           </button>
         </div>
       </div>

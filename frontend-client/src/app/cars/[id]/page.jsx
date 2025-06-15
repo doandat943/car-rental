@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { carsAPI, API_BASE_URL, locationsAPI, bookingsAPI } from '@/lib/api';
 import { FaStar, FaCheck, FaCalendarAlt } from 'react-icons/fa';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { formatDate, getTomorrow, normalizeDate, hasBookedDatesBetween, findMaxValidEndDate, isDateInBookingWindow } from '@/utils/dateUtils';
 
@@ -15,8 +15,9 @@ const BookingCalendar = dynamic(() => import('@/components/BookingCalendar'), {
   loading: () => <p>Loading calendar...</p>
 });
 
-export default function CarDetailPage({ params }) {
+function CarDetailPageContent({ params }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { id } = use(params);
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -63,6 +64,9 @@ export default function CarDetailPage({ params }) {
   // State for refresh indicator
   const [isRefreshingCalendar, setIsRefreshingCalendar] = useState(false);
 
+  // Add flag to track if URL pre-selection has been processed
+  const [hasProcessedUrlDates, setHasProcessedUrlDates] = useState(false);
+
   // Function to refresh calendar data
   const refreshCalendarData = async () => {
     try {
@@ -106,6 +110,54 @@ export default function CarDetailPage({ params }) {
       setIsRefreshingCalendar(false);
     }
   };
+
+  // Handle URL query parameters for pre-selected dates
+  useEffect(() => {
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    
+    console.log('URL pre-selection useEffect triggered:', { startDate, endDate });
+    
+    if (startDate && endDate) {
+      // Validate dates
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      
+      console.log('Parsed date objects:', { startDateObj, endDateObj });
+      
+      // Check if dates are valid and in the future
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (!isNaN(startDateObj) && !isNaN(endDateObj) && startDateObj >= today && endDateObj > startDateObj) {
+        console.log('Setting dates from URL:', { startDate, endDate });
+        setPickupDate(startDate);
+        setReturnDate(endDate);
+        
+        // Calculate days and price
+        const days = Math.ceil((endDateObj - startDateObj) / (1000 * 60 * 60 * 24));
+        setTotalDays(days);
+        
+        // Mark that URL dates have been processed
+        setHasProcessedUrlDates(true);
+        
+        console.log('Pre-selected dates from URL applied:', { startDate, endDate, days });
+      } else {
+        console.log('Invalid dates from URL:', { 
+          startDateValid: !isNaN(startDateObj),
+          endDateValid: !isNaN(endDateObj),
+          startInFuture: startDateObj >= today,
+          endAfterStart: endDateObj > startDateObj
+        });
+        // Mark as processed even if invalid to prevent auto-find
+        setHasProcessedUrlDates(true);
+      }
+    } else {
+      // No URL dates, mark as processed to allow auto-find
+      console.log('No URL dates found, allowing auto-find');
+      setHasProcessedUrlDates(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Fetch pickup locations
@@ -196,18 +248,9 @@ export default function CarDetailPage({ params }) {
     }
   }, [id]);
 
-  // Separate availability checking from price calculation useEffect
+  // Price calculation useEffect - handles both manual selection and URL pre-selection
   useEffect(() => {
-    // Skip first render to avoid flash
-    if (isInitialLoad) {
-      // Reset isInitialLoad after initial data is loaded
-      if (car && !initialLoading) {
-        setIsInitialLoad(false);
-      }
-      return;
-    }
-    
-    // Only calculate total price, not availability
+    // Calculate total price when dates and car are available
     if (pickupDate && returnDate && car) {
       const start = new Date(pickupDate);
       const end = new Date(returnDate);
@@ -238,8 +281,20 @@ export default function CarDetailPage({ params }) {
       }
       
       setTotalPrice(total);
+      
+      console.log('Price calculated:', { 
+        pickupDate, 
+        returnDate, 
+        days: diffDays, 
+        basePrice: car.price, 
+        total 
+      });
+    } else if (car && !pickupDate && !returnDate) {
+      // Reset to base price when no dates selected
+      setTotalPrice(car.price || 0);
+      setTotalDays(1);
     }
-  }, [pickupDate, returnDate, car, includeDriver, doorstepDelivery, isInitialLoad, initialLoading]);
+  }, [pickupDate, returnDate, car, includeDriver, doorstepDelivery]);
 
   const handleBooking = async (e) => {
     // Prevent default form behavior
@@ -504,6 +559,20 @@ export default function CarDetailPage({ params }) {
     // If already searching for dates, don't search again
     if (autoFindingDates) return;
     
+    // Check if dates are already set from URL parameters - don't override them
+    const hasUrlDates = searchParams.get('startDate') && searchParams.get('endDate');
+    if (hasUrlDates) {
+      console.log('findAvailableDates: Dates already set from URL, skipping auto-find');
+      return;
+    }
+    
+    // Check if dates are already manually selected - don't override them
+    if (pickupDate && returnDate) {
+      console.log('findAvailableDates: Dates already selected, skipping auto-find');
+      return;
+    }
+    
+    console.log('findAvailableDates: Starting auto-find process');
     setAutoFindingDates(true);
     
     // Start from today
@@ -611,6 +680,49 @@ export default function CarDetailPage({ params }) {
       alert("Conflict detected with booked dates. Please select different dates.");
     }
   }, [pickupDate, returnDate, bookedDates]);
+
+  // Auto-find available dates when bookedDates are loaded, but only if no URL pre-selection
+  useEffect(() => {
+    console.log('Auto-find useEffect triggered:', {
+      hasProcessedUrlDates,
+      bookedDates: bookedDates?.length,
+      pickupDate,
+      returnDate,
+      autoFindingDates,
+      hasFoundAvailableDates
+    });
+    
+    // Wait until URL processing is complete
+    if (!hasProcessedUrlDates) {
+      console.log('Auto-find: Waiting for URL processing to complete');
+      return;
+    }
+    
+    // Check if URL has date parameters - if yes, never auto-find
+    const hasUrlDates = searchParams.get('startDate') && searchParams.get('endDate');
+    if (hasUrlDates) {
+      console.log('URL dates detected, skipping auto-find:', {
+        startDate: searchParams.get('startDate'),
+        endDate: searchParams.get('endDate')
+      });
+      return;
+    }
+    
+    // Only run auto-find if:
+    // 1. bookedDates have been loaded (not initial empty state)
+    // 2. Not already searching for dates
+    // 3. Haven't found available dates yet
+    if (bookedDates !== null && !autoFindingDates && !hasFoundAvailableDates) {
+      console.log('Auto-finding available dates...');
+      findAvailableDates();
+    } else {
+      console.log('Auto-find conditions not met:', {
+        bookedDatesLoaded: bookedDates !== null,
+        notSearching: !autoFindingDates,
+        notFoundYet: !hasFoundAvailableDates
+      });
+    }
+  }, [bookedDates, autoFindingDates, hasFoundAvailableDates, hasProcessedUrlDates, searchParams]);
 
   if (initialLoading) {
     return (
@@ -966,5 +1078,13 @@ export default function CarDetailPage({ params }) {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function CarDetailPage({ params }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CarDetailPageContent params={params} />
+    </Suspense>
   );
 } 

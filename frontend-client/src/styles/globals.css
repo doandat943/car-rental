@@ -440,7 +440,50 @@ html {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: #a8a8a8;
+}
+
+/* Smooth scroll behavior */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Modal z-index utilities */
+.modal-backdrop {
+  z-index: 9999;
+}
+
+.modal-content {
+  z-index: 10000;
+}
+
+/* Prevent body scroll when modal is open */
+.modal-open {
+  overflow: hidden;
+}
+
+/* Ensure modal content is properly sized */
+.modal-content {
+  min-height: 0;
+}
+
+/* Custom scrollbar for modal content */
+.modal-content .flex-1::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-content .flex-1::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.modal-content .flex-1::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
+}
+
+.modal-content .flex-1::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 /* Focus Styles */
