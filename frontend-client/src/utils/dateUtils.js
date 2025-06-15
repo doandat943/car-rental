@@ -28,6 +28,24 @@ export const normalizeDate = (date) => {
   return normalized;
 };
 
+// Check if date is within 30-day booking window
+export const isDateInBookingWindow = (date) => {
+  if (!(date instanceof Date) || isNaN(date)) {
+    return false;
+  }
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const maxAllowedDate = new Date(today);
+  maxAllowedDate.setDate(today.getDate() + 30);
+  
+  const compareDate = new Date(date);
+  compareDate.setHours(0, 0, 0, 0);
+  
+  return compareDate >= today && compareDate <= maxAllowedDate;
+};
+
 export const hasBookedDatesBetween = (startDate, endDate, isDateBookedFn) => {
   if (!startDate || !endDate || !isDateBookedFn) return false;
   

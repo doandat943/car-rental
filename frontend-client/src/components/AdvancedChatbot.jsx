@@ -567,7 +567,7 @@ export default function AdvancedChatbot() {
     
     return (
       <div className="mb-4">
-        <div className="inline-block rounded-lg px-4 py-2 bg-gray-200 text-gray-800">
+        <div className="inline-block px-4 py-2 text-gray-800 bg-gray-200 rounded-lg">
           <div className="flex space-x-1">
             <div className="typing-dot"></div>
             <div className="typing-dot"></div>
@@ -579,7 +579,7 @@ export default function AdvancedChatbot() {
   };
   
   return (
-    <div className="fixed bottom-6 right-6 z-50 chatbot-container">
+    <div className="fixed z-50 bottom-6 right-6 chatbot-container">
       {/* Chatbot button */}
       <button
         onClick={toggleChat}
@@ -587,12 +587,12 @@ export default function AdvancedChatbot() {
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? (
-          <FaTimes className="text-white text-xl" />
+          <FaTimes className="text-xl text-white" />
         ) : (
           <>
-            <FaCommentDots className="text-white text-xl" />
+            <FaCommentDots className="text-xl text-white" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              <span className="absolute flex items-center justify-center w-5 h-5 text-xs text-white bg-red-500 rounded-full -top-1 -right-1">
                 {unreadCount}
               </span>
             )}
@@ -604,8 +604,8 @@ export default function AdvancedChatbot() {
       {isOpen && (
         <div className="absolute bottom-16 right-0 w-80 md:w-96 bg-white rounded-lg shadow-xl overflow-hidden flex flex-col transition-all duration-300 h-[750px] chatbox-container">
           {/* Header - Fixed */}
-          <div className="bg-primary text-white p-4 flex items-center sticky top-0 z-10">
-            <FaRobot className="text-xl mr-2" />
+          <div className="sticky top-0 z-10 flex items-center p-4 text-white bg-primary">
+            <FaRobot className="mr-2 text-xl" />
             <div className="flex-1">
               <h3 className="font-semibold">CarRental Assistant</h3>
               <p className="text-xs opacity-80">Automated support 24/7</p>
@@ -649,8 +649,8 @@ export default function AdvancedChatbot() {
               <div ref={chatTabRef} className="flex-1 p-4 overflow-y-auto chatbot-messages" style={{ height: '600px' }}>
                 {Object.keys(groupedMessages).map(date => (
                   <div key={date}>
-                    <div className="text-center my-3">
-                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                    <div className="my-3 text-center">
+                      <span className="px-2 py-1 text-xs text-gray-600 bg-gray-200 rounded-full">
                         <span suppressHydrationWarning>{getFormattedDate(date)}</span>
                       </span>
                     </div>
@@ -666,12 +666,112 @@ export default function AdvancedChatbot() {
                           {message.sender === 'bot' && !message.isSystem && (
                             <div className="flex items-center mb-1">
                               <div className="flex items-center">
-                                <FaRobot className="text-xs mr-1" />
+                                <FaRobot className="mr-1 text-xs" />
                                 <span className="text-xs font-medium">Assistant</span>
                               </div>
                             </div>
                           )}
                           <p className="text-sm">{renderMessageContent(message.text)}</p>
+                          
+                          {/* Booking calendar - if message contains booking calendar data */}
+                          {message.data && 
+                            message.data.type === 'booking_calendar' && 
+                            message.data.car && (
+                            <div className="mt-3">
+                              <div className="flex items-center mb-2 font-medium text-gray-100">
+                                <FaCar className="mr-2" /> Booking Calendar for {message.data.car.brand} {message.data.car.model}
+                              </div>
+                              
+                              <div className="p-4 text-gray-800 bg-white rounded-lg shadow-sm">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div>
+                                    <h4 className="text-lg font-semibold text-primary">
+                                      {message.data.car.brand} {message.data.car.model}
+                                      {message.data.car.year && <span className="ml-1 text-gray-500">({message.data.car.year})</span>}
+                                    </h4>
+                                    <div className="text-xl font-bold text-green-600">
+                                      ${message.data.car.price?.toLocaleString()}/day
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Show current bookings */}
+                                {message.data.bookings && message.data.bookings.length > 0 && (
+                                  <div className="mb-4">
+                                    <h5 className="mb-2 font-medium text-gray-700">🚫 Booked Periods:</h5>
+                                    <div className="space-y-2">
+                                      {message.data.bookings.map((booking, idx) => (
+                                        <div key={idx} className="p-2 text-sm border border-red-200 rounded-md bg-red-50">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-red-700">
+                                              {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
+                                            </span>
+                                            <span className={`px-2 py-1 rounded-full text-xs ${
+                                              booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                              booking.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
+                                              'bg-gray-100 text-gray-700'
+                                            }`}>
+                                              {booking.status}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Show available periods */}
+                                {message.data.availablePeriods && message.data.availablePeriods.length > 0 && (
+                                  <div className="mb-4">
+                                    <h5 className="mb-2 font-medium text-gray-700">✅ Available Periods:</h5>
+                                    <div className="space-y-2">
+                                      {message.data.availablePeriods.map((period, idx) => {
+                                        const startDate = new Date(period.startDate);
+                                        const endDate = new Date(period.endDate);
+                                        const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+                                        
+                                        return (
+                                          <div key={idx} className="p-2 text-sm border border-green-200 rounded-md bg-green-50">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-green-700">
+                                                {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
+                                              </span>
+                                              <span className="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">
+                                                {daysDiff} days available
+                                              </span>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Show message if no availability */}
+                                {(!message.data.availablePeriods || message.data.availablePeriods.length === 0) && 
+                                 message.data.bookings && message.data.bookings.length > 0 && (
+                                  <div className="mb-4">
+                                    <div className="p-3 text-sm border border-yellow-200 rounded-md bg-yellow-50">
+                                      <div className="text-yellow-700">
+                                        ⚠️ This car is fully booked for the next 30 days. Please check back later or choose another car.
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Book this car button */}
+                                <div className="text-center">
+                                  <Link 
+                                    href={`/cars/${message.data.car.id}`} 
+                                    className="inline-block px-6 py-2 text-sm font-medium text-white transition-colors rounded-full bg-primary hover:bg-primary-dark"
+                                  >
+                                    View Calendar & Book This Car
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                           
                           {/* Car search result cards - if message contains car data */}
                           {message.data && 
@@ -679,14 +779,14 @@ export default function AdvancedChatbot() {
                             message.data.cars && 
                             message.data.cars.length > 0 && (
                             <div className="mt-3 space-y-3">
-                              <div className="text-gray-100 font-medium mb-2 flex items-center justify-between">
+                              <div className="flex items-center justify-between mb-2 font-medium text-gray-100">
                                 <div className="flex items-center">
                                   <FaCar className="mr-2" /> Found {message.data.cars.length} matching cars:
                                 </div>
                                 {message.data.cars.length > 1 && (
                                   <button 
                                     onClick={toggleViewMode} 
-                                    className="text-xs bg-gray-700 text-white rounded-full px-2 py-1 flex items-center hover:bg-gray-600 transition-colors"
+                                    className="flex items-center px-2 py-1 text-xs text-white transition-colors bg-gray-700 rounded-full hover:bg-gray-600"
                                   >
                                     {viewMode === 'carousel' ? <><FaList className="mr-1" /> List view</> : <><FaImages className="mr-1" /> Card view</>}
                                   </button>
@@ -695,7 +795,7 @@ export default function AdvancedChatbot() {
                               
                               {/* Carousel Mode */}
                               {viewMode === 'carousel' && message.data.cars.length > 0 && (
-                                <div className="relative bg-white rounded-lg overflow-hidden shadow-sm">
+                                <div className="relative overflow-hidden bg-white rounded-lg shadow-sm">
                                   {/* Current Car Card */}
                                   <div className="p-4 text-gray-800">
                                     {/* Ensure current car exists */}
@@ -709,37 +809,37 @@ export default function AdvancedChatbot() {
                                       return (
                                         <>
                                           {/* Car Content */}
-                                          <div className="flex justify-between items-center mb-2">
+                                          <div className="flex items-center justify-between mb-2">
                                             <div>
-                                              <h4 className="font-semibold text-primary text-lg">
+                                              <h4 className="text-lg font-semibold text-primary">
                                                 {currentCar.make || currentCar.brand} {currentCar.model}
-                                                {currentCar.year && <span className="text-gray-500 ml-1">({currentCar.year})</span>}
+                                                {currentCar.year && <span className="ml-1 text-gray-500">({currentCar.year})</span>}
                                               </h4>
                                             </div>
-                                            <span className="text-xs bg-primary text-white rounded-full px-3 py-1">
+                                            <span className="px-3 py-1 text-xs text-white rounded-full bg-primary">
                                               {currentCar.category || 'Car'}
                                             </span>
                                           </div>
                                           
                                           {/* Car Price */}
-                                          <div className="text-green-600 font-bold text-xl mb-3">
+                                          <div className="mb-3 text-xl font-bold text-green-600">
                                             ${currentCar.price?.toLocaleString()}/day
                                           </div>
                                           
                                           {/* Car Details */}
-                                          <div className="space-y-2 mb-3">
+                                          <div className="mb-3 space-y-2">
                                             {currentCar.transmission && (
-                                              <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm">
+                                              <div className="px-3 py-1 text-sm text-blue-600 rounded-md bg-blue-50">
                                                 <span className="font-medium">Transmission:</span> {currentCar.transmission}
                                               </div>
                                             )}
                                             {currentCar.seats && (
-                                              <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm">
+                                              <div className="px-3 py-1 text-sm text-blue-600 rounded-md bg-blue-50">
                                                 <span className="font-medium">Seats:</span> {currentCar.seats} seats
                                               </div>
                                             )}
                                             {currentCar.fuelType && (
-                                              <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm">
+                                              <div className="px-3 py-1 text-sm text-blue-600 rounded-md bg-blue-50">
                                                 <span className="font-medium">Fuel:</span> {currentCar.fuelType}
                                               </div>
                                             )}
@@ -749,12 +849,12 @@ export default function AdvancedChatbot() {
                                           {currentCar.features && currentCar.features.length > 0 && (
                                             <div className="flex flex-wrap gap-1 mb-4">
                                               {currentCar.features.slice(0, 3).map((feature, i) => (
-                                                <span key={i} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                                <span key={i} className="px-2 py-1 text-xs text-purple-700 bg-purple-100 rounded">
                                                   {feature}
                                                 </span>
                                               ))}
                                               {currentCar.features.length > 3 && (
-                                                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                                <span className="px-2 py-1 text-xs text-purple-700 bg-purple-100 rounded">
                                                   +{currentCar.features.length - 3} more
                                                 </span>
                                               )}
@@ -762,7 +862,7 @@ export default function AdvancedChatbot() {
                                           )}
                                           
                                           {/* View details button */}
-                                          <div className="text-center mt-3">
+                                          <div className="mt-3 text-center">
                                             <Link href={`/cars/${currentCar.id}`} className="inline-block text-sm bg-primary text-white px-6 py-1.5 rounded-full hover:bg-primary-dark transition-colors font-medium">
                                               View details
                                             </Link>
@@ -775,7 +875,7 @@ export default function AdvancedChatbot() {
                                     {message.data.cars.length > 1 && (
                                       <>
                                         {/* Pagination Indicators */}
-                                        <div className="flex justify-center gap-2 mb-3 mt-4">
+                                        <div className="flex justify-center gap-2 mt-4 mb-3">
                                           {message.data.cars.map((_, idx) => (
                                             <button
                                               key={idx}
@@ -791,19 +891,19 @@ export default function AdvancedChatbot() {
                                         </div>
                                         
                                         {/* Left/Right Navigation Buttons */}
-                                        <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
+                                        <div className="absolute transform -translate-y-1/2 left-2 top-1/2">
                                           <button 
                                             onClick={() => prevCar(message.data.cars.length)} 
-                                            className="bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-md text-primary hover:bg-gray-50 transition-colors"
+                                            className="flex items-center justify-center w-8 h-8 transition-colors bg-white rounded-full shadow-md text-primary hover:bg-gray-50"
                                             aria-label="Previous car"
                                           >
                                             <FaChevronLeft />
                                           </button>
                                         </div>
-                                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                        <div className="absolute transform -translate-y-1/2 right-2 top-1/2">
                                           <button 
                                             onClick={() => nextCar(message.data.cars.length)} 
-                                            className="bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-md text-primary hover:bg-gray-50 transition-colors"
+                                            className="flex items-center justify-center w-8 h-8 transition-colors bg-white rounded-full shadow-md text-primary hover:bg-gray-50"
                                             aria-label="Next car"
                                           >
                                             <FaChevronRight />
@@ -819,37 +919,37 @@ export default function AdvancedChatbot() {
                               {viewMode === 'list' && (
                                 <div className="space-y-3">
                                   {message.data.cars.map((car, index) => (
-                                    <div key={index} className="bg-white rounded-lg p-4 text-gray-800 shadow-sm">
+                                    <div key={index} className="p-4 text-gray-800 bg-white rounded-lg shadow-sm">
                                       {/* Header with car name and type */}
-                                      <div className="flex justify-between items-center mb-2">
+                                      <div className="flex items-center justify-between mb-2">
                                         <div>
-                                          <h4 className="font-semibold text-primary text-lg">
+                                          <h4 className="text-lg font-semibold text-primary">
                                             {car.make || car.brand} {car.model}
-                                            {car.year && <span className="text-gray-500 ml-1">({car.year})</span>}
+                                            {car.year && <span className="ml-1 text-gray-500">({car.year})</span>}
                                           </h4>
                                         </div>
-                                        <span className="text-xs bg-primary text-white rounded-full px-3 py-1">{car.category || 'Car'}</span>
+                                        <span className="px-3 py-1 text-xs text-white rounded-full bg-primary">{car.category || 'Car'}</span>
                                       </div>
                                       
                                       {/* Display price with highlight color */}
-                                      <div className="text-green-600 font-bold text-xl mb-3">
+                                      <div className="mb-3 text-xl font-bold text-green-600">
                                         ${car.price?.toLocaleString()}/day
                                       </div>
                                       
                                       {/* Car Details */}
                                       <div className="flex flex-wrap gap-2 mb-3">
                                         {car.transmission && (
-                                          <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm">
+                                          <div className="px-3 py-1 text-sm text-blue-600 rounded-md bg-blue-50">
                                             <span className="font-medium">Transmission:</span> {car.transmission}
                                           </div>
                                         )}
                                         {car.seats && (
-                                          <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm">
+                                          <div className="px-3 py-1 text-sm text-blue-600 rounded-md bg-blue-50">
                                             <span className="font-medium">Seats:</span> {car.seats} seats
                                           </div>
                                         )}
                                         {car.fuelType && (
-                                          <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm">
+                                          <div className="px-3 py-1 text-sm text-blue-600 rounded-md bg-blue-50">
                                             <span className="font-medium">Fuel:</span> {car.fuelType}
                                           </div>
                                         )}
@@ -859,12 +959,12 @@ export default function AdvancedChatbot() {
                                       {car.features && car.features.length > 0 && (
                                         <div className="flex flex-wrap gap-1 mb-3">
                                           {car.features.slice(0, 3).map((feature, i) => (
-                                            <span key={i} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                            <span key={i} className="px-2 py-1 text-xs text-purple-700 bg-purple-100 rounded">
                                               {feature}
                                             </span>
                                           ))}
                                           {car.features.length > 3 && (
-                                            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                            <span className="px-2 py-1 text-xs text-purple-700 bg-purple-100 rounded">
                                               +{car.features.length - 3} more
                                             </span>
                                           )}
@@ -873,7 +973,7 @@ export default function AdvancedChatbot() {
                                       
                                       {/* View details button */}
                                       <div className="text-right">
-                                        <Link href={`/cars/${car.id}`} className="inline-block text-sm bg-primary text-white px-4 py-1 rounded-full hover:bg-primary-dark transition-colors">
+                                        <Link href={`/cars/${car.id}`} className="inline-block px-4 py-1 text-sm text-white transition-colors rounded-full bg-primary hover:bg-primary-dark">
                                           View details
                                         </Link>
                                       </div>
@@ -883,10 +983,10 @@ export default function AdvancedChatbot() {
                               )}
                               
                               {message.data.cars.length > 3 && viewMode === 'list' && (
-                                <div className="text-center mt-2">
-                                  <Link href="/cars" className="text-primary hover:underline inline-flex items-center">
+                                <div className="mt-2 text-center">
+                                  <Link href="/cars" className="inline-flex items-center text-primary hover:underline">
                                     <span>View all {message.data.cars.length} cars</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                     </svg>
                                   </Link>
@@ -895,7 +995,7 @@ export default function AdvancedChatbot() {
                             </div>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="mt-1 text-xs text-gray-500">
                           <span suppressHydrationWarning>{formatTime(message.timestamp)}</span>
                         </div>
                       </div>
@@ -915,11 +1015,11 @@ export default function AdvancedChatbot() {
                   value={inputValue}
                   onChange={handleInputChange}
                   placeholder="Type your message..."
-                  className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <button
                   type="submit"
-                  className="bg-indigo-600 text-white rounded-r-lg px-4 hover:bg-opacity-90 transition-colors focus:outline-none disabled:opacity-50"
+                  className="px-4 text-white transition-colors bg-indigo-600 rounded-r-lg hover:bg-opacity-90 focus:outline-none disabled:opacity-50"
                   disabled={!inputValue.trim() || isTyping}
                 >
                   <FaArrowUp />
@@ -927,10 +1027,10 @@ export default function AdvancedChatbot() {
               </form>
               
               {/* AI mode status indicator - Fixed at bottom for Chat tab only */}
-              <div className="border-t border-gray-200 bg-gray-50 sticky bottom-0 z-10">
-                <div className="px-3 py-1 flex items-center justify-between">
+              <div className="sticky bottom-0 z-10 border-t border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between px-3 py-1">
                   <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full mr-2 bg-indigo-600"></div>
+                    <div className="w-2 h-2 mr-2 bg-indigo-600 rounded-full"></div>
                     <span className="text-xs text-gray-500">
                       AI mode: On - Using Gemini
                     </span>
@@ -949,31 +1049,31 @@ export default function AdvancedChatbot() {
             <div ref={helpTabRef} className={`${activeTab === 'help' ? 'block' : 'hidden'} flex-1 overflow-y-auto p-4`} style={{ minHeight: '600px' }}>
               {/* Search bar */}
               <div className="relative mb-4">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <FaSearch className="text-gray-400" />
                 </div>
                 <input
                   type="text"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="block w-full py-2 pl-10 pr-3 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary"
                   placeholder="Search help topics..."
                 />
               </div>
               
-              <h3 className="font-medium text-gray-800 mb-4 text-xl">Frequently Asked Questions</h3>
+              <h3 className="mb-4 text-xl font-medium text-gray-800">Frequently Asked Questions</h3>
               
-              <div className="space-y-3 mb-6">
+              <div className="mb-6 space-y-3">
                 {/* FAQ Item 1 */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-white p-4 cursor-pointer hover:bg-gray-50">
+                <div className="overflow-hidden border border-gray-200 rounded-lg">
+                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
                     <div className="flex items-center">
                       <div className="flex-1">
-                        <h4 className="font-medium text-primary text-lg">How do I book a car?</h4>
+                        <h4 className="text-lg font-medium text-primary">How do I book a car?</h4>
                       </div>
-                      <div className="text-green-500 ml-2">
+                      <div className="ml-2 text-green-500">
                         <FaCircle className="text-xs" />
                       </div>
                     </div>
-                    <p className="text-gray-600 mt-2">
+                    <p className="mt-2 text-gray-600">
                       Browse the list of cars, select one that meets your needs. Choose your pickup and return dates, 
                       then follow the checkout process. You'll receive a confirmation email once your booking is complete.
                     </p>
@@ -981,17 +1081,17 @@ export default function AdvancedChatbot() {
                 </div>
                 
                 {/* FAQ Item 2 */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-white p-4 cursor-pointer hover:bg-gray-50">
+                <div className="overflow-hidden border border-gray-200 rounded-lg">
+                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
                     <div className="flex items-center">
                       <div className="flex-1">
-                        <h4 className="font-medium text-primary text-lg">Can I cancel my booking?</h4>
+                        <h4 className="text-lg font-medium text-primary">Can I cancel my booking?</h4>
                       </div>
-                      <div className="text-green-500 ml-2">
+                      <div className="ml-2 text-green-500">
                         <FaCircle className="text-xs" />
                       </div>
                     </div>
-                    <p className="text-gray-600 mt-2">
+                    <p className="mt-2 text-gray-600">
                       Yes, you can cancel your booking up to 24 hours before the scheduled pickup time for a full refund.
                       Cancellations within 24 hours may be subject to a cancellation fee.
                     </p>
@@ -999,17 +1099,17 @@ export default function AdvancedChatbot() {
                 </div>
                 
                 {/* FAQ Item 3 */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-white p-4 cursor-pointer hover:bg-gray-50">
+                <div className="overflow-hidden border border-gray-200 rounded-lg">
+                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
                     <div className="flex items-center">
                       <div className="flex-1">
-                        <h4 className="font-medium text-primary text-lg">What payment methods are accepted?</h4>
+                        <h4 className="text-lg font-medium text-primary">What payment methods are accepted?</h4>
                       </div>
-                      <div className="text-green-500 ml-2">
+                      <div className="ml-2 text-green-500">
                         <FaCircle className="text-xs" />
                       </div>
                     </div>
-                    <p className="text-gray-600 mt-2">
+                    <p className="mt-2 text-gray-600">
                       We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and digital wallets 
                       including Apple Pay and Google Pay. Cash payments are not accepted.
                     </p>
@@ -1017,17 +1117,17 @@ export default function AdvancedChatbot() {
                 </div>
                 
                 {/* FAQ Item 4 */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-white p-4 cursor-pointer hover:bg-gray-50">
+                <div className="overflow-hidden border border-gray-200 rounded-lg">
+                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
                     <div className="flex items-center">
                       <div className="flex-1">
-                        <h4 className="font-medium text-primary text-lg">Is insurance included?</h4>
+                        <h4 className="text-lg font-medium text-primary">Is insurance included?</h4>
                       </div>
-                      <div className="text-green-500 ml-2">
+                      <div className="ml-2 text-green-500">
                         <FaCircle className="text-xs" />
                       </div>
                     </div>
-                    <p className="text-gray-600 mt-2">
+                    <p className="mt-2 text-gray-600">
                       Basic insurance is included in all rentals. This covers liability and collision damage. 
                       Additional coverage options are available during the booking process for extra peace of mind.
                     </p>
@@ -1035,17 +1135,17 @@ export default function AdvancedChatbot() {
                 </div>
                 
                 {/* FAQ Item 5 */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-white p-4 cursor-pointer hover:bg-gray-50">
+                <div className="overflow-hidden border border-gray-200 rounded-lg">
+                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
                     <div className="flex items-center">
                       <div className="flex-1">
-                        <h4 className="font-medium text-primary text-lg">What if I return the car late?</h4>
+                        <h4 className="text-lg font-medium text-primary">What if I return the car late?</h4>
                       </div>
-                      <div className="text-green-500 ml-2">
+                      <div className="ml-2 text-green-500">
                         <FaCircle className="text-xs" />
                       </div>
                     </div>
-                    <p className="text-gray-600 mt-2">
+                    <p className="mt-2 text-gray-600">
                       Late returns are charged at an hourly rate of the daily rental price, up to one full day.
                       Returns more than 24 hours late may incur additional penalties. Please contact us if you
                       expect to be late.
@@ -1054,17 +1154,17 @@ export default function AdvancedChatbot() {
                 </div>
                 
                 {/* FAQ Item 6 */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-white p-4 cursor-pointer hover:bg-gray-50">
+                <div className="overflow-hidden border border-gray-200 rounded-lg">
+                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
                     <div className="flex items-center">
                       <div className="flex-1">
-                        <h4 className="font-medium text-primary text-lg">Do I need to refill the fuel tank?</h4>
+                        <h4 className="text-lg font-medium text-primary">Do I need to refill the fuel tank?</h4>
                       </div>
-                      <div className="text-green-500 ml-2">
+                      <div className="ml-2 text-green-500">
                         <FaCircle className="text-xs" />
                       </div>
                     </div>
-                    <p className="text-gray-600 mt-2">
+                    <p className="mt-2 text-gray-600">
                       Yes, all vehicles should be returned with the same fuel level as when they were picked up.
                       If returned with less fuel, you'll be charged for refueling plus a service fee.
                     </p>
@@ -1072,17 +1172,17 @@ export default function AdvancedChatbot() {
                 </div>
                 
                 {/* FAQ Item 7 */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-white p-4 cursor-pointer hover:bg-gray-50">
+                <div className="overflow-hidden border border-gray-200 rounded-lg">
+                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
                     <div className="flex items-center">
                       <div className="flex-1">
-                        <h4 className="font-medium text-primary text-lg">What documents do I need to rent a car?</h4>
+                        <h4 className="text-lg font-medium text-primary">What documents do I need to rent a car?</h4>
                       </div>
-                      <div className="text-green-500 ml-2">
+                      <div className="ml-2 text-green-500">
                         <FaCircle className="text-xs" />
                       </div>
                     </div>
-                    <p className="text-gray-600 mt-2">
+                    <p className="mt-2 text-gray-600">
                       You'll need a valid driver's license, a credit card in your name, and a valid ID or passport.
                       International customers may also need an International Driving Permit depending on their country of origin.
                     </p>
@@ -1091,16 +1191,16 @@ export default function AdvancedChatbot() {
               </div>
               
               {/* Need more help section */}
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <h3 className="font-medium text-gray-800 mb-3 text-xl">Need more help?</h3>
-                <p className="text-gray-600 mb-3">
+              <div className="pt-4 mt-6 border-t border-gray-200">
+                <h3 className="mb-3 text-xl font-medium text-gray-800">Need more help?</h3>
+                <p className="mb-3 text-gray-600">
                   If you couldn't find the answer to your question, please contact our support team:
                 </p>
                 <div className="mt-2">
-                  <a href="mailto:support@carrental.com" className="text-primary hover:underline block mb-2">
+                  <a href="mailto:support@carrental.com" className="block mb-2 text-primary hover:underline">
                     support@carrental.com
                   </a>
-                  <a href="tel:+84123456789" className="text-primary hover:underline block">
+                  <a href="tel:+84123456789" className="block text-primary hover:underline">
                     +84 123 456 789
                   </a>
                 </div>
@@ -1109,17 +1209,17 @@ export default function AdvancedChatbot() {
             
             {/* Search Tab */}
             <div ref={searchTabRef} className={`${activeTab === 'search' ? 'block' : 'hidden'} flex-1 overflow-y-auto p-4`} style={{ minHeight: '600px' }}>
-              <h3 className="font-medium text-gray-800 mb-4">Find the Right Car</h3>
+              <h3 className="mb-4 font-medium text-gray-800">Find the Right Car</h3>
               
-              <div className="bg-indigo-50 rounded-lg p-4 mb-6">
+              <div className="p-4 mb-6 rounded-lg bg-indigo-50">
                 <div className="flex items-start">
-                  <FaInfoCircle className="text-indigo-600 mt-1 mr-3" />
+                  <FaInfoCircle className="mt-1 mr-3 text-indigo-600" />
                   <div>
-                    <p className="text-gray-700 mb-2">
+                    <p className="mb-2 text-gray-700">
                       Chat with our AI assistant to find the perfect car for your needs.
                       The assistant can help you find cars based on:
                     </p>
-                    <ul className="text-gray-600 text-sm list-disc pl-5 space-y-1">
+                    <ul className="pl-5 space-y-1 text-sm text-gray-600 list-disc">
                       <li>Car type (sedan, SUV, luxury...)</li>
                       <li>Brand (Toyota, Honda, BMW...)</li>
                       <li>Number of seats</li>
@@ -1139,9 +1239,9 @@ export default function AdvancedChatbot() {
                       handleQuickQuestion("I need a sedan");
                     }, 100);
                   }}
-                  className="flex flex-col items-center justify-center bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                  className="flex flex-col items-center justify-center p-3 transition-colors bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
-                  <div className="bg-blue-100 text-blue-600 p-2 rounded-full mb-2">
+                  <div className="p-2 mb-2 text-blue-600 bg-blue-100 rounded-full">
                     <FaCar />
                   </div>
                   <span className="text-sm font-medium">Sedan</span>
@@ -1154,9 +1254,9 @@ export default function AdvancedChatbot() {
                       handleQuickQuestion("I need an SUV");
                     }, 100);
                   }}
-                  className="flex flex-col items-center justify-center bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                  className="flex flex-col items-center justify-center p-3 transition-colors bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
-                  <div className="bg-green-100 text-green-600 p-2 rounded-full mb-2">
+                  <div className="p-2 mb-2 text-green-600 bg-green-100 rounded-full">
                     <FaCar />
                   </div>
                   <span className="text-sm font-medium">SUV</span>
@@ -1169,16 +1269,16 @@ export default function AdvancedChatbot() {
                       handleQuickQuestion("I need a luxury car");
                     }, 100);
                   }}
-                  className="flex flex-col items-center justify-center bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                  className="flex flex-col items-center justify-center p-3 transition-colors bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
-                  <div className="bg-purple-100 text-purple-600 p-2 rounded-full mb-2">
+                  <div className="p-2 mb-2 text-purple-600 bg-purple-100 rounded-full">
                     <FaCar />
                   </div>
                   <span className="text-sm font-medium">Luxury</span>
                 </button>
               </div>
               
-              <div className="text-center mb-6">
+              <div className="mb-6 text-center">
                 <button 
                   onClick={() => {
                     setActiveTab('chat');
@@ -1188,14 +1288,14 @@ export default function AdvancedChatbot() {
                       if (input) input.focus();
                     }, 100);
                   }}
-                  className="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="px-6 py-2 text-white transition-colors bg-indigo-600 rounded-lg hover:bg-indigo-700"
                 >
                   <FaCommentDots className="inline mr-2" /> Start chatting
                 </button>
               </div>
               
-              <div className="border-t border-gray-200 pt-4">
-                <h4 className="font-medium text-gray-700 mb-3">Suggested questions:</h4>
+              <div className="pt-4 border-t border-gray-200">
+                <h4 className="mb-3 font-medium text-gray-700">Suggested questions:</h4>
                 <div className="space-y-2">
                   {[
                     "I need to find a sedan under $100 per day",
@@ -1206,7 +1306,7 @@ export default function AdvancedChatbot() {
                     "I need a fuel-efficient car"
                   ].map((question, index) => (
                     <div key={index} 
-                      className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer flex items-center"
+                      className="flex items-center p-2 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
                       onClick={() => {
                         setActiveTab('chat');
                         setTimeout(() => {
@@ -1214,7 +1314,7 @@ export default function AdvancedChatbot() {
                         }, 100);
                       }}
                     >
-                      <div className="bg-primary text-white p-1 rounded-full mr-2 flex-shrink-0">
+                      <div className="flex-shrink-0 p-1 mr-2 text-white rounded-full bg-primary">
                         <FaCommentDots className="text-xs" />
                       </div>
                       <p className="text-sm text-gray-700">"{question}"</p>

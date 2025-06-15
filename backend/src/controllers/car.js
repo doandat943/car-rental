@@ -399,7 +399,7 @@ exports.checkCarStatus = async (req, res) => {
       car: id,
       status: { $nin: ['cancelled'] },
       startDate: { $gte: new Date(new Date().setDate(new Date().getDate() - 30)) }, // Last 30 days
-      endDate: { $lte: new Date(new Date().setDate(new Date().getDate() + 90)) }    // Next 90 days
+      endDate: { $lte: new Date(new Date().setDate(new Date().getDate() + 30)) }    // Next 30 days
     }).select('startDate endDate status');
     
     // Format bookings for calendar

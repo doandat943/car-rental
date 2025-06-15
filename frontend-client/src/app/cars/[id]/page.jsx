@@ -7,7 +7,7 @@ import { carsAPI, API_BASE_URL, locationsAPI, bookingsAPI } from '@/lib/api';
 import { FaStar, FaCheck, FaCalendarAlt } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { formatDate, getTomorrow, normalizeDate, hasBookedDatesBetween, findMaxValidEndDate } from '@/utils/dateUtils';
+import { formatDate, getTomorrow, normalizeDate, hasBookedDatesBetween, findMaxValidEndDate, isDateInBookingWindow } from '@/utils/dateUtils';
 
 // Dynamically import the BookingCalendar to avoid SSR issues with date-fns
 const BookingCalendar = dynamic(() => import('@/components/BookingCalendar'), {
@@ -68,15 +68,15 @@ export default function CarDetailPage({ params }) {
     try {
       setIsRefreshingCalendar(true);
       
-      // Calculate current date and 90 days later
+      // Calculate current date and 30 days later
       const today = new Date();
-      const in90Days = new Date();
-      in90Days.setDate(today.getDate() + 90);
+      const in30Days = new Date();
+      in30Days.setDate(today.getDate() + 30);
       
       // Get updated booking data
       const availabilityResponse = await carsAPI.checkStatus(id, {
         startDate: formatDate(today),
-        endDate: formatDate(in90Days)
+        endDate: formatDate(in30Days)
       });
       
       if (availabilityResponse?.bookedDates && Array.isArray(availabilityResponse.bookedDates)) {
@@ -150,15 +150,15 @@ export default function CarDetailPage({ params }) {
           
           // Get information about booked dates right after getting car info
           try {
-            // Calculate current date and 90 days later
+            // Calculate current date and 30 days later
             const today = new Date();
-            const in90Days = new Date();
-            in90Days.setDate(today.getDate() + 90);
+            const in30Days = new Date();
+            in30Days.setDate(today.getDate() + 30);
             
-            // Get data about booked dates within 90 days
+            // Get data about booked dates within 30 days
             const availabilityResponse = await carsAPI.checkStatus(id, {
               startDate: formatDate(today),
-              endDate: formatDate(in90Days)
+              endDate: formatDate(in30Days)
             });
             
             if (availabilityResponse?.bookedDates && Array.isArray(availabilityResponse.bookedDates)) {
@@ -355,6 +355,12 @@ export default function CarDetailPage({ params }) {
       return;
     }
     
+    // Check if date is within 30-day booking window
+    if (!isDateInBookingWindow(date)) {
+      alert("Booking is only allowed within 30 days from today.");
+      return;
+    }
+    
     // Prevent automatic date finding when user is selecting
     setHasFoundAvailableDates(true);
     
@@ -507,7 +513,7 @@ export default function CarDetailPage({ params }) {
     
     // Set maximum time for search
     const maxSearchDate = new Date();
-    maxSearchDate.setDate(maxSearchDate.getDate() + 60); // Search up to 60 days
+    maxSearchDate.setDate(maxSearchDate.getDate() + 30); // Search up to 30 days
     
     // If no booked dates, just select today and tomorrow
     if (!bookedDates.length) {
@@ -529,7 +535,7 @@ export default function CarDetailPage({ params }) {
     let consecutiveAvailableDays = 0;
     let potentialStartDate = null;
     
-    for (let i = 0; i < 60 && currentDate <= maxSearchDate; i++) {
+    for (let i = 0; i < 30 && currentDate <= maxSearchDate; i++) {
       const testDate = new Date(currentDate);
       
       // Check if this date is booked
@@ -566,7 +572,7 @@ export default function CarDetailPage({ params }) {
     // If no available dates found
     setAutoFindingDates(false);
     
-    alert("No available dates found within the next 60 days. Please select dates manually.");
+    alert("No available dates found within the next 30 days. Please select dates manually.");
   };
 
   // Double-check selected dates to ensure they are not booked

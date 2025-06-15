@@ -8,6 +8,7 @@ const Category = require('../models/category');
 const Transmission = require('../models/transmission');
 const Fuel = require('../models/fuel');
 const Feature = require('../models/feature');
+const Booking = require('../models/booking');
 const mongoose = require('mongoose');
 
 // Initialize Gemini AI
@@ -94,11 +95,60 @@ const fetchDatabaseData = async () => {
       name: feature.name
     }));
     
+    // Fetch all bookings with populated car and customer data
+    const bookings = await Booking.find()
+      .populate({
+        path: 'car',
+        populate: [
+          { path: 'brand' },
+          { path: 'category' }
+        ]
+      })
+      .populate('customer')
+      .lean();
+      
+    const formattedBookings = bookings.map(booking => ({
+      id: booking._id.toString(),
+      carName: booking.car ? `${booking.car.brand?.name || 'Unknown'} ${booking.car.model}` : 'Unknown Car',
+      carId: booking.car ? booking.car._id.toString() : null,
+      customerName: booking.customer ? `${booking.customer.firstName} ${booking.customer.lastName}` : 'Unknown Customer',
+      customerId: booking.customer ? booking.customer._id.toString() : null,
+      customerEmail: booking.customer ? booking.customer.email : null,
+      startDate: booking.startDate,
+      endDate: booking.endDate,
+      totalDays: booking.totalDays,
+      totalAmount: booking.totalAmount,
+      status: booking.status,
+      paymentStatus: booking.paymentStatus,
+      pickupLocation: booking.pickupLocation,
+      dropoffLocation: booking.dropoffLocation,
+      includeDriver: booking.includeDriver,
+      doorstepDelivery: booking.doorstepDelivery,
+      driverFee: booking.driverFee,
+      deliveryFee: booking.deliveryFee,
+      specialRequests: booking.specialRequests,
+      cancelReason: booking.cancelReason,
+      createdAt: booking.createdAt
+    }));
+    
     // Calculate price statistics
     const priceStats = {
       min: Math.min(...formattedCars.map(car => car.price)),
       max: Math.max(...formattedCars.map(car => car.price)),
       avg: formattedCars.reduce((sum, car) => sum + car.price, 0) / formattedCars.length
+    };
+    
+    // Calculate booking statistics
+    const bookingStats = {
+      total: formattedBookings.length,
+      confirmed: formattedBookings.filter(b => b.status === 'confirmed').length,
+      pending: formattedBookings.filter(b => b.status === 'pending').length,
+      ongoing: formattedBookings.filter(b => b.status === 'ongoing').length,
+      completed: formattedBookings.filter(b => b.status === 'completed').length,
+      cancelled: formattedBookings.filter(b => b.status === 'cancelled').length,
+      totalRevenue: formattedBookings
+        .filter(b => b.paymentStatus === 'paid')
+        .reduce((sum, b) => sum + b.totalAmount, 0)
     };
     
     return {
@@ -108,7 +158,9 @@ const fetchDatabaseData = async () => {
       transmissions: formattedTransmissions,
       fuels: formattedFuels,
       features: formattedFeatures,
-      priceStats
+      bookings: formattedBookings,
+      priceStats,
+      bookingStats
     };
   } catch (error) {
     console.error('Error fetching database data:', error);
@@ -119,7 +171,9 @@ const fetchDatabaseData = async () => {
       transmissions: [],
       fuels: [],
       features: [],
-      priceStats: { min: 0, max: 0, avg: 0 }
+      bookings: [],
+      priceStats: { min: 0, max: 0, avg: 0 },
+      bookingStats: { total: 0, confirmed: 0, pending: 0, ongoing: 0, completed: 0, cancelled: 0, totalRevenue: 0 }
     };
   }
 };
@@ -151,8 +205,7 @@ exports.processAIMessage = async (req, res) => {
     
     // Fetch all database data to include in prompt
     const dbData = await fetchDatabaseData();
-    console.log(`Prepared data for AI: ${dbData.cars.length} cars, ${dbData.brands.length} brands, ${dbData.categories.length} categories`);
-    
+
     // Get the generative model
     const model = genAI.getGenerativeModel({ 
       model: "gemini-2.5-flash-preview-05-20"
@@ -176,14 +229,25 @@ exports.processAIMessage = async (req, res) => {
     
     Features: ${JSON.stringify(dbData.features)}
     
+    Bookings (${dbData.bookings.length} bookings): ${JSON.stringify(dbData.bookings.slice(0, 15))}
+    
     Price Statistics: 
     - Minimum price: $${dbData.priceStats.min}/day
     - Maximum price: $${dbData.priceStats.max}/day
     - Average price: $${Math.round(dbData.priceStats.avg)}/day
     
+    Booking Statistics:
+    - Total bookings: ${dbData.bookingStats.total}
+    - Confirmed bookings: ${dbData.bookingStats.confirmed}  
+    - Pending bookings: ${dbData.bookingStats.pending}
+    - Ongoing bookings: ${dbData.bookingStats.ongoing}
+    - Completed bookings: ${dbData.bookingStats.completed}
+    - Cancelled bookings: ${dbData.bookingStats.cancelled}
+    - Total revenue (paid bookings): $${dbData.bookingStats.totalRevenue}
+    
     IMPORTANT INSTRUCTIONS:
     
-    1. When answering questions about cars, use ONLY the information provided in the database above.
+    1. When answering questions about cars or bookings, use ONLY the information provided in the database above.
     
     2. For price-related queries, use the "price" field to determine car prices.
     
@@ -201,11 +265,39 @@ exports.processAIMessage = async (req, res) => {
          "car_id": "specific_car_id"
        }
        
-    6. For general questions about prices, availability, or service information, provide a helpful response based on the database information.
+    6. If the user wants to book a specific car or asks about booking availability for a car, include a JSON object:
+       {
+         "action": "show_booking_calendar",
+         "car_id": "specific_car_id"
+       }
+       This will show the booking calendar for that car so users can see available dates.
+       
+    7. For booking-related questions, you can answer about:
+       - Booking statistics and trends
+       - Customer booking history 
+       - Car rental performance
+       - Revenue information
+       - Booking status updates
+       - Popular cars (based on booking frequency)
+       - Busiest rental periods
+       - Customer preferences
+       
+    8. When answering booking questions, reference the booking data provided above. You can mention specific booking details, customer names, car models, dates, and amounts as needed.
     
-    7. Always respond in a friendly, helpful manner. Be concise but informative.
+    9. When a user asks to book a specific car (e.g., "I want to book BMW X5", "tôi muốn đặt xe BMW X5"), do the following:
+       - First, find the car in the cars database by matching the brand and model
+       - Check the booking data to see if that car has any current or upcoming bookings (status: confirmed, ongoing, pending)
+       - If the car has bookings, mention the specific dates when it's booked
+       - Also mention the available periods when the car is free for booking
+       - Always include the show_booking_calendar action so users can see the full calendar with both booked and available periods
+       - Be helpful by suggesting the available date ranges where they can book the car
+       - If there are no available periods, let them know the car is fully booked
     
-    8. If the information requested is not in the database, say so politely rather than making up information.
+    10. For general questions about prices, availability, or service information, provide a helpful response based on the database information.
+    
+    11. Always respond in a friendly, helpful manner. Be concise but informative.
+    
+    12. If the information requested is not in the database, say so politely rather than making up information.
     
     Chat history:
     ${chatHistory.slice(-5).map(item => `${item.sender === 'user' ? 'Customer' : 'Assistant'}: ${item.text}`).join('\n')}
@@ -314,6 +406,109 @@ exports.processAIMessage = async (req, res) => {
             }
           } catch (e) {
             console.error('Error fetching car details:', e);
+          }
+        }
+        
+        // Handle show_booking_calendar action
+        if (actionData.action === 'show_booking_calendar' && actionData.car_id) {
+          try {
+            const carId = new mongoose.Types.ObjectId(actionData.car_id);
+            const car = await Car.findById(carId)
+              .populate('brand')
+              .populate('category')
+              .populate('transmission')
+              .populate('fuel')
+              .populate('features');
+              
+            if (car) {
+              // Get bookings for this car
+              const carBookings = await Booking.find({ 
+                car: carId,
+                status: { $in: ['confirmed', 'ongoing', 'pending'] }
+              }).select('startDate endDate status').sort({ startDate: 1 });
+              
+              // Calculate available periods
+              const calculateAvailablePeriods = (bookings) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const maxDate = new Date();
+                maxDate.setDate(maxDate.getDate() + 30); // Show availability for next 30 days
+                
+                const availablePeriods = [];
+                const sortedBookings = bookings
+                  .map(b => ({
+                    start: new Date(b.startDate),
+                    end: new Date(b.endDate),
+                    status: b.status
+                  }))
+                  .sort((a, b) => a.start - b.start);
+                
+                let currentDate = new Date(today);
+                
+                for (const booking of sortedBookings) {
+                  // If there's a gap before this booking
+                  if (currentDate < booking.start) {
+                    const gapEnd = new Date(booking.start);
+                    gapEnd.setDate(gapEnd.getDate() - 1);
+                    
+                    if (currentDate <= gapEnd) {
+                      availablePeriods.push({
+                        startDate: new Date(currentDate),
+                        endDate: gapEnd
+                      });
+                    }
+                  }
+                  
+                  // Move current date to after this booking
+                  currentDate = new Date(booking.end);
+                  currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                // Add final period if there's time left until maxDate
+                if (currentDate <= maxDate) {
+                  availablePeriods.push({
+                    startDate: new Date(currentDate),
+                    endDate: maxDate
+                  });
+                }
+                
+                return availablePeriods;
+              };
+              
+              const availablePeriods = calculateAvailablePeriods(carBookings);
+              
+              // Format car for frontend display
+              const formattedCar = {
+                id: car._id,
+                model: car.model,
+                brand: car.brand ? car.brand.name : 'Unknown',
+                category: car.category ? car.category.name : 'Unknown',
+                year: car.year,
+                price: car.price,
+                seats: car.seats,
+                transmission: car.transmission ? car.transmission.name : 'Unknown',
+                fuel: car.fuel ? car.fuel.name : 'Unknown',
+                features: car.features ? car.features.map(f => f.name) : [],
+                description: car.description,
+                imageUrl: car.images && car.images.length > 0 ? car.images[0] : null,
+                images: car.images
+              };
+              
+              // Return AI response with booking calendar
+              return res.status(200).json({
+                success: true,
+                message: aiResponse.replace(jsonMatch[0], '').trim(), // Remove JSON from visible response
+                data: {
+                  type: 'booking_calendar',
+                  car: formattedCar,
+                  bookings: carBookings,
+                  availablePeriods: availablePeriods
+                }
+              });
+            }
+          } catch (e) {
+            console.error('Error fetching car booking calendar:', e);
           }
         }
       }
