@@ -248,6 +248,11 @@ export const websiteAPI = {
   getInfo: () => api.get('/website-info'),
   getContact: () => api.get('/website-info'),
   sendContactForm: (data) => api.post('/website/contact', data),
+  
+  // Content Pages API
+  getAllContentPages: () => api.get('/website-info/pages'),
+  getContentPage: (pageType) => api.get(`/website-info/pages/${pageType}`),
+  updateContentPage: (pageType, content) => api.put(`/website-info/pages/${pageType}`, { content }),
 };
 
 // Chatbot API

@@ -29,7 +29,8 @@ import {
   CalendarCheck,
   Tag,
   CheckSquare,
-  Globe
+  Globe,
+  FileText
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -69,6 +70,7 @@ const Sidebar = () => {
     { name: 'Car Attributes', icon: <Tag className="h-5 w-5" />, path: '/dashboard/car-attributes' },
     { name: 'Bookings', icon: <CalendarCheck className="h-5 w-5" />, path: '/dashboard/bookings' },
     { name: 'Users', icon: <Users className="h-5 w-5" />, path: '/dashboard/users' },
+    { name: 'Content', icon: <FileText className="h-5 w-5" />, path: '/dashboard/content' },
     { name: 'Website Info', icon: <Globe className="h-5 w-5" />, path: '/dashboard/website-info' },
     { name: 'Statistics & Reports', icon: <BarChart3 className="h-5 w-5" />, path: '/dashboard/statistics' }
   ];
