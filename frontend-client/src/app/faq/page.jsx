@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { websiteInfoAPI } from '../../lib/api';
+import { websiteAPI } from '../../lib/api';
 import Link from 'next/link';
-import { FaChevronDown, FaChevronUp, FaQuestionCircle, FaHome, FaEnvelope, FaPhone } from 'react-icons/fa';
+import { FaChevronDown, FaChevronUp, FaQuestionCircle, FaHome, FaEnvelope, FaPhone, FaTimes } from 'react-icons/fa';
 
 export default function FAQPage() {
   const [faqs, setFaqs] = useState([]);
@@ -16,7 +16,7 @@ export default function FAQPage() {
     const fetchFAQs = async () => {
       try {
         setLoading(true);
-        const response = await websiteInfoAPI.getWebsiteInfo();
+        const response = await websiteAPI.getInfo();
         if (response?.data?.success && response.data.data) {
           setWebsiteInfo(response.data.data);
           setFaqs(response.data.data.faqs || []);
@@ -45,6 +45,20 @@ export default function FAQPage() {
     faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
     faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Highlight search text in FAQ content
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm.trim()) return text;
+    
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? 
+        <mark key={index} className="bg-yellow-200 px-1 rounded">{part}</mark> : 
+        part
+    );
+  };
 
   if (loading) {
     return (
@@ -121,15 +135,38 @@ export default function FAQPage() {
                 placeholder="Search FAQs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-4 py-3 pl-12 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
               </div>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
+
+          {/* Results count */}
+          {searchTerm && (
+            <div className="mb-4 text-center">
+              <p className="text-sm text-gray-600">
+                {filteredFaqs.length > 0 ? (
+                  <>
+                    Found <span className="font-semibold text-primary">{filteredFaqs.length}</span> result{filteredFaqs.length !== 1 ? 's' : ''} for "<span className="font-medium">{searchTerm}</span>"
+                  </>
+                ) : (
+                  <>No results found for "<span className="font-medium">{searchTerm}</span>"</>
+                )}
+              </p>
+            </div>
+          )}
 
           {/* FAQ Items */}
           <div className="space-y-4 mb-8">
@@ -142,7 +179,7 @@ export default function FAQPage() {
                   >
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-medium text-gray-900 pr-4">
-                        {faq.question}
+                        {highlightText(faq.question, searchTerm)}
                       </h3>
                       <div className="flex-shrink-0">
                         {expandedItems.has(index) ? (
@@ -157,7 +194,7 @@ export default function FAQPage() {
                   {expandedItems.has(index) && (
                     <div className="px-6 pb-4 border-t border-gray-100">
                       <p className="text-gray-700 leading-relaxed pt-4">
-                        {faq.answer}
+                        {highlightText(faq.answer, searchTerm)}
                       </p>
                     </div>
                   )}
@@ -166,8 +203,17 @@ export default function FAQPage() {
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500 text-lg">
-                  {searchTerm ? 'No FAQs found matching your search.' : 'No FAQs available.'}
+                  {searchTerm ? `No FAQs found matching "${searchTerm}"` : 'No FAQs available.'}
                 </p>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    <FaTimes className="w-4 h-4 mr-2" />
+                    Clear search
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -27,6 +27,7 @@ export default function AdvancedChatbot() {
   
   // State for search and display
   const [searchQuery, setSearchQuery] = useState('');
+  const [faqSearchQuery, setFaqSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('carousel'); // 'carousel' or 'list'
   const [activeCarIndex, setActiveCarIndex] = useState(0); // For carousel mode
   
@@ -366,6 +367,30 @@ export default function AdvancedChatbot() {
   // Handle search change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleFaqSearchChange = (e) => {
+    setFaqSearchQuery(e.target.value);
+  };
+
+  // Filter FAQs based on search query
+  const filteredFaqs = faqs.filter(faq =>
+    faq.question.toLowerCase().includes(faqSearchQuery.toLowerCase()) ||
+    faq.answer.toLowerCase().includes(faqSearchQuery.toLowerCase())
+  );
+
+  // Highlight search text in FAQ content
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm.trim()) return text;
+    
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? 
+        <mark key={index} className="bg-yellow-200 px-1 rounded">{part}</mark> : 
+        part
+    );
   };
   
   // Toggle view mode between carousel and list
@@ -1159,35 +1184,49 @@ export default function AdvancedChatbot() {
                 </div>
                 <input
                   type="text"
-                  className="block w-full py-2 pl-10 pr-3 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary"
+                  value={faqSearchQuery}
+                  onChange={handleFaqSearchChange}
+                  className="block w-full py-2 pl-10 pr-10 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary"
                   placeholder="Search help topics..."
                 />
+                {faqSearchQuery && (
+                  <button
+                    onClick={() => setFaqSearchQuery('')}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  >
+                    <FaTimes className="w-4 h-4" />
+                  </button>
+                )}
               </div>
               
               <h3 className="mb-4 text-xl font-medium text-gray-800">Frequently Asked Questions</h3>
               
               <div className="mb-6 space-y-3">
-                {faqs.length > 0 ? (
-                  faqs.map((faq, index) => (
+                {filteredFaqs.length > 0 ? (
+                  filteredFaqs.map((faq, index) => (
                     <div key={index} className="overflow-hidden border border-gray-200 rounded-lg">
-                      <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
-                        <div className="flex items-center">
-                          <div className="flex-1">
-                            <h4 className="text-lg font-medium text-primary">{faq.question}</h4>
+                                              <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
+                          <div className="flex items-center">
+                            <div className="flex-1">
+                              <h4 className="text-lg font-medium text-primary">
+                                {highlightText(faq.question, faqSearchQuery)}
+                              </h4>
+                            </div>
+                            <div className="ml-2 text-green-500">
+                              <FaCircle className="text-xs" />
+                            </div>
                           </div>
-                          <div className="ml-2 text-green-500">
-                            <FaCircle className="text-xs" />
-                          </div>
+                          <p className="mt-2 text-gray-600">
+                            {highlightText(faq.answer, faqSearchQuery)}
+                          </p>
                         </div>
-                        <p className="mt-2 text-gray-600">
-                          {faq.answer}
-                        </p>
-                      </div>
                     </div>
                   ))
                 ) : (
                   <div className="p-4 text-center text-gray-500">
-                    Loading FAQs...
+                    {faqs.length === 0 ? 'Loading FAQs...' : 
+                     faqSearchQuery ? `No FAQs found matching "${faqSearchQuery}"` : 
+                     'No FAQs available.'}
                   </div>
                 )}
               </div>
