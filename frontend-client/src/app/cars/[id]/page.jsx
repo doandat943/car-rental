@@ -202,9 +202,28 @@ function CarDetailPageContent({ params }) {
               }));
               
               setBookedDates(formattedBookedDates);
+              
+              // Trigger auto-find available dates after loading booking data
+              // Only if no dates are currently selected and no URL dates
+              const hasUrlDates = searchParams.get('startDate') && searchParams.get('endDate');
+              if (!hasUrlDates && !pickupDate && !returnDate) {
+                setTimeout(() => {
+                  setHasFoundAvailableDates(false);
+                  setAutoFindingDates(false);
+                }, 100);
+              }
             } else {
               console.warn('No booking date data received or invalid format');
               setBookedDates([]);
+              
+              // If no booking data, also trigger auto-find
+              const hasUrlDates = searchParams.get('startDate') && searchParams.get('endDate');
+              if (!hasUrlDates && !pickupDate && !returnDate) {
+                setTimeout(() => {
+                  setHasFoundAvailableDates(false);
+                  setAutoFindingDates(false);
+                }, 100);
+              }
             }
           } catch (error) {
             console.error('Error checking car availability:', error);
@@ -502,6 +521,14 @@ function CarDetailPageContent({ params }) {
 
   // Find the first available date range
   const findAvailableDates = () => {
+    console.log('findAvailableDates called', { 
+      autoFindingDates, 
+      pickupDate, 
+      returnDate, 
+      bookedDatesLength: bookedDates.length,
+      bookedDatesContent: bookedDates.slice(0, 3) // Show first 3 bookings for debugging
+    });
+    
     // If already searching for dates, don't search again
     if (autoFindingDates) return;
     
@@ -517,30 +544,22 @@ function CarDetailPageContent({ params }) {
     const maxSearchDate = new Date();
     maxSearchDate.setDate(maxSearchDate.getDate() + 30);
     
-    // If no booked dates, just select today and tomorrow
-    if (!bookedDates.length) {
-      const today = new Date();
-      const tomorrow = new Date();
-      tomorrow.setDate(today.getDate() + 1);
-      
-      setPickupDate(formatDate(today));
-      setReturnDate(formatDate(tomorrow));
-      setHasFoundAvailableDates(true);
-      setAutoFindingDates(false);
-      setLastActionType('pickup');
-      return;
-    }
+    // Always search through dates properly, even if no bookings exist
+    // Do not auto-select today/tomorrow without checking
     
-    // Find first available date
+    // Start search from today (but if today is booked, move to next available day)
     let currentDate = new Date();
     let consecutiveAvailableDays = 0;
     let potentialStartDate = null;
     
     for (let i = 0; i < 30 && currentDate <= maxSearchDate; i++) {
       const testDate = new Date(currentDate);
+      const isBooked = isDateBooked(testDate);
+      
+      console.log(`Checking date ${formatDate(testDate)}: ${isBooked ? 'BOOKED' : 'AVAILABLE'}`);
       
       // Check if this date is booked
-      if (isDateBooked(testDate)) {
+      if (isBooked) {
         consecutiveAvailableDays = 0;
         potentialStartDate = null;
       } else {
@@ -555,6 +574,7 @@ function CarDetailPageContent({ params }) {
           const endDate = new Date(potentialStartDate);
           endDate.setDate(potentialStartDate.getDate() + 1);
           
+          console.log('Found available dates:', formatDate(potentialStartDate), 'to', formatDate(endDate));
           setPickupDate(formatDate(potentialStartDate));
           setReturnDate(formatDate(endDate));
           setHasFoundAvailableDates(true);
@@ -568,15 +588,22 @@ function CarDetailPageContent({ params }) {
       currentDate.setDate(currentDate.getDate() + 1);
     }
     
-    // If no available dates found
+    // If no available dates found, don't select any dates and let user choose manually
     setAutoFindingDates(false);
-    alert("No available dates found within the next 30 days. Please select dates manually.");
+    setHasFoundAvailableDates(true); // Prevent infinite retries
+    console.log("No available consecutive dates found. User needs to select manually.");
   };
 
   // Double-check selected dates to ensure they are not booked
   useEffect(() => {
     // Only run when both start and end dates are selected
     if (!pickupDate || !returnDate || !bookedDates.length) {
+      return;
+    }
+
+    // Skip validation if dates are from URL parameters (user intentionally selected them)
+    const hasUrlDates = searchParams.get('startDate') && searchParams.get('endDate');
+    if (hasUrlDates) {
       return;
     }
 
@@ -588,27 +615,34 @@ function CarDetailPageContent({ params }) {
     const startIsBooked = isDateBooked(startDateObj);
     const endIsBooked = isDateBooked(endDateObj);
 
-    // If either date is booked, reset and find again
+    // Reset if auto-selected dates conflict, or warn if user-selected
     if (startIsBooked || endIsBooked) {
-      console.error('Conflict detected with booked dates!', {
-        startDate: startDateObj.toLocaleDateString(), 
-        isBooked: startIsBooked,
-        endDate: endDateObj.toLocaleDateString(),
-        isBooked: endIsBooked
+      console.warn('Selected dates conflict with bookings:', {
+        startDate: startDateObj.toLocaleDateString(),
+        startIsBooked,
+        endDate: endDateObj.toLocaleDateString(), 
+        endIsBooked,
+        wasAutoSelected: autoFindingDates
       });
       
-      // Reset selection
+      // Always reset conflicting dates, whether auto or manual
       setPickupDate('');
       setReturnDate('');
       
-      // Mark as not having found available dates to search again
-      setHasFoundAvailableDates(false);
-      setAutoFindingDates(false);
-      
-      // Show notification
-      alert("Conflict detected with booked dates. Please select different dates.");
+      // If was auto-selected, try to find alternative dates
+      if (autoFindingDates) {
+        setHasFoundAvailableDates(false);
+        setAutoFindingDates(false);
+        
+        setTimeout(() => {
+          findAvailableDates();
+        }, 100);
+      } else {
+        // Reset state for manual retry
+        setHasFoundAvailableDates(false);
+      }
     }
-  }, [pickupDate, returnDate, bookedDates]);
+  }, [pickupDate, returnDate, bookedDates, autoFindingDates, searchParams]);
 
   // Auto-find available dates when bookedDates are loaded, but only if no URL pre-selection
   useEffect(() => {
@@ -620,10 +654,12 @@ function CarDetailPageContent({ params }) {
     if (hasUrlDates) return;
     
     // Only run auto-find if bookedDates have been loaded and haven't found dates yet
-    if (bookedDates !== null && !autoFindingDates && !hasFoundAvailableDates) {
+    // Use Array.isArray to ensure bookedDates is properly initialized
+    if (Array.isArray(bookedDates) && !autoFindingDates && !hasFoundAvailableDates && !pickupDate && !returnDate) {
+      console.log('Auto-finding available dates...', { bookedDatesCount: bookedDates.length });
       findAvailableDates();
     }
-  }, [bookedDates, autoFindingDates, hasFoundAvailableDates, hasProcessedUrlDates, searchParams]);
+  }, [bookedDates, autoFindingDates, hasFoundAvailableDates, hasProcessedUrlDates, searchParams, pickupDate, returnDate]);
 
   if (initialLoading) {
     return (
