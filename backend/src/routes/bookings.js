@@ -5,6 +5,7 @@ const bookingController = require('../controllers/booking');
 
 // Protected routes - Authenticated users
 router.get('/', protect, bookingController.getBookings);
+router.get('/user', protect, bookingController.getUserBookings);
 router.get('/:id', protect, bookingController.getBookingById);
 router.post('/', protect, bookingController.createBooking);
 router.patch('/:id/status', protect, bookingController.updateBookingStatus);

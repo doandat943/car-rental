@@ -298,6 +298,50 @@ exports.updateBookingStatus = async (req, res) => {
 };
 
 /**
+ * Get current user's bookings
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getUserBookings = async (req, res) => {
+  try {
+    const { 
+      status,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+    
+    // Build filter object for current user
+    const filter = {
+      customer: req.user.id
+    };
+    
+    if (status) filter.status = status;
+    
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    
+    // Execute query
+    const bookings = await Booking.find(filter)
+      .populate('customer', 'name firstName lastName email phone phoneNumber')
+      .populate('car', 'name brand model year images price')
+      .sort(sort);
+    
+    res.status(200).json({
+      success: true,
+      data: bookings
+    });
+  } catch (error) {
+    console.error('Error fetching user bookings:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching your bookings',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Delete a booking
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
