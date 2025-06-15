@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { connectDB } = require('../db');
 
 // Import all seed modules with error handling
-let seedUsers, seedBrands, seedTransmissions, seedFuels, seedFeatures, seedCategories, seedCars, seedBookings, seedNotifications, seedWebsiteInfo, seedStatistics, seedLocations, seedFaqs;
+let seedUsers, seedBrands, seedTransmissions, seedFuels, seedFeatures, seedCategories, seedCars, seedBookings, seedNotifications, seedWebsiteInfo, seedStatistics, seedLocations;
 
 try {
   seedUsers = require('./users');
@@ -112,15 +112,6 @@ try {
   };
 }
 
-try {
-  seedFaqs = require('./faqs');
-} catch (error) {
-  console.warn('FAQs seed module not found:', error.message);
-  seedFaqs = async () => {
-    console.log('Skipping FAQs seed (module not available)');
-  };
-}
-
 // Seed all data
 const seedAll = async () => {
   try {
@@ -154,7 +145,6 @@ const seedAll = async () => {
     
     // 7. Seed website info and FAQs
     await seedWebsiteInfo();
-    await seedFaqs();
     
     // 8. Seed statistics (should run last to get accurate counts)
     await seedStatistics();

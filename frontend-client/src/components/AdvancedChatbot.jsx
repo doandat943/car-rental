@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { FaRobot, FaTimes, FaArrowUp, FaCommentDots, FaSearch, FaHistory, FaCircle, FaInfoCircle, FaCar, FaList, FaImages, FaChevronLeft, FaChevronRight, FaStar } from 'react-icons/fa';
+import { FaRobot, FaTimes, FaArrowUp, FaCommentDots, FaSearch, FaHistory, FaCircle, FaInfoCircle, FaCar, FaList, FaImages, FaChevronLeft, FaChevronRight, FaStar, FaPaperPlane, FaUser, FaComments, FaQuestionCircle, FaLifeRing } from 'react-icons/fa';
 import Link from 'next/link';
 import axios from 'axios';
+import { chatbotAPI, websiteAPI } from '../lib/api';
 
 // Constants for localStorage
 const CHAT_HISTORY_KEY = 'carRental_chatHistory';
@@ -20,6 +21,9 @@ export default function AdvancedChatbot() {
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef(null);
 
+  // State for FAQs and website info
+  const [faqs, setFaqs] = useState([]);
+  const [websiteInfo, setWebsiteInfo] = useState(null);
   
   // State for search and display
   const [searchQuery, setSearchQuery] = useState('');
@@ -583,6 +587,54 @@ export default function AdvancedChatbot() {
     );
   };
   
+  // Fetch FAQs from websiteInfo
+  useEffect(() => {
+    const fetchFAQs = async () => {
+      try {
+        const response = await websiteAPI.getInfo();
+        if (response?.data?.success && response.data.data) {
+          setWebsiteInfo(response.data.data);
+          setFaqs(response.data.data.faqs || []);
+        }
+      } catch (error) {
+        console.error('Error fetching FAQs:', error);
+        // Set default FAQs if fetch fails
+        setFaqs([
+          {
+            question: "How do I book a car?",
+            answer: "Browse the list of cars, select one that meets your needs. Choose your pickup and return dates, then follow the checkout process. You'll receive a confirmation email once your booking is complete."
+          },
+          {
+            question: "Can I cancel my booking?",
+            answer: "Yes, you can cancel your booking up to 24 hours before the scheduled pickup time for a full refund. Cancellations within 24 hours may be subject to a cancellation fee."
+          },
+          {
+            question: "What payment methods are accepted?",
+            answer: "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and digital wallets including Apple Pay and Google Pay. Cash payments are not accepted."
+          },
+          {
+            question: "Is insurance included?",
+            answer: "Basic insurance is included in all rentals. This covers liability and collision damage. Additional coverage options are available during the booking process for extra peace of mind."
+          },
+          {
+            question: "What if I return the car late?",
+            answer: "Late returns are charged at an hourly rate of the daily rental price, up to one full day. Returns more than 24 hours late may incur additional penalties. Please contact us if you expect to be late."
+          },
+          {
+            question: "Do I need to refill the fuel tank?",
+            answer: "Yes, all vehicles should be returned with the same fuel level as when they were picked up. If returned with less fuel, you'll be charged for refueling plus a service fee."
+          },
+          {
+            question: "What documents do I need to rent a car?",
+            answer: "You'll need a valid driver's license, a credit card in your name, and a valid ID or passport. International customers may also need an International Driving Permit depending on their country of origin."
+          }
+        ]);
+      }
+    };
+
+    fetchFAQs();
+  }, []);
+  
   return (
     <>
       <style jsx>{`
@@ -1115,132 +1167,29 @@ export default function AdvancedChatbot() {
               <h3 className="mb-4 text-xl font-medium text-gray-800">Frequently Asked Questions</h3>
               
               <div className="mb-6 space-y-3">
-                {/* FAQ Item 1 */}
-                <div className="overflow-hidden border border-gray-200 rounded-lg">
-                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-primary">How do I book a car?</h4>
-                      </div>
-                      <div className="ml-2 text-green-500">
-                        <FaCircle className="text-xs" />
-                      </div>
-                    </div>
-                    <p className="mt-2 text-gray-600">
-                      Browse the list of cars, select one that meets your needs. Choose your pickup and return dates, 
-                      then follow the checkout process. You'll receive a confirmation email once your booking is complete.
-                    </p>
-                  </div>
-                </div>
-                
-                {/* FAQ Item 2 */}
-                <div className="overflow-hidden border border-gray-200 rounded-lg">
-                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-primary">Can I cancel my booking?</h4>
-                      </div>
-                      <div className="ml-2 text-green-500">
-                        <FaCircle className="text-xs" />
+                {faqs.length > 0 ? (
+                  faqs.map((faq, index) => (
+                    <div key={index} className="overflow-hidden border border-gray-200 rounded-lg">
+                      <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
+                        <div className="flex items-center">
+                          <div className="flex-1">
+                            <h4 className="text-lg font-medium text-primary">{faq.question}</h4>
+                          </div>
+                          <div className="ml-2 text-green-500">
+                            <FaCircle className="text-xs" />
+                          </div>
+                        </div>
+                        <p className="mt-2 text-gray-600">
+                          {faq.answer}
+                        </p>
                       </div>
                     </div>
-                    <p className="mt-2 text-gray-600">
-                      Yes, you can cancel your booking up to 24 hours before the scheduled pickup time for a full refund.
-                      Cancellations within 24 hours may be subject to a cancellation fee.
-                    </p>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500">
+                    Loading FAQs...
                   </div>
-                </div>
-                
-                {/* FAQ Item 3 */}
-                <div className="overflow-hidden border border-gray-200 rounded-lg">
-                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-primary">What payment methods are accepted?</h4>
-                      </div>
-                      <div className="ml-2 text-green-500">
-                        <FaCircle className="text-xs" />
-                      </div>
-                    </div>
-                    <p className="mt-2 text-gray-600">
-                      We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and digital wallets 
-                      including Apple Pay and Google Pay. Cash payments are not accepted.
-                    </p>
-                  </div>
-                </div>
-                
-                {/* FAQ Item 4 */}
-                <div className="overflow-hidden border border-gray-200 rounded-lg">
-                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-primary">Is insurance included?</h4>
-                      </div>
-                      <div className="ml-2 text-green-500">
-                        <FaCircle className="text-xs" />
-                      </div>
-                    </div>
-                    <p className="mt-2 text-gray-600">
-                      Basic insurance is included in all rentals. This covers liability and collision damage. 
-                      Additional coverage options are available during the booking process for extra peace of mind.
-                    </p>
-                  </div>
-                </div>
-                
-                {/* FAQ Item 5 */}
-                <div className="overflow-hidden border border-gray-200 rounded-lg">
-                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-primary">What if I return the car late?</h4>
-                      </div>
-                      <div className="ml-2 text-green-500">
-                        <FaCircle className="text-xs" />
-                      </div>
-                    </div>
-                    <p className="mt-2 text-gray-600">
-                      Late returns are charged at an hourly rate of the daily rental price, up to one full day.
-                      Returns more than 24 hours late may incur additional penalties. Please contact us if you
-                      expect to be late.
-                    </p>
-                  </div>
-                </div>
-                
-                {/* FAQ Item 6 */}
-                <div className="overflow-hidden border border-gray-200 rounded-lg">
-                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-primary">Do I need to refill the fuel tank?</h4>
-                      </div>
-                      <div className="ml-2 text-green-500">
-                        <FaCircle className="text-xs" />
-                      </div>
-                    </div>
-                    <p className="mt-2 text-gray-600">
-                      Yes, all vehicles should be returned with the same fuel level as when they were picked up.
-                      If returned with less fuel, you'll be charged for refueling plus a service fee.
-                    </p>
-                  </div>
-                </div>
-                
-                {/* FAQ Item 7 */}
-                <div className="overflow-hidden border border-gray-200 rounded-lg">
-                  <div className="p-4 bg-white cursor-pointer hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-primary">What documents do I need to rent a car?</h4>
-                      </div>
-                      <div className="ml-2 text-green-500">
-                        <FaCircle className="text-xs" />
-                      </div>
-                    </div>
-                    <p className="mt-2 text-gray-600">
-                      You'll need a valid driver's license, a credit card in your name, and a valid ID or passport.
-                      International customers may also need an International Driving Permit depending on their country of origin.
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
               
               {/* Need more help section */}
@@ -1250,12 +1199,26 @@ export default function AdvancedChatbot() {
                   If you couldn't find the answer to your question, please contact our support team:
                 </p>
                 <div className="mt-2">
-                  <a href="mailto:support@carrental.com" className="block mb-2 text-primary hover:underline">
-                    support@carrental.com
-                  </a>
-                  <a href="tel:+84123456789" className="block text-primary hover:underline">
-                    +84 123 456 789
-                  </a>
+                  {websiteInfo?.contactInfo?.email && (
+                    <a href={`mailto:${websiteInfo.contactInfo.email}`} className="block mb-2 text-primary hover:underline">
+                      {websiteInfo.contactInfo.email}
+                    </a>
+                  )}
+                  {websiteInfo?.contactInfo?.phone && (
+                    <a href={`tel:${websiteInfo.contactInfo.phone}`} className="block text-primary hover:underline">
+                      {websiteInfo.contactInfo.phone}
+                    </a>
+                  )}
+                  {(!websiteInfo?.contactInfo?.email && !websiteInfo?.contactInfo?.phone) && (
+                    <>
+                      <a href="mailto:support@carrental.com" className="block mb-2 text-primary hover:underline">
+                        support@carrental.com
+                      </a>
+                      <a href="tel:+84123456789" className="block text-primary hover:underline">
+                        +84 123 456 789
+                      </a>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

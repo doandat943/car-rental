@@ -281,7 +281,6 @@ export const websiteAPI = {
 export const chatbotAPI = {
   sendMessage: (message, sessionData = null) => api.post('/chatbot/message', { message, sessionData }),
   sendAIMessage: (message, sessionData = null) => api.post('/chatbot/ai-message', { message, sessionData }),
-  getFAQs: () => api.get('/chatbot/faqs'),
   getCarSuggestions: (criteria) => api.post('/chatbot/car-suggestions', criteria),
 };
 

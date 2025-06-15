@@ -10,7 +10,6 @@ const Transmission = require('./transmission');
 const Fuel = require('./fuel');
 const Feature = require('./feature');
 const Location = require('./location');
-const Faq = require('./faq');
 
 module.exports = {
   User,
@@ -24,6 +23,5 @@ module.exports = {
   Transmission,
   Fuel,
   Feature,
-  Location,
-  Faq
+  Location
 }; 
