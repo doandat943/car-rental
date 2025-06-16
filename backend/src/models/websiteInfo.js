@@ -25,8 +25,7 @@ const WebsiteInfo = mongoose.models.WebsiteInfo || mongoose.model('WebsiteInfo',
     depositPercentage: { type: Number, default: 15 },
     enablePaypal: { type: Boolean, default: true },
     enableCreditCard: { type: Boolean, default: true },
-    enableCash: { type: Boolean, default: true },
-    enableBankTransfer: { type: Boolean, default: true }
+    enableCash: { type: Boolean, default: true }
   },
   bookingSettings: {
     minimumBookingHours: { type: Number, default: 4 },

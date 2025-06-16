@@ -262,4 +262,14 @@ export const chatbotAPI = {
   getCarSuggestions: (criteria) => api.post('/chatbot/car-suggestions', criteria),
 };
 
+// Payment API
+export const paymentAPI = {
+  getConfig: () => api.get('/payment/config'),
+  createStripeIntent: (data) => api.post('/payment/stripe/create-intent', data),
+  confirmStripePayment: (data) => api.post('/payment/stripe/confirm', data),
+  createPayPalOrder: (data) => api.post('/payment/paypal/create-order', data),
+  capturePayPalPayment: (data) => api.post('/payment/paypal/capture', data),
+  processDemoPayment: (data) => api.post('/payment/demo', data)
+};
+
 export default api; 

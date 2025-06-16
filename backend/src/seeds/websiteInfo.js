@@ -38,8 +38,7 @@ const seedWebsiteInfo = async () => {
         depositPercentage: 15,
         enablePaypal: true,
         enableCreditCard: true,
-        enableCash: true,
-        enableBankTransfer: true
+        enableCash: true
       },
       bookingSettings: {
         minimumBookingHours: 4,

@@ -31,6 +31,8 @@ export default function BookingConfirmationPage({ params }) {
         
         if (response?.data?.data) {
           setBooking(response.data.data);
+          console.log('Booking data:', response.data.data);
+          console.log('Car data:', response.data.data.car);
         } else {
           setError('Booking details not found');
         }
@@ -65,7 +67,21 @@ export default function BookingConfirmationPage({ params }) {
     );
   }
 
-  const carName = booking.car?.name || `${booking.car?.brand?.name || booking.car?.brand} ${booking.car?.model}`;
+  // Build car name from available data
+  let carName = 'Unknown Car';
+  if (booking.car?.name) {
+    carName = booking.car.name;
+  } else if (booking.car) {
+    const brand = booking.car.brand?.name || booking.car.brand || '';
+    const model = booking.car.model?.name || booking.car.model || '';
+    if (brand && model) {
+      carName = `${brand} ${model}`;
+    } else if (brand) {
+      carName = brand;
+    } else if (model) {
+      carName = model;
+    }
+  }
   const bookingCode = `BK-${booking._id.substr(-6).toUpperCase()}`;
   
   return (
@@ -179,11 +195,11 @@ export default function BookingConfirmationPage({ params }) {
                 <div>
                   <p className="text-sm text-gray-600">Payment Method</p>
                   <p className="font-medium">
-                    {booking.paymentMethod === 'paypal' && 'PayPal'}
                     {booking.paymentMethod === 'credit_card' && 'Credit Card'}
-                    {booking.paymentMethod === 'bank_transfer' && 'Bank Transfer'}
+                    {booking.paymentMethod === 'paypal' && 'PayPal'}
                     {booking.paymentMethod === 'cash' && 'Cash on Pickup'}
-                    {!booking.paymentMethod && 'Cash on Pickup'}
+                    {booking.paymentMethod === 'demo' && 'Demo Payment'}
+                    {!['credit_card', 'paypal', 'cash', 'demo'].includes(booking.paymentMethod) && 'Other'}
                   </p>
                 </div>
               </div>

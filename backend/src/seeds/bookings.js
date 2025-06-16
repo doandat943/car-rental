@@ -138,7 +138,7 @@ const seedBookings = async () => {
  * Generate random payment method
  */
 function getRandomPaymentMethod() {
-  const methods = ['credit_card', 'paypal', 'cash', 'bank_transfer'];
+  const methods = ['credit_card', 'paypal', 'cash', 'demo'];
   return methods[Math.floor(Math.random() * methods.length)];
 }
 

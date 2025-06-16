@@ -164,7 +164,7 @@ exports.createBooking = async (req, res) => {
     }
 
     // Validate payment method
-    const validPaymentMethods = ['paypal', 'credit_card', 'bank_transfer', 'cash'];
+    const validPaymentMethods = ['paypal', 'credit_card', 'cash', 'demo'];
     if (!validPaymentMethods.includes(paymentMethod)) {
       return res.status(400).json({
         success: false,

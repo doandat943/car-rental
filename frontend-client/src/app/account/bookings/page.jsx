@@ -297,12 +297,12 @@ export default function UserBookingsPage() {
                             </div>
                             <div className="text-gray-600">
                               <span className="font-medium">Payment Method:</span> 
-                              <span className="ml-1">
-                                {booking.paymentMethod === 'paypal' && 'PayPal'}
+                              <span className="text-sm text-gray-600">
                                 {booking.paymentMethod === 'credit_card' && 'Credit Card'}
-                                {booking.paymentMethod === 'bank_transfer' && 'Bank Transfer'}
+                                {booking.paymentMethod === 'paypal' && 'PayPal'}
                                 {booking.paymentMethod === 'cash' && 'Cash on Pickup'}
-                                {!booking.paymentMethod && 'Cash on Pickup'}
+                                {booking.paymentMethod === 'demo' && 'Demo Payment'}
+                                {!['credit_card', 'paypal', 'cash', 'demo'].includes(booking.paymentMethod) && 'Other'}
                               </span>
                             </div>
                             <div className="text-gray-600">

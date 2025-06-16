@@ -21,8 +21,9 @@ const Booking = mongoose.models.Booking || mongoose.model('Booking', new mongoos
   // Payment information
   paymentMethod: {
     type: String,
-    enum: ['paypal', 'credit_card', 'bank_transfer', 'cash'],
-    default: 'cash'
+    required: true,
+    enum: ['paypal', 'credit_card', 'cash', 'demo'],
+    default: 'demo'
   },
   paymentType: {
     type: String,
