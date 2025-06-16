@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authAPI } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,9 +37,8 @@ export default function LoginPage() {
       const response = await authAPI.login({ email, password });
       
       if (response.data && response.data.token) {
-        // Save auth token and user data
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user || {}));
+        // Save auth token and user data using the hook
+        login(response.data.token, response.data.user || {});
         
         // Check for pending booking
         if (pendingBooking) {

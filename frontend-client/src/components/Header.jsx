@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { websiteAPI } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {
   const router = useRouter();
+  const { isLoggedIn, user, authLoading, mounted, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [websiteInfo, setWebsiteInfo] = useState({
     siteName: 'CarRental',
@@ -18,18 +18,6 @@ export default function Header() {
   });
   
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      setIsLoggedIn(true);
-      try {
-        setUser(JSON.parse(userData));
-      } catch (e) {
-        console.error('Error parsing user data', e);
-      }
-    }
 
     // Fetch website info
     async function fetchWebsiteInfo() {
@@ -61,13 +49,84 @@ export default function Header() {
   const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);
   
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsLoggedIn(false);
-    setUser(null);
     setIsUserMenuOpen(false);
-    router.push('/');
+    logout();
   };
+
+  // Don't render auth buttons until we've checked authentication state
+  if (!mounted || authLoading) {
+    return (
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white shadow-2xl border-b border-gray-200' 
+          : 'bg-white/95 backdrop-blur-md shadow-xl'
+      }`}>
+        <div className="container px-6 py-4 mx-auto">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="flex items-center text-2xl font-bold group">
+              {websiteInfo.logo ? (
+                <div className="relative mr-3">
+                  <img 
+                    src={websiteInfo.logo.startsWith('http') ? 
+                      websiteInfo.logo : 
+                      `http://localhost:5000${websiteInfo.logo}`} 
+                    alt={websiteInfo.siteName} 
+                    className="w-auto h-10 transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 transition-opacity duration-300 rounded-lg opacity-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-sm group-hover:opacity-100"></div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center w-10 h-10 mr-3 transition-all duration-300 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl group-hover:shadow-xl">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+              )}
+              <span className="font-extrabold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+                {websiteInfo.siteName}
+              </span>
+            </Link>
+            
+            {/* Desktop Navigation */}
+            <nav className="hidden space-x-1 md:flex">
+              {[
+                { href: '/', label: 'Home' },
+                { href: '/cars', label: 'Cars' },
+                { href: '/faq', label: 'FAQ' },
+                { href: '/about', label: 'About' }
+              ].map((item) => (
+                <Link 
+                  key={item.href}
+                  href={item.href} 
+                  className="relative px-4 py-2 font-semibold text-gray-700 transition-all duration-300 rounded-lg hover:text-blue-600 hover:bg-blue-50 group"
+                >
+                  <span className="relative z-10">{item.label}</span>
+                  <div className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 -translate-x-1/2 group-hover:w-3/4"></div>
+                </Link>
+              ))}
+            </nav>
+            
+            {/* Loading placeholder for user actions */}
+            <div className="items-center hidden space-x-4 md:flex">
+              <div className="w-16 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="w-20 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+            
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={toggleMenu}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+    );
+  }
   
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -188,20 +247,18 @@ export default function Header() {
           </div>
           
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button 
-              onClick={toggleMenu}
-              className="p-2 text-gray-700 transition-all duration-300 rounded-lg hover:text-blue-600 hover:bg-blue-50 focus:outline-none"
-            >
-              <svg className="w-6 h-6 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                )}
-              </svg>
-            </button>
-          </div>
+          <button 
+            onClick={toggleMenu}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <svg className="w-6 h-6 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              )}
+            </svg>
+          </button>
         </div>
         
         {/* Mobile Menu */}

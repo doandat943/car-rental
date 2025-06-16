@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { bookingsAPI, carsAPI, websiteAPI } from '@/lib/api';
@@ -21,12 +21,10 @@ import {
   FaClock
 } from 'react-icons/fa';
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-
-  
   // Get booking data from URL params or localStorage
   const [bookingData, setBookingData] = useState(null);
   const [car, setCar] = useState(null);
@@ -665,5 +663,24 @@ export default function CheckoutPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function CheckoutPageLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <FaSpinner className="w-8 h-8 mx-auto text-blue-600 animate-spin mb-4" />
+        <p className="text-gray-600">Loading checkout...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<CheckoutPageLoading />}>
+      <CheckoutContent />
+    </Suspense>
   );
 } 
