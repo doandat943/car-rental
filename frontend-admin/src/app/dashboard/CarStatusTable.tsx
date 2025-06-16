@@ -146,16 +146,14 @@ const CarStatusTable = ({ cars }: CarStatusTableProps) => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    car.status === 'available' ? 'bg-green-100 text-green-800' : 
+                    car.status === 'active' ? 'bg-green-100 text-green-800' : 
                     car.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
-                    car.status === 'rented' ? 'bg-blue-100 text-blue-800' :
-                    car.status === 'reserved' ? 'bg-purple-100 text-purple-800' :
+                    car.status === 'overdue_return' ? 'bg-red-100 text-red-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {car.status === 'available' ? 'Available' : 
+                    {car.status === 'active' ? 'Active' : 
                      car.status === 'maintenance' ? 'Maintenance' :
-                     car.status === 'rented' ? 'Rented' :
-                     car.status === 'reserved' ? 'Reserved' : 
+                     car.status === 'overdue_return' ? 'Overdue Return' : 
                      'Unknown'}
                   </span>
                 </td>

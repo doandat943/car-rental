@@ -391,11 +391,11 @@ export default function BookingDetailsPage({ params }) {
               {/* Payment Method and Type */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="flex">
-                  <div className="mr-3 bg-green-100 text-green-600 p-2 rounded-md">
-                    <CreditCard className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Payment Method</p>
+                <div className="mr-3 bg-green-100 text-green-600 p-2 rounded-md">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Payment Method</p>
                     <p className="font-medium">
                       {booking.paymentMethod === 'paypal' && 'PayPal'}
                       {booking.paymentMethod === 'credit_card' && 'Credit Card'}

@@ -64,7 +64,7 @@ exports.updateWebsiteInfo = async (req, res) => {
       error: error.message
     });
   }
-};
+}; 
 
 /**
  * Get specific content page

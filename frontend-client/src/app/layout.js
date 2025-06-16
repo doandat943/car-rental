@@ -18,15 +18,15 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <CalendarModalProvider>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
-            <AdvancedChatbot />
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+          <AdvancedChatbot />
             <GlobalCalendarModal />
-          </div>
+        </div>
         </CalendarModalProvider>
       </body>
     </html>
